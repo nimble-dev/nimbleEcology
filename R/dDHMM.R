@@ -1,0 +1,107 @@
+#' Dynamic Hidden Markov Model distribution for use in NIMBLE models
+#'
+#' \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model distributions for NIMBLE models.
+#' "Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
+#' \code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
+#' Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
+#' one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
+#' model code.
+#'
+#' @aliases dDHMM dDHMMo rDHMM rDHMMo
+#'
+#' @export
+#'
+#' @param x vector of observation classes, one of which could be defined as "not observed".
+#' @param init vector of initial state probabilities
+#' @param Z time-independent matrix of observation probabilities.
+#' First two dimensions of \code{Z} are of size (number of possible observation classes) x
+#'  (number of possible system states).  In \code{dDHMMo}, the third dimension of \code{Z} is of
+#'  size (number of observation times).
+#' @param T time-dependent matrix of system state-transition probabilities.
+#' Dimension of \code{T} is (number of possible system states) x  (number of possible system states)
+#' x (number of observation times).
+#' @param len length of observations (needed for rDHMM)
+#' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#'
+#' @author Perry de Valpine and Daniel Turek
+#'
+#' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
+#' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
+#' 23:549–564. DOI 10.1007/s10651-016-0353-z
+#'
+#' @details These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
+#' for \link{nimbleModel}.
+#'
+#' These are written in the format of user-defined distributions to extend NIMBLE's
+#' use of the BUGS model language.  More information about writing user-defined distributions can be found
+#' in the NIMBLE User Manual at \code{https://r-nimble.org}.
+#'
+#' The first argument to a "d" function is always named \code{x} and is given on the
+#' left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
+#' When using these distributions in a NIMBLE model, the user
+#' should not provide the \code{log} argument.  (It is always set to \code{TRUE} when used
+#' in a NIMBLE model.)
+#'
+#' For example, in a NIMBLE model,
+#'
+#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S],
+#' transitionProbs[1:S, 1:S, 1:T], T)}
+#'
+#' declares that the \code{observedStates[1:T]} vector follows a dynamic hidden Markov model distribution
+#' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.  In
+#' this case, \code{S} is the number of system states, \code{O} is the number of observation classes, and
+#' \code{T} is the number of observation occasions.
+#'
+#' If the observation probabilities are time-dependent, one would use:
+#'
+#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+#' transitionProbs[1:S, 1:S, 1:T], T)}
+#'
+#' @seealso For hidden Markov models with time-independent transitions, see \link{dHMM} and \link{dHMMo}.
+#' For simple capture-recapture, see \link{dCJS}.
+dDHMM <- nimbleFunction(
+  run = function(x = double(1),    ## Observed capture (state) history
+                 init = double(1),##
+                 Z = double(2),
+                 T = double(3),
+                 len = double(),## length of x (needed as a separate param for rDHMM)
+                 log = integer(0, default = 0)) {
+    if(length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMM.")
+    if(length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMM.")
+    if(length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMM.")
+    pi <- init # State probabilities at time t=1
+    logL <- 0
+    nObsClasses <- dim(Z)[1]
+    lengthX <- length(x)
+    for(t in 1:lengthX) {
+      if(x[t] > nObsClasses) stop("Invalid value of x[t] in dDHMM.")
+      Zpi <- Z[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
+      sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
+      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
+      if(t != lengthX)   pi <- (T[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+    }
+    returnType(double())
+    if(log) return(logL)
+    return(exp(logL))
+  }
+)
+
+rDHMM <- nimbleFunction(
+  run = function(n = integer(),
+                 init = double(1),
+                 Z = double(2),
+                 T = double(3),
+                 len = double(), prior = double(1)) {
+    if(n != 1) print('should only specify n=1 in rDHMM() distribution')
+    if(len != dim(T)[3]) stop("length != dim(T)[3] in rDHMM")
+    ans <- numeric(length)
+    ans[1] <- rcat(1, init)
+    if(length == 1) return(ans)
+    pi <- init
+    for(t in 2:len) {
+      ans[t] <- rcat(1, T[, ans[t-1], t])
+    }
+    returnType(double(1))
+    return(ans)
+    }
+)
