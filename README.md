@@ -11,5 +11,6 @@ Community contributions or suggestions for other needs are welcome.
 
 The plan for this repository is to finish the code, documentation and testing and then make it available as an R package on CRAN.
 
-Some of these models were used (in slightly different forms) in
-[Daniel Turek, Perry de Valpine, and Christopher J. Paciorek. 2016. Efficient Markov chain Monte Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics 4:549-564](https://link.springer.com/article/10.1007/s10651-016-0353-z).
+Some of these models were used (in slightly different forms) in:
+
+[D. Turek, P. de Valpine, and C. J. Paciorek. 2016. Efficient Markov chain Monte Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics 4:549-564](https://link.springer.com/article/10.1007/s10651-016-0353-z).
