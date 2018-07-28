@@ -6,9 +6,12 @@
 \alias{rCJSss}
 \alias{rCJSvv}
 \alias{dCJS}
+\alias{rCJSss}
 \title{Cormack-Jolly-Seber distribution for use in NIMBLE models}
 \usage{
-dCJSss(x, probSurvive, probCapture, len, log = 0)
+dCJSss(x, probSurvive, probCapture, len = 0, log = 0)
+
+rCJSss(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
 \item{x}{capture-history vector of 0s (not captured) and 1s (captured), assumed to begin with a 1.}

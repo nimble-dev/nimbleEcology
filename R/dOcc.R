@@ -14,12 +14,38 @@
 #' @export
 #'
 #' @param x detection/non-detection vector of 0s (not detected) and 1s (detected).
-#' @param probOcc occupancy probability
-#' @param probDetect detection probability
-#' @param l length of detection/non-detection history (needed for rOcc)
+#' @param probOcc occupancy probability (scalar).
+#' @param probDetect detection probability (scalar for \code{dOcc_s}, vector for \code{dOcc_v}).
+#' @param l length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
 #' @param log TRUE (return log probability) or FALSE (return probability)
 #'
-#' @details To be filled in.
+#' @author Perry de Valpine
+#'
+#' @details These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
+#' for \link{nimbleModel}.
+#'
+#' These are written in the format of user-defined distributions to extend NIMBLE's
+#' use of the BUGS model language.  More information about writing user-defined distributions can be found
+#' in the NIMBLE User Manual at \code{https://r-nimble.org}.
+#'
+#' The first argument to a "d" function is always named \code{x} and is given on the
+#' left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
+#' When using these distributions in a NIMBLE model, the user
+#' should not provide the \code{log} argument.  (It is always set to \code{TRUE} when used
+#' in a NIMBLE model.)
+#'
+#' For example, in a NIMBLE model,
+#'
+#' \code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability)}
+#'
+#' declares that the \code{detections[1:T]} vector follows an occupancy model distribution
+#' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
+#'
+#' If the detection probabilities are time-dependent, one would use:
+#'
+#'\code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability[1:T])}
+#'
+#' @seealso For dynamic occupancy models, see \link{dDynOcc}.
 dOcc_s <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),

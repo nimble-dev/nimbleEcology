@@ -2,5 +2,7 @@
 
 export(dCJSss)
 export(dDHMM)
+export(dDynOcc)
 export(dHMM)
 export(dOcc_s)
+export(rCJSss)

@@ -55,17 +55,18 @@ dCJSss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double(),
+                 len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
     logProbData <- 0
-    if(len == 1) {  ## l==1 should not occur, but just in case:
+    lenX <- length(x)
+    if(lenX == 1) {  ## l==1 should not occur, but just in case:
       return(logProbData)
     }
-    for(t in 2:len) {
+    for(t in 2:lenX) {
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
@@ -94,7 +95,7 @@ dCJSvv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double(),
+                 len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     ## Note the calculations used here are actually in hidden Markov model form.
@@ -129,11 +130,12 @@ rCJSvv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double()) {
+                 len = double(0, default = 0)) {
+    if(n != 1) stop("rCJSss only works for n = 1")
     ans <- numeric(len)
     ans[1] <- 1
     alive <- 1
-    if(l == 1) return(ans)
+    if(len <= 1) return(ans)
     for(i in 2:len) {
       if(alive)
         alive <- rbinom(1, size = 1, prob = probSurvive[i])
@@ -148,16 +150,18 @@ rCJSvv <- nimbleFunction(
   }
 )
 
-
+#' @export
+#' @rdname dCJSss
 rCJSss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double()) {
+                 len = double(0, default = 0)) {
+    if(n != 1) stop("rCJSss only works for n = 1")
     ans <- numeric(len)
     ans[1] <- 1
     alive <- 1
-    if(l == 1) return(ans)
+    if(len <= 1) return(ans)
     for(i in 2:len) {
       if(alive)
         alive <- rbinom(1, size = 1, prob = probSurvive)
@@ -170,4 +174,25 @@ rCJSss <- nimbleFunction(
     return(ans)
     returnType(double(1))
   }
+)
+
+# Register the distributions explicitly for two reasons:
+# 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
+# 2. Establish default len = 0 via reparameterization mechanism.
+registerDistributions(list(
+  dCJSss = list(
+    BUGSdist = "dCJSss(probSurvive, probCapture, len)",
+    Rdist = "dCJSss(probSurvive, probCapture, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(0)', 'len = double(0)'),
+    pqAvail = FALSE))
+  )
+
+registerDistributions(list(
+  dCJSvv = list(
+    BUGSdist = "dCJSvv(probSurvive, probCapture, len)",
+    Rdist = "dCJSvv(probSurvive, probCapture, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double(0)'),
+    pqAvail = FALSE))
 )
