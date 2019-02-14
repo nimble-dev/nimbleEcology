@@ -63,8 +63,8 @@ dCJSss <- nimbleFunction(
     ## logProbData will be the final answer
     logProbData <- 0
     lenX <- length(x)
-    if (lenX < 0) {  ## l==1 should not occur, but just in case:
-      return(logProbData)
+    if (lenX == 0) {  ## l < 1 should not occur, but just in case:
+      return(0)
     }
     for (t in 1:lenX) {
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
@@ -75,13 +75,13 @@ dCJSss <- nimbleFunction(
         probThisObs <- probAlive * probCapture
         probAliveGivenHistory <- 1
       } else {
-        probAliveNotSeen <- probAlive * (1-probCapture)
-        probThisObs <- probAliveNotSeen + (1-probAlive)
+        probAliveNotSeen <- probAlive * (1 - probCapture)
+        probThisObs <- probAliveNotSeen + (1 - probAlive)
         probAliveGivenHistory <- probAliveNotSeen / probThisObs
       }
       logProbData <- logProbData + log(probThisObs)
     }
-    if(log) return(logProbData)
+    if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
   }
@@ -102,13 +102,13 @@ dCJSvv <- nimbleFunction(
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
     logProbData <- 0
-    if (len < 1) {  ## l<1 should not occur, but just in case:
-      return(0)
+    if (len == 0) {  ## l<1 should not occur, but just in case:
+      len <- length(x)
     }
     for (t in 1:len) {
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
-      probAlive <- probAliveGivenHistory * probSurvive[1]
+      probAlive <- probAliveGivenHistory * probSurvive[t]
       if (x[t] == 1) {
         ## ProbThisObs = P(x(t) | x(1)...x(t-1))
         probThisObs <- probAlive * probCapture[t]
@@ -120,7 +120,9 @@ dCJSvv <- nimbleFunction(
       }
       logProbData <- logProbData + log(probThisObs)
     }
-    if (log) return(logProbData)
+    if (log) {
+      return(logProbData)
+    }
     return(exp(logProbData))
     returnType(double())
   }

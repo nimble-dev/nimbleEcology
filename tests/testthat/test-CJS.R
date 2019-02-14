@@ -1,12 +1,13 @@
 # tests for Cormack-Jolly-Seber distributions
 
 library(testthat)
+library(nimble)
 context("Testing dCJS-related functions.")
 
 test_that("dCJSss works",
           {
             ## Uncompiled calculation
-            x <- c(1, 0, 1, 0, 0)
+            x <- c(0, 1, 0, 0)
             probSurvive <- 0.6
             probCapture <- 0.4
             probX <- dCJSss(x, probSurvive, probCapture)
@@ -33,11 +34,11 @@ test_that("dCJSss works",
           ## r function works
           set.seed(2468)
           oneSim <- rCJSss(1, probSurvive, probCapture, len = 5)
-          expect_equal(oneSim, c(1, 0, 1, 0, 0))
+          expect_equal(oneSim, c(0, 1, 0, 0))
 
           ## Use in model
           nc <- nimbleCode({
-            x[1:5] ~ dCJSss(probSurvive, probCapture, len = 0)
+            x[1:4] ~ dCJSss(probSurvive, probCapture, len = 0)
             probSurvive ~ dunif(0,1)
             probCapture ~ dunif(0,1)
           })
@@ -55,7 +56,7 @@ test_that("dCJSss works",
 
           set.seed(2468)
           cm$simulate('x')
-          expect_equal(cm$x, c(1, 0, 1, 0, 0))
+          expect_equal(cm$x, c(0, 1, 0, 0))
           })
 
 ## Other situations to test:
@@ -65,42 +66,46 @@ test_that("dCJSss works",
 test_that("dCJSvv works",
           {
             ## Uncompiled calculation
-            x <- c(1, 0, 1, 0, 0)
-            ## STOPPED HERE
-            probSurvive <- c(0.6, 0.5, 0.4, 0.55, 0.65)
-            probCapture <- c(0.4, 0.45, 0.5, 0.55, 0.6)
-            len <- 5
+            x <- c(0,1,0,0)
+            probSurvive <- c(0.6, 0.5, 0.4, 0.55)
+            probCapture <- c(0.45, 0.5, 0.55, 0.6)
+            len <- 4
             probX <- dCJSvv(x, probSurvive, probCapture, len)
-            correctProbX <- probSurvive[1] * (1-probCapture[1]) *
+
+            correctProbX <-
+              probSurvive[1] * (1 - probCapture[1]) *
               probSurvive[2] * (probCapture[2]) *
-              (probSurvive^2 * (1-probCapture)^2 +
-                 probSurvive * (1-probCapture) * (1-probSurvive) +
-                 (1-probSurvive))
+              ((probSurvive[3] * (1 - probCapture[3]) * probSurvive[4] * (1 - probCapture[4])) +
+               (probSurvive[3] * (1 - probCapture[3]) * (1 - probSurvive[4])) +
+                (1 - probSurvive[3]))
+
             expect_equal(probX, correctProbX)
 
             ## log Prob
-            lProbX <- dCJSss(x, probSurvive, probCapture, log = TRUE)
+            lProbX <- dCJSvv(x, probSurvive, probCapture, log = TRUE)
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
             ## Compiles
-            CdCJSss <- compileNimble(dCJSss)
-            CprobX <- CdCJSss(x, probSurvive, probCapture)
+            CdCJSvv <- compileNimble(dCJSvv)
+            CprobX <- CdCJSvv(x, probSurvive, probCapture)
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdCJSss(x, probSurvive, probCapture, log = TRUE)
+            ClProbX <- CdCJSvv(x, probSurvive, probCapture, len = 4, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
             ## r function works
             set.seed(2468)
-            oneSim <- rCJSss(1, probSurvive, probCapture, len = 5)
-            expect_equal(oneSim, c(1, 0, 1, 0, 0))
+            oneSim <- rCJSvv(1, probSurvive, probCapture, len = 4)
+            expect_equal(oneSim, c(0, 1, 0, 0))
 
             ## Use in model
             nc <- nimbleCode({
-              x[1:5] ~ dCJSss(probSurvive, probCapture, len = 0)
-              probSurvive ~ dunif(0,1)
-              probCapture ~ dunif(0,1)
+              x[1:4] ~ dCJSvv(probSurvive[1:4], probCapture[1:4], len = 0)
+              for (i in 1:4) {
+                probSurvive[i] ~ dunif(0,1)
+                probCapture[i] ~ dunif(0,1)
+              }
             })
             m <- nimbleModel(nc, data = list(x = x),
                              inits = list(probSurvive = probSurvive,
@@ -116,5 +121,5 @@ test_that("dCJSvv works",
 
             set.seed(2468)
             cm$simulate('x')
-            expect_equal(cm$x, c(1, 0, 1, 0, 0))
+            expect_equal(cm$x, c(0, 1, 0, 0))
           })
