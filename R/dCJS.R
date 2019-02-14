@@ -8,7 +8,7 @@
 #'
 #' @export
 #'
-#' @param x capture-history vector of 0s (not captured) and 1s (captured), assumed to begin with a 1.
+#' @param x capture-history vector of 0s (not captured) and 1s (captured). This series is implicitly preceded by a 1.
 #' @param probSurvive survival probability, either a scalar (for dCJSss) or a vector (for dCJSvv).
 #' @param probCapture capture probability, either a scalar (for dCJSss) or a vector (for dCJSvv).
 #' @param l length of capture history (needed for rCJSxx).
@@ -63,14 +63,14 @@ dCJSss <- nimbleFunction(
     ## logProbData will be the final answer
     logProbData <- 0
     lenX <- length(x)
-    if(lenX == 1) {  ## l==1 should not occur, but just in case:
+    if (lenX < 0) {  ## l==1 should not occur, but just in case:
       return(logProbData)
     }
-    for(t in 2:lenX) {
+    for (t in 1:lenX) {
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if(x[t] == 1) {
+      if (x[t] == 1) {
         ## ProbThisObs = P(x(t) | x(1)...x(t-1))
         probThisObs <- probAlive * probCapture
         probAliveGivenHistory <- 1
@@ -88,10 +88,10 @@ dCJSss <- nimbleFunction(
 )
 
 dCJSvv <- nimbleFunction(
-  # The first element of x is ignored.
-  # It is assumed to represent first capture and hence to be 1.
-  # probSurvive[t] represents survival from t to t+1, so the last element of probSurvive is ignored.
-  # probCapture[t] represents capture probability at time t, so the first element of probCapture is ignored.
+  # It is assumed that the individual has already been captured.
+  # Therefore, the first entry in x represents the first possible recapture event.
+  # probSurvive[t] represents survival from t-1 to t.
+  # probCapture[t] represents capture probability at time t.
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(1),
@@ -102,25 +102,25 @@ dCJSvv <- nimbleFunction(
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
     logProbData <- 0
-    if(len == 1) {  ## l==1 should not occur, but just in case:
-      return(logProbData)
+    if (len < 1) {  ## l<1 should not occur, but just in case:
+      return(0)
     }
-    for(t in 2:len) {
+    for (t in 1:len) {
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[1]
-      if(x[t] == 1) {
+      if (x[t] == 1) {
         ## ProbThisObs = P(x(t) | x(1)...x(t-1))
-        probThisObs <- probAlive * probCapture[i]
+        probThisObs <- probAlive * probCapture[t]
         probAliveGivenHistory <- 1
       } else {
-        probAliveNotSeen <- probAlive * (1-probCapture[i])
-        probThisObs <- probAliveNotSeen + (1-probAlive)
+        probAliveNotSeen <- probAlive * (1 - probCapture[t])
+        probThisObs <- probAliveNotSeen + (1 - probAlive)
         probAliveGivenHistory <- probAliveNotSeen / probThisObs
       }
       logProbData <- logProbData + log(probThisObs)
     }
-    if(log) return(logProbData)
+    if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
   }

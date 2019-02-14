@@ -3,7 +3,7 @@
 library(testthat)
 context("Testing dCJS-related functions.")
 
-test_that("dCJS_ss works",
+test_that("dCJSss works",
           {
             ## Uncompiled calculation
             x <- c(1, 0, 1, 0, 0)
@@ -62,16 +62,17 @@ test_that("dCJS_ss works",
 ## imputing values for an NA
 ## Having the entire capture history be NA (except for first)
 
-test_that("dCJS_vv works",
+test_that("dCJSvv works",
           {
             ## Uncompiled calculation
             x <- c(1, 0, 1, 0, 0)
             ## STOPPED HERE
             probSurvive <- c(0.6, 0.5, 0.4, 0.55, 0.65)
             probCapture <- c(0.4, 0.45, 0.5, 0.55, 0.6)
-            probX <- dCJSss(x, probSurvive, probCapture)
+            len <- 5
+            probX <- dCJSvv(x, probSurvive, probCapture, len)
             correctProbX <- probSurvive[1] * (1-probCapture[1]) *
-              probSurvive[2] * (probCapture) *
+              probSurvive[2] * (probCapture[2]) *
               (probSurvive^2 * (1-probCapture)^2 +
                  probSurvive * (1-probCapture) * (1-probSurvive) +
                  (1-probSurvive))
