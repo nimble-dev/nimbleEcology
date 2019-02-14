@@ -87,6 +87,8 @@ dCJSss <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dCJSvv
 dCJSvv <- nimbleFunction(
   # It is assumed that the individual has already been captured.
   # Therefore, the first entry in x represents the first possible recapture event.
@@ -128,21 +130,22 @@ dCJSvv <- nimbleFunction(
   }
 )
 
-rCJSvv <- nimbleFunction(
+#' @export
+#' @rdname rCJSss
+rCJSss <- nimbleFunction(
   run = function(n = integer(),
-                 probSurvive = double(1),
-                 probCapture = double(1),
+                 probSurvive = double(),
+                 probCapture = double(),
                  len = double(0, default = 0)) {
-    if(n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJSss only works for n = 1")
     ans <- numeric(len)
-    ans[1] <- 1
     alive <- 1
-    if(len <= 1) return(ans)
-    for(i in 2:len) {
-      if(alive)
-        alive <- rbinom(1, size = 1, prob = probSurvive[i])
-      if(alive) {
-        ans[i] <- rbinom(1, size = 1, prob = probCapture[i])
+    if (len <= 0) return(ans)
+    for (i in 1:len) {
+      if (alive)
+        alive <- rbinom(1, size = 1, prob = probSurvive)
+      if (alive) {
+        ans[i] <- rbinom(1, size = 1, prob = probCapture)
       } else {
         ans[i] <- 0
       }
@@ -153,22 +156,21 @@ rCJSvv <- nimbleFunction(
 )
 
 #' @export
-#' @rdname dCJSss
-rCJSss <- nimbleFunction(
+#' @rdname rCJSvv
+rCJSvv <- nimbleFunction(
   run = function(n = integer(),
-                 probSurvive = double(),
-                 probCapture = double(),
+                 probSurvive = double(1),
+                 probCapture = double(1),
                  len = double(0, default = 0)) {
-    if(n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJSss only works for n = 1")
     ans <- numeric(len)
-    ans[1] <- 1
     alive <- 1
-    if(len <= 1) return(ans)
-    for(i in 2:len) {
-      if(alive)
-        alive <- rbinom(1, size = 1, prob = probSurvive)
-      if(alive) {
-        ans[i] <- rbinom(1, size = 1, prob = probCapture)
+    if (len <= 0) return(ans)
+    for (i in 1:len) {
+      if (alive)
+        alive <- rbinom(1, size = 1, prob = probSurvive[i])
+      if (alive) {
+        ans[i] <- rbinom(1, size = 1, prob = probCapture[i])
       } else {
         ans[i] <- 0
       }
@@ -177,6 +179,9 @@ rCJSss <- nimbleFunction(
     returnType(double(1))
   }
 )
+
+
+
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel

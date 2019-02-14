@@ -33,7 +33,7 @@ test_that("dCJSss works",
 
           ## r function works
           set.seed(2468)
-          oneSim <- rCJSss(1, probSurvive, probCapture, len = 5)
+          oneSim <- rCJSss(1, probSurvive, probCapture, len = 4)
           expect_equal(oneSim, c(0, 1, 0, 0))
 
           ## Use in model
@@ -97,7 +97,7 @@ test_that("dCJSvv works",
             ## r function works
             set.seed(2468)
             oneSim <- rCJSvv(1, probSurvive, probCapture, len = 4)
-            expect_equal(oneSim, c(0, 1, 0, 0))
+            expect_equal(oneSim, c(1, 0, 0, 0))
 
             ## Use in model
             nc <- nimbleCode({
