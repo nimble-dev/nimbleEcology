@@ -2,6 +2,7 @@
 
 library(testthat)
 library(nimble)
+source("R/dCJS.R")
 context("Testing dCJS-related functions.")
 
 test_that("dCJSss works",
@@ -38,7 +39,7 @@ test_that("dCJSss works",
 
           ## Use in model
           nc <- nimbleCode({
-            x[1:4] ~ dCJSss(probSurvive, probCapture, len = 0)
+            x[1:4] ~ dCJSss(probSurvive, probCapture, len = 4)
             probSurvive ~ dunif(0,1)
             probCapture ~ dunif(0,1)
           })
@@ -101,7 +102,7 @@ test_that("dCJSvv works",
 
             ## Use in model
             nc <- nimbleCode({
-              x[1:4] ~ dCJSvv(probSurvive[1:4], probCapture[1:4], len = 0)
+              x[1:4] ~ dCJSvv(probSurvive[1:4], probCapture[1:4], len = 4)
               for (i in 1:4) {
                 probSurvive[i] ~ dunif(0,1)
                 probCapture[i] ~ dunif(0,1)

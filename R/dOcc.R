@@ -48,14 +48,14 @@
 #' @seealso For dynamic occupancy models, see \link{dDynOcc}.
 dOcc_s <- nimbleFunction(
   run = function(x = double(1),
-                 probOcc = double(0),
-                 probDetect = double(0),
+                 probOcc = double(),
+                 probDetect = double(),
                  log = logical(0, default = 0)) {
     returnType(double(0))
     logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
     prob_x_given_unoccupied <- sum(x) == 0
-    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1-probOcc)
-    if(log) return(log(prob_x))
+    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
+    if (log) return(log(prob_x))
     return(prob_x)
   }
 )
@@ -68,16 +68,16 @@ dOcc_v <- nimbleFunction(
     returnType(double(0))
     logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
     prob_x_given_unoccupied <- sum(x) == 0
-    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1-probOcc)
-    if(log) return(log(prob_x))
+    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
+    if (log) return(log(prob_x))
     return(prob_x)
   }
 )
 
 rOcc_s <- nimbleFunction(
   run = function(n = integer(),
-                 probOcc = double(0),
-                 probDetect = double(0)) {
+                 probOcc = double(),
+                 probDetect = double()) {
     returnType(double(1))
     k <- length(probDetect)
     z <- rbinom(1, prob = probOcc, size = 1)
@@ -93,7 +93,17 @@ rOcc_v <- nimbleFunction(
     returnType(double(1))
     k <- length(probDetect)
     z <- rbinom(1, prob = probOcc, size = 1)
-    if(z == 0) return(numeric(k))
+    if (z == 0) return(numeric(k))
     return(rbinom(k, prob = probDetect, size = 1))
   }
 )
+
+
+# registerDistributions(list(
+#   dOcc_s = list(
+#     BUGSdist = "dOcc_s(probOcc, probDetect)",
+#     Rdist = "dOcc_s(probOcc, probDetect)",
+#     discrete = TRUE,
+#     types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)'),
+#     pqAvail = FALSE))
+# )
