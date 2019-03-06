@@ -1,7 +1,7 @@
 #' Hidden Markov Model distribution for use in NIMBLE models
 #'
 #' \code{dHMM} and \code{dHMMo} provide hidden Markov model distributions for NIMBLE models.
-#' "Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
+#' "Dynamic" here means that the matrix of state transition probabilities is indexed by time.  The
 #' \code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
 #' Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 #' one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
@@ -16,7 +16,7 @@
 #' @param Z time-independent matrix of observation probabilities.
 #' Dimension of \code{Z} is (number of possible observation classes) x (number of possible system states)
 #' @param T time-independent matrix of system state-transition probabilities.
-#' Dimension of \code{T} is (number of possible system states) x  (number of possible system states)
+#' Dimension of \code{T} is (number of possible system states) x (number of possible system states)
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #'
@@ -59,23 +59,23 @@
 
 dHMM <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
-                 length = double(),## length of x (needed as a separate param for rDHMM)
                  init = double(1),##
                  Z = double(2),
                  T = double(2),
+                 len = double(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     pi <- init # State probabilities at time t=1
     logL <- 0
     nStates <- dim(Z)[1]
-    for(t in 1:length) {
-      if(x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+    for (t in 1:len) {
+      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
       Zpi <- Z[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if(t != length)   pi <- (T[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != len) pi <- (T[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
     }
     returnType(double())
-    if(log) return(logL)
+    if (log) return(logL)
     return(exp(logL))
   }
 )

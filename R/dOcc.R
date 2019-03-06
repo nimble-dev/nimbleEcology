@@ -46,10 +46,10 @@
 #'\code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability[1:T])}
 #'
 #' @seealso For dynamic occupancy models, see \link{dDynOcc}.
-dOcc_s <- nimbleFunction(
+dOcc_ss <- nimbleFunction(
   run = function(x = double(1),
-                 probOcc = double(),
-                 probDetect = double(),
+                 probOcc = double(0),
+                 probDetect = double(0),
                  log = logical(0, default = 0)) {
     returnType(double(0))
     logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
@@ -60,7 +60,7 @@ dOcc_s <- nimbleFunction(
   }
 )
 
-dOcc_v <- nimbleFunction(
+dOcc_sv <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
                  probDetect = double(1),
@@ -74,7 +74,39 @@ dOcc_v <- nimbleFunction(
   }
 )
 
-rOcc_s <- nimbleFunction(
+dOcc_vs <- nimbleFunction(
+  run = function(x = double(1),
+                 probOcc = double(1),
+                 probDetect = double(0),
+                 log = logical(0, default = 0)) {
+    returnType(double(0))
+    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
+    prob_x_given_unoccupied <- sum(x) == 0
+    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
+    if (log) return(log(prob_x))
+    return(prob_x)
+  }
+)
+
+
+dOcc_vv <- nimbleFunction(
+  run = function(x = double(1),
+                 probOcc = double(1),
+                 probDetect = double(1),
+                 log = logical(0, default = 0)) {
+    returnType(double(0))
+    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
+    prob_x_given_unoccupied <- sum(x) == 0
+    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
+    if (log) return(log(prob_x))
+    return(prob_x)
+  }
+)
+
+
+
+
+rOcc_ss <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(),
                  probDetect = double()) {
@@ -86,7 +118,31 @@ rOcc_s <- nimbleFunction(
   }
 )
 
-rOcc_v <- nimbleFunction(
+rOcc_sv <- nimbleFunction(
+  run = function(n = integer(),
+                 probOcc = double(0),
+                 probDetect = double(1)) {
+    returnType(double(1))
+    k <- length(probDetect)
+    z <- rbinom(1, prob = probOcc, size = 1)
+    if (z == 0) return(numeric(k))
+    return(rbinom(k, prob = probDetect, size = 1))
+  }
+)
+
+rOcc_vs <- nimbleFunction(
+  run = function(n = integer(),
+                 probOcc = double(0),
+                 probDetect = double(1)) {
+    returnType(double(1))
+    k <- length(probDetect)
+    z <- rbinom(1, prob = probOcc, size = 1)
+    if (z == 0) return(numeric(k))
+    return(rbinom(k, prob = probDetect, size = 1))
+  }
+)
+
+rOcc_vv <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
                  probDetect = double(1)) {
@@ -99,11 +155,29 @@ rOcc_v <- nimbleFunction(
 )
 
 
-# registerDistributions(list(
-#   dOcc_s = list(
-#     BUGSdist = "dOcc_s(probOcc, probDetect)",
-#     Rdist = "dOcc_s(probOcc, probDetect)",
-#     discrete = TRUE,
-#     types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)'),
-#     pqAvail = FALSE))
-# )
+registerDistributions(list(
+  dOcc_ss = list(
+    BUGSdist = "dOcc_ss(probOcc, probDetect)",
+    Rdist = "dOcc_ss(probOcc, probDetect)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)'),
+    pqAvail = FALSE),
+  dOcc_sv = list(
+    BUGSdist = "dOcc_sv(probOcc, probDetect)",
+    Rdist = "dOcc_sv(probOcc, probDetect)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)'),
+    pqAvail = FALSE),
+  dOcc_vs = list(
+    BUGSdist = "dOcc_vs(probOcc, probDetect)",
+    Rdist = "dOcc_vs(probOcc, probDetect)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(0)'),
+    pqAvail = FALSE),
+  dOcc_vv = list(
+    BUGSdist = "dOcc_vv(probOcc, probDetect)",
+    Rdist = "dOcc_vv(probOcc, probDetect)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(1)'),
+    pqAvail = FALSE)
+))

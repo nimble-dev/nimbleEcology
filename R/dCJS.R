@@ -83,9 +83,87 @@ dCJSss <- nimbleFunction(
     }
     if (log) return(logProbData)
     return(exp(logProbData))
+    returnType(double(0))
+  }
+)
+
+#' @export
+#' @rdname dCJSsv
+dCJSsv <- nimbleFunction(
+  run = function(x = double(1),    ## standard name for the "data"
+                 probSurvive = double(),
+                 probCapture = double(1),
+                 len = double(0, default = 0),
+                 log = integer(0, default = 0) ## required log argument
+  ) {
+    ## Note the calculations used here are actually in hidden Markov model form.
+    probAliveGivenHistory <- 1
+    ## logProbData will be the final answer
+    logProbData <- 0
+    lenX <- length(x)
+    if (lenX == 0) {  ## l < 1 should not occur, but just in case:
+      return(0)
+    }
+    for (t in 1:lenX) {
+      ## probAlive is P(Alive(t) | x(1)...x(t-1))
+      ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
+      probAlive <- probAliveGivenHistory * probSurvive
+      if (x[t] == 1) {
+        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+        probThisObs <- probAlive * probCapture[t]
+        probAliveGivenHistory <- 1
+      } else {
+        probAliveNotSeen <- probAlive * (1 - probCapture[t])
+        probThisObs <- probAliveNotSeen + (1 - probAlive)
+        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      }
+      logProbData <- logProbData + log(probThisObs)
+    }
+    if (log) return(logProbData)
+    return(exp(logProbData))
     returnType(double())
   }
 )
+
+
+#' @export
+#' @rdname dCJSvs
+dCJSvs <- nimbleFunction(
+  run = function(x = double(1),    ## standard name for the "data"
+                 probSurvive = double(1),
+                 probCapture = double(),
+                 len = double(0, default = 0),
+                 log = integer(0, default = 0) ## required log argument
+  ) {
+    ## Note the calculations used here are actually in hidden Markov model form.
+    probAliveGivenHistory <- 1
+    ## logProbData will be the final answer
+    logProbData <- 0
+    lenX <- length(x)
+    if (lenX == 0) {  ## l < 1 should not occur, but just in case:
+      return(0)
+    }
+    for (t in 1:lenX) {
+      ## probAlive is P(Alive(t) | x(1)...x(t-1))
+      ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
+      probAlive <- probAliveGivenHistory * probSurvive[t]
+      if (x[t] == 1) {
+        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+        probThisObs <- probAlive * probCapture
+        probAliveGivenHistory <- 1
+      } else {
+        probAliveNotSeen <- probAlive * (1 - probCapture)
+        probThisObs <- probAliveNotSeen + (1 - probAlive)
+        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      }
+      logProbData <- logProbData + log(probThisObs)
+    }
+    if (log) return(logProbData)
+    return(exp(logProbData))
+    returnType(double())
+  }
+)
+
 
 #' @export
 #' @rdname dCJSvv
@@ -155,6 +233,52 @@ rCJSss <- nimbleFunction(
   }
 )
 
+rCJSsv <- nimbleFunction(
+  run = function(n = integer(),
+                 probSurvive = double(0),
+                 probCapture = double(1),
+                 len = double(0, default = 0)) {
+    if (n != 1) stop("rCJSss only works for n = 1")
+    ans <- numeric(len)
+    alive <- 1
+    if (len <= 0) return(ans)
+    for (i in 1:len) {
+      if (alive)
+        alive <- rbinom(1, size = 1, prob = probSurvive)
+      if (alive) {
+        ans[i] <- rbinom(1, size = 1, prob = probCapture[i])
+      } else {
+        ans[i] <- 0
+      }
+    }
+    return(ans)
+    returnType(double(1))
+  }
+)
+
+rCJSvs <- nimbleFunction(
+  run = function(n = integer(),
+                 probSurvive = double(1),
+                 probCapture = double(0),
+                 len = double(0, default = 0)) {
+    if (n != 1) stop("rCJSss only works for n = 1")
+    ans <- numeric(len)
+    alive <- 1
+    if (len <= 0) return(ans)
+    for (i in 1:len) {
+      if (alive)
+        alive <- rbinom(1, size = 1, prob = probSurvive[i])
+      if (alive) {
+        ans[i] <- rbinom(1, size = 1, prob = probCapture)
+      } else {
+        ans[i] <- 0
+      }
+    }
+    return(ans)
+    returnType(double(1))
+  }
+)
+
 #' @export
 #' @rdname rCJSvv
 rCJSvv <- nimbleFunction(
@@ -192,6 +316,24 @@ registerDistributions(list(
     Rdist = "dCJSss(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(0)', 'len = double(0)'),
+    pqAvail = FALSE))
+  )
+
+registerDistributions(list(
+  dCJSsv = list(
+    BUGSdist = "dCJSsv(probSurvive, probCapture, len)",
+    Rdist = "dCJSsv(probSurvive, probCapture, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(1)', 'len = double(0)'),
+    pqAvail = FALSE))
+  )
+
+registerDistributions(list(
+  dCJSvs = list(
+    BUGSdist = "dCJSvs(probSurvive, probCapture, len)",
+    Rdist = "dCJSvs(probSurvive, probCapture, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(0)', 'len = double(0)'),
     pqAvail = FALSE))
   )
 
