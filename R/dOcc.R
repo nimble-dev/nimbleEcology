@@ -50,7 +50,9 @@ dOcc_ss <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
                  probDetect = double(0),
+                 len = integer(0, default = 0),
                  log = logical(0, default = 0)) {
+    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
     returnType(double(0))
     logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
     prob_x_given_unoccupied <- sum(x) == 0
@@ -64,7 +66,10 @@ dOcc_sv <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
                  probDetect = double(1),
+                 len = integer(0, default = 0),
                  log = logical(0, default = 0)) {
+    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
+    if (length(x) != length(probDetect)) stop("Length of data does not match length of detection vector.")
     returnType(double(0))
     logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
     prob_x_given_unoccupied <- sum(x) == 0
@@ -78,42 +83,52 @@ dOcc_vs <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(1),
                  probDetect = double(0),
+                 len = integer(0, default = 0),
                  log = logical(0, default = 0)) {
+    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
+    if (length(x) != length(probOcc)) stop("Length of data does not match length of occupancy vector.")
+
     returnType(double(0))
-    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
-    prob_x_given_unoccupied <- sum(x) == 0
-    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
-    if (log) return(log(prob_x))
-    return(prob_x)
+    prob_x_given_occupied <- dbinom(x, prob = probDetect, size = 1, log = FALSE)
+    prob_x_given_unoccupied <- x == 0
+    log_prob_x <- sum(log(prob_x_given_occupied * probOcc + prob_x_given_unoccupied * (1 - probOcc)))
+
+    if (log) return(log_prob_x)
+    return(exp(log_prob_x))
   }
 )
-
 
 dOcc_vv <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(1),
                  probDetect = double(1),
+                 len = integer(0, default = 0),
                  log = logical(0, default = 0)) {
+    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
+    if (length(x) != length(probOcc)) stop("Length of data does not match length of occupancy vector.")
+    if (length(x) != length(probDetect)) stop("Length of data does not match length of detection vector.")
+
     returnType(double(0))
-    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
-    prob_x_given_unoccupied <- sum(x) == 0
-    prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
-    if (log) return(log(prob_x))
-    return(prob_x)
+    prob_x_given_occupied <- dbinom(x, prob = probDetect, size = 1, log = FALSE)
+    prob_x_given_unoccupied <- x == 0
+    log_prob_x <- sum(log(prob_x_given_occupied * probOcc + prob_x_given_unoccupied * (1 - probOcc)))
+    if (log) return(log_prob_x)
+    return(exp(log_prob_x))
   }
 )
 
 
 
-
 rOcc_ss <- nimbleFunction(
   run = function(n = integer(),
-                 probOcc = double(),
-                 probDetect = double()) {
+                 probOcc = double(0),
+                 probDetect = double(0),
+                 len = integer(0, default = 0)) {
+    if (len == 0) stop("Argument 'len' must be specified in rOcc_ss form.")
     returnType(double(1))
-    k <- length(probDetect)
+    k <- len
     z <- rbinom(1, prob = probOcc, size = 1)
-    if(z == 0) return(numeric(k))
+    if (z == 0) return(numeric(k))
     return(rbinom(k, prob = probDetect, size = 1))
   }
 )
@@ -121,7 +136,11 @@ rOcc_ss <- nimbleFunction(
 rOcc_sv <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
-                 probDetect = double(1)) {
+                 probDetect = double(1),
+                 len = integer(0, default = 0)) {
+    if (len != length(probDetect)) {
+      stop("If specified, argument 'len' must match length of probDetect.")
+    }
     returnType(double(1))
     k <- length(probDetect)
     z <- rbinom(1, prob = probOcc, size = 1)
@@ -131,53 +150,67 @@ rOcc_sv <- nimbleFunction(
 )
 
 rOcc_vs <- nimbleFunction(
-  run = function(n = integer(),
-                 probOcc = double(0),
-                 probDetect = double(1)) {
+  run = function(n = integer(0),
+                 probOcc = double(1),
+                 probDetect = double(0),
+                 len = integer(0, default = 0)) {
+    if (len != length(probOcc)) {
+      stop("If specified, argument 'len' must match length of probOcc")
+    }
     returnType(double(1))
-    k <- length(probDetect)
-    z <- rbinom(1, prob = probOcc, size = 1)
-    if (z == 0) return(numeric(k))
-    return(rbinom(k, prob = probDetect, size = 1))
+    k <- length(probOcc)
+    z <- rbinom(k, prob = probOcc, size = 1)
+    return(rbinom(k, prob = probDetect, size = 1) * z)
   }
 )
 
 rOcc_vv <- nimbleFunction(
   run = function(n = integer(),
-                 probOcc = double(0),
-                 probDetect = double(1)) {
+                 probOcc = double(1),
+                 probDetect = double(1),
+                 len = integer(0, default = 0)) {
+    if (length(probDetect) != length(probOcc)) {
+      stop("Occupancy and detection vectors are of different lengths.")
+    }
+    if (len != length(probDetect)) {
+      stop("If specified, argument 'len' must match length of probDetect and probOcc.")
+    }
     returnType(double(1))
     k <- length(probDetect)
-    z <- rbinom(1, prob = probOcc, size = 1)
-    if (z == 0) return(numeric(k))
-    return(rbinom(k, prob = probDetect, size = 1))
+    z <- rbinom(k, prob = probOcc, size = 1)
+    return(rbinom(k, prob = probDetect, size = 1) * z)
   }
 )
 
 
 registerDistributions(list(
   dOcc_ss = list(
-    BUGSdist = "dOcc_ss(probOcc, probDetect)",
-    Rdist = "dOcc_ss(probOcc, probDetect)",
+    BUGSdist = "dOcc_ss(probOcc, probDetect, len)",
+    Rdist = "dOcc_ss(probOcc, probDetect, len)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)'),
-    pqAvail = FALSE),
+    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)', 'len = integer(0)'),
+    pqAvail = FALSE)))
+
+registerDistributions(list(
   dOcc_sv = list(
-    BUGSdist = "dOcc_sv(probOcc, probDetect)",
-    Rdist = "dOcc_sv(probOcc, probDetect)",
+    BUGSdist = "dOcc_sv(probOcc, probDetect, len)",
+    Rdist = "dOcc_sv(probOcc, probDetect, len)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)'),
-    pqAvail = FALSE),
+    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)', 'len = integer(0)'),
+    pqAvail = FALSE)))
+
+registerDistributions(list(
   dOcc_vs = list(
-    BUGSdist = "dOcc_vs(probOcc, probDetect)",
-    Rdist = "dOcc_vs(probOcc, probDetect)",
+    BUGSdist = "dOcc_vs(probOcc, probDetect, len)",
+    Rdist = "dOcc_vs(probOcc, probDetect, len)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(0)'),
-    pqAvail = FALSE),
+    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(0)', 'len = integer(0)'),
+    pqAvail = FALSE)))
+
+registerDistributions(list(
   dOcc_vv = list(
-    BUGSdist = "dOcc_vv(probOcc, probDetect)",
-    Rdist = "dOcc_vv(probOcc, probDetect)",
+    BUGSdist = "dOcc_vv(probOcc, probDetect, len)",
+    Rdist = "dOcc_vv(probOcc, probDetect, len)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(1)'),
-    pqAvail = FALSE)
-))
+    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(1)', 'len = integer(0)'),
+    pqAvail = FALSE)))
