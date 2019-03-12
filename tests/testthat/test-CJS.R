@@ -341,3 +341,79 @@ test_that("dCJSvv works",
       # Did the imputed values come back?
           expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
   })
+
+test_that("dCJS errors", {
+
+### Uncompiled errors
+# dCJSss error checks
+  expect_error(
+    dCJSss(x = c(0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
+  )
+
+# dCJSsv error checks
+  expect_error(
+    dCJSsv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 5)
+  )
+  expect_error(
+    dCJSsv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
+  )
+
+# dCJSvs error checks
+  expect_error(
+    dCJSsv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 5)
+  )
+  expect_error(
+    dCJSsv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4), probSurvive = 0.8)
+  )
+
+# dCJSvv error checks
+  expect_error(
+    dCJSvv(x = c(0,1,0,0), probCapture = c(0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
+  )
+  expect_error(
+    dCJSvv(x = c(0,1,0,0), probCapture = c(0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
+  )
+  expect_error(
+    dCJSvv(x = c(0,1,0,0), probCapture = c(0,1,0,0),
+            probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
+  )
+
+### Compiled errors
+  CdCJSss <- compileNimble(dCJSss)
+  CdCJSsv <- compileNimble(dCJSsv)
+  CdCJSvs <- compileNimble(dCJSvs)
+  CdCJSvv <- compileNimble(dCJSvv)
+
+  expect_error(
+    CdCJSss(x = c(0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
+  )
+
+# dCJSsv error checks
+  expect_error(
+    CdCJSsv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 5)
+  )
+  expect_error(
+    CdCJSsv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
+  )
+
+# dCJSvs error checks
+  expect_error(
+    CdCJSsv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 5)
+  )
+  expect_error(
+    CdCJSsv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4), probSurvive = 0.8)
+  )
+
+# dCJSvv error checks
+  expect_error(
+    CdCJSvv(x = c(0,1,0,0), probCapture = c(0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
+  )
+  expect_error(
+    CdCJSvv(x = c(0,1,0,0), probCapture = c(0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
+  )
+  expect_error(
+    CdCJSvv(x = c(0,1,0,0), probCapture = c(0,1,0,0),
+            probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
+  )
+})
+
