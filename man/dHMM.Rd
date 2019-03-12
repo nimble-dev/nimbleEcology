@@ -7,7 +7,7 @@
 \alias{rHMMo}
 \title{Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
-dHMM(x, length, init, Z, T, log = 0)
+dHMM(x, init, Z, T, len, log = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
@@ -18,15 +18,15 @@ dHMM(x, length, init, Z, T, log = 0)
 Dimension of \code{Z} is (number of possible observation classes) x (number of possible system states)}
 
 \item{T}{time-independent matrix of system state-transition probabilities.
-Dimension of \code{T} is (number of possible system states) x  (number of possible system states)}
-
-\item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
+Dimension of \code{T} is (number of possible system states) x (number of possible system states)}
 
 \item{len}{length of observations (needed for rDHMM)}
+
+\item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 }
 \description{
 \code{dHMM} and \code{dHMMo} provide hidden Markov model distributions for NIMBLE models.
-"Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
+"Dynamic" here means that the matrix of state transition probabilities is indexed by time.  The
 \code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
 Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE

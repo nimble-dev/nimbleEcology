@@ -1,18 +1,21 @@
 #' Cormack-Jolly-Seber distribution for use in NIMBLE models
 #'
-#' \code{dCJSss} and \code{dCJSvv} provide a basic distribution for capture history vectors based
-#'  on survival and capture probabilities.  The different names are for scalar ("s", time-independent)
-#'  versus vector ("v", time-dependent) survival and capture probabilities.
+#' \code{dCJS**} functions provide a basic distribution for capture history vectors based
+#'  on survival and capture probabilities. The different aliases are for scalar ("s", time-independent)
+#'  versus vector ("v", time-dependent) survival and capture probabilities, in that order.
 #'
-#' @aliases dCJSvv rCJSss rCJSvv dCJS
+#' @aliases dCJSss dCJSsv dCJSvs dCJSvv rCJSss rCJSsv rCJSvs rCJSvv
+#'
+#' @name dCJS
 #'
 #' @export
 #'
-#' @param x capture-history vector of 0s (not captured) and 1s (captured). This series is implicitly preceded by a 1.
-#' @param probSurvive survival probability, either a scalar (for dCJSss) or a vector (for dCJSvv).
-#' @param probCapture capture probability, either a scalar (for dCJSss) or a vector (for dCJSvv).
-#' @param l length of capture history (needed for rCJSxx).
+#' @param x capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed.
+#' @param probSurvive survival probability, either a scalar (for dCJSs*) or a vector (for dCJSv*).
+#' @param probCapture capture probability, either a scalar (for dCJS*s) or a vector (for dCJS*v).
+#' @param len length of capture history (needed for rCJSxx).
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#' @param n
 #'
 #' @author Perry de Valpine and Daniel Turek
 #'
@@ -51,6 +54,13 @@
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
 #' @seealso For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
+#' @name dCJS
+NULL
+#> NULL
+
+
+#' @export
+#' @rdname dCJS
 dCJSss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
@@ -58,6 +68,11 @@ dCJSss <- nimbleFunction(
                  len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
+
+    if (len != 0) {
+      if (len != length(x)) stop("Argument len must match length of data, or be 0.")
+    }
+
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -88,7 +103,7 @@ dCJSss <- nimbleFunction(
 )
 
 #' @export
-#' @rdname dCJSsv
+#' @rdname dCJS
 dCJSsv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
@@ -96,6 +111,11 @@ dCJSsv <- nimbleFunction(
                  len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
+    if (len != 0) {
+      if (len != length(x)) stop("Argument len must match length of data, or be 0.")
+    }
+    if (length(x) != length(probCapture)) stop("Length of data does not match length of capture vector.")
+
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -127,7 +147,7 @@ dCJSsv <- nimbleFunction(
 
 
 #' @export
-#' @rdname dCJSvs
+#' @rdname dCJS
 dCJSvs <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
@@ -135,6 +155,12 @@ dCJSvs <- nimbleFunction(
                  len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
+    if (len != 0) {
+      if (len != length(x)) stop("Argument len must match length of data, or be 0.")
+    }
+    if (length(x) != length(probSurvive)) stop("Length of data does not match length of survival vector.")
+
+
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -166,7 +192,7 @@ dCJSvs <- nimbleFunction(
 
 
 #' @export
-#' @rdname dCJSvv
+#' @rdname dCJS
 dCJSvv <- nimbleFunction(
   # It is assumed that the individual has already been captured.
   # Therefore, the first entry in x represents the first possible recapture event.
@@ -178,6 +204,11 @@ dCJSvv <- nimbleFunction(
                  len = double(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
+    if (len != 0) {
+      if (len != length(x)) stop("Argument len must match length of data, or be 0.")
+    }
+    if (length(x) != length(probSurvive)) stop("Length of data does not match length of survival vector.")
+    if (length(x) != length(probCapture)) stop("Length of data does not match length of capture vector.")
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -209,13 +240,13 @@ dCJSvv <- nimbleFunction(
 )
 
 #' @export
-#' @rdname rCJSss
+#' @rdname dCJS
 rCJSss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(),
                  len = double(0, default = 0)) {
-    if (n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJS only works for n = 1")
     ans <- numeric(len)
     alive <- 1
     if (len <= 0) return(ans)
@@ -233,12 +264,14 @@ rCJSss <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dCJS
 rCJSsv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(0),
                  probCapture = double(1),
                  len = double(0, default = 0)) {
-    if (n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJS only works for n = 1")
     ans <- numeric(len)
     alive <- 1
     if (len <= 0) return(ans)
@@ -256,12 +289,14 @@ rCJSsv <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dCJS
 rCJSvs <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(0),
                  len = double(0, default = 0)) {
-    if (n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJS only works for n = 1")
     ans <- numeric(len)
     alive <- 1
     if (len <= 0) return(ans)
@@ -280,13 +315,13 @@ rCJSvs <- nimbleFunction(
 )
 
 #' @export
-#' @rdname rCJSvv
+#' @rdname dCJS
 rCJSvv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(1),
                  len = double(0, default = 0)) {
-    if (n != 1) stop("rCJSss only works for n = 1")
+    if (n != 1) stop("rCJS only works for n = 1")
     ans <- numeric(len)
     alive <- 1
     if (len <= 0) return(ans)
