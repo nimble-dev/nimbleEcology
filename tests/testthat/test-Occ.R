@@ -173,23 +173,23 @@ test_that("dOcc_vv works",
 
     expect_equal(probX, correctProbX)
 
-    lProbX <- dOcc_vs(x, probOcc, probDetect, log = TRUE)
+    lProbX <- dOcc_vv(x, probOcc, probDetect, log = TRUE)
     lCorrectProbX <- log(correctProbX)
     expect_equal(lProbX, lCorrectProbX)
 
-    CdOcc_v <- compileNimble(dOcc_v)
-    CprobX <- CdOcc_v(x, probOcc, probDetect)
+    CdOcc_vv <- compileNimble(dOcc_vv)
+    CprobX <- CdOcc_vv(x, probOcc, probDetect)
     expect_equal(CprobX, probX)
 
-    ClProbX <- CdOcc_v(x, probOcc, probDetect, log = TRUE)
+    ClProbX <- CdOcc_vv(x, probOcc, probDetect, log = TRUE)
     expect_equal(ClProbX, lProbX)
 
     nc <- nimbleCode({
-      x[1:5] ~ dOcc_v(probOcc, probDetect[1:5], len = 5)
+      x[1:5] ~ dOcc_vv(probOcc[1:5], probDetect[1:5], len = 5)
       for (i in 1:5) {
         probDetect[i] ~ dunif(0,1)
+        probOcc[i] ~ dunif(0,1)
       }
-      probOcc ~ dunif(0,1)
     })
     m <- nimbleModel(nc, data = list(x = x),
                      inits = list(probOcc = probOcc,
@@ -211,6 +211,78 @@ test_that("dOcc_vv works",
 
 
 test_that("Checking errors", {
+### Uncompiled errors
+# dOcc_ss error checks
+  expect_error(
+    dOcc_ss(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
+  )
+
+# dOcc_sv error checks
+  expect_error(
+    dOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4, 0.4), len = 5)
+  )
+  expect_error(
+    dOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4))
+  )
+
+# dOcc_vs error checks
+  expect_error(
+    dOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4, 0.4), probDetect = 0.1, len = 5)
+  )
+  expect_error(
+    dOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4), probDetect = 0.8)
+  )
+
+# dOcc_vv error checks
+  expect_error(
+    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0.3,0.3), probDetect = c(0.9, 0.9))
+  )
+  expect_error(
+    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1), probDetect = c(0.9, 0.9, 0.1, 0.1))
+  )
+  expect_error(
+    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0,0),
+            probDetect = c(0.9, 0.9, 0.1, 0.1), len = 2)
+  )
+
+### Compiled errors
+  CdOcc_ss <- compileNimble(dOcc_ss)
+  CdOcc_sv <- compileNimble(dOcc_sv)
+  CdOcc_vs <- compileNimble(dOcc_vs)
+  CdOcc_vv <- compileNimble(dOcc_vv)
+
+  expect_error(
+    CdOcc_ss(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
+  )
+
+# dOcc_sv error checks
+  expect_error(
+    CdOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4, 0.4), len = 5)
+  )
+  expect_error(
+    CdOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4))
+  )
+
+# dOcc_vs error checks
+  expect_error(
+    CdOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4, 0.4), probDetect = 0.1, len = 5)
+  )
+  expect_error(
+    CdOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4), probDetect = 0.8)
+  )
+
+# dOcc_vv error checks
+  expect_error(
+    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0.3,0.3), probDetect = c(0.9, 0.9))
+  )
+  expect_error(
+    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1), probDetect = c(0.9, 0.9, 0.1, 0.1))
+  )
+  expect_error(
+    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0,0),
+            probDetect = c(0.9, 0.9, 0.1, 0.1), len = 2)
+  )
+
 
 })
 
