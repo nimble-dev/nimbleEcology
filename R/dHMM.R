@@ -2,7 +2,7 @@
 #'
 #' \code{dHMM} and \code{dHMMo} provide hidden Markov model distributions for NIMBLE models.
 #' "Dynamic" here means that the matrix of state transition probabilities is indexed by time.  The
-#' \code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
+#' \code{dHMMo} version additionally allows observation probabilities to be indexed by time.
 #' Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 #' one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
 #' model code.
@@ -62,8 +62,12 @@ dHMM <- nimbleFunction(
                  init = double(1),##
                  Z = double(2),
                  T = double(2),
-                 len = double(),## length of x (needed as a separate param for rDHMM)
+                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
+    if (length(x) != len) stop("Argument len must be length of x or 0.")
+    if (length(Z[1,]) != length(T[1,])) stop("Number of cols in Z must equal number of cols in T.")
+    if (length(T[,1]) != length(T[1,])) stop("T must be a square matrix.")
+
     pi <- init # State probabilities at time t=1
     logL <- 0
     nStates <- dim(Z)[1]

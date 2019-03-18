@@ -101,5 +101,53 @@ test_that("dHMM works", {
 
 })
 
+test_that("dHMM errors where expected", {
+
+# Start with good stuff and break it one by one
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  Z <- t(matrix(
+         c(1, 0.2, 1,
+           0, 0.8, 0),
+         nrow = length(init)))
+
+  Tt <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3,
+            0, 0, 1),
+          ncol = length(init)))
+  badT <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+  badZ <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+
+
+
+
+
+  probX <- expect_error(
+              dHMM(x = x, init = init,
+                   Z = Z, T = Tt,
+                   len = 4, log = F))
+  probX <- expect_error(
+              dHMM(x = x, init = init,
+                   Z = Z, T = badT,
+                   len = len, log = F))
+  probX <- expect_error(
+              dHMM(x = x, init = init,
+                   Z = badZ, T = Tt,
+                   len = len, log = F))
+
+
+
+
+})
+
 
 
