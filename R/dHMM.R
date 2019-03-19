@@ -67,6 +67,7 @@ dHMM <- nimbleFunction(
     if (length(x) != len) stop("Argument len must be length of x or 0.")
     if (length(Z[1,]) != length(T[1,])) stop("Number of cols in Z must equal number of cols in T.")
     if (length(T[,1]) != length(T[1,])) stop("T must be a square matrix.")
+    if (sum(init) != 0)
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -83,3 +84,91 @@ dHMM <- nimbleFunction(
     return(exp(logL))
   }
 )
+
+
+
+dHMMo <- nimbleFunction(
+  run = function(x = double(1),    ## Observed capture (state) history
+                 init = double(1),##
+                 Z = double(3),
+                 T = double(2),
+                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 log = integer(0, default = 0)) {
+    if (length(x) != len) stop("Argument len must be length of x or 0.")
+    if (length(Z[1,,1]) != length(T[1,])) stop("Number of cols in Z must equal number of cols in T.")
+    if (length(T[,1]) != length(T[1,])) stop("T must be a square matrix.")
+    if (length(Z[1,1,]) != len) stop("Length of time dimension of Z must match length of data.")
+
+    pi <- init # State probabilities at time t=1
+    logL <- 0
+    nStates <- dim(Z)[1]
+    for (t in 1:len) {
+      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+      Zpi <- Z[x[t],,t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
+      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
+      if (t != len) pi <- (T[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+    }
+    returnType(double())
+    if (log) return(logL)
+    return(exp(logL))
+  }
+)
+
+rHMM <- nimbleFunction(
+  run = function(n = integer(),    ## Observed capture (state) history
+                 init = double(1),
+                 Z = double(2),
+                 T = double(2),
+                 len = double(0, default = 0)) {
+  returnType(double(1))
+  ans <- numeric(len)
+
+  probInit <- init
+  trueInit <- 0
+
+  r <- runif(1, 0, 1)
+  j <- 1
+  while (r > sum(probInit[1:j])) j <- j + 1
+  trueInit <- j
+
+  trueState <- trueInit
+  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
+  for (i in 1:len) {
+    # Transition to a new true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(T[trueState, 1:j])) j <- j + 1
+    trueState <- j
+
+    # Detect based on the true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(Z[1:j, trueState])) j <- j + 1
+    ans[i] <- j
+
+  }
+
+  return(ans)
+})
+
+
+
+registerDistributions(list(
+  dHMM = list(
+    BUGSdist = "dHMM(init, Z, T, len)",
+    Rdist = "dHMM(init, Z, T, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'init = double(1)', 'Z = double(2)', 'T = double(2)', 'len = double(0)'),
+    pqAvail = FALSE))
+  )
+
+registerDistributions(list(
+  dHMMo = list(
+    BUGSdist = "dHMMo(init, Z, T, len)",
+    Rdist = "dHMMo(init, Z, T, len = 0)",
+    discrete = TRUE,
+    types = c('value = double(1)', 'init = double(1)', 'Z = double(3)', 'T = double(2)', 'len = double(0)'),
+    pqAvail = FALSE))
+  )
+
