@@ -8,6 +8,12 @@
 \title{Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
 dHMM(x, init, Z, T, len = 0, log = 0)
+
+dHMMo(x, init, Z, T, len = 0, log = 0)
+
+rHMM(n, init, Z, T, len = 0)
+
+rHMMo(n, init, Z, T, len = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
@@ -71,5 +77,5 @@ For dynamic hidden Markov models with time-dependent transitions, see \link{dDHM
 For simple capture-recapture, see \link{dCJS}.
 }
 \author{
-Perry de Valpine and Daniel Turek
+Ben Goldstein, Perry de Valpine, and Daniel Turek
 }

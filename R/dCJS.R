@@ -17,7 +17,7 @@
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #' @param n
 #'
-#' @author Perry de Valpine and Daniel Turek
+#' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'
 #' @details These nimbleFunctions provide distributions that can be used in code (via \code{nimbleCode}) for \link{nimbleModel}.
 #'

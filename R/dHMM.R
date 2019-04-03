@@ -9,6 +9,8 @@
 #'
 #' @aliases dHMM dHMMo rHMM rHMMo
 #'
+#' @name dHMM
+#'
 #' @export
 #'
 #' @param x vector of observation classes, one of which could be defined as "not observed".
@@ -20,7 +22,7 @@
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #'
-#' @author Perry de Valpine and Daniel Turek
+#' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
@@ -57,6 +59,8 @@
 #' @seealso For dynamic hidden Markov models with time-dependent transitions, see \link{dDHMM} and \link{dDHMMo}.
 #' For simple capture-recapture, see \link{dCJS}.
 
+#' @export
+#' @rdname dHMM
 dHMM <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
                  init = double(1),##
@@ -85,8 +89,8 @@ dHMM <- nimbleFunction(
   }
 )
 
-
-
+#' @export
+#' @rdname dHMM
 dHMMo <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
                  init = double(1),##
@@ -119,6 +123,8 @@ dHMMo <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dHMM
 rHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1),
@@ -156,6 +162,8 @@ rHMM <- nimbleFunction(
   return(ans)
 })
 
+#' @export
+#' @rdname dHMM
 rHMMo <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1),

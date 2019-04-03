@@ -86,5 +86,5 @@ Carlo sampling for hierarchical hidden Markov models. Environmental and Ecologic
 For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
 }
 \author{
-Perry de Valpine and Daniel Turek
+Ben Goldstein, Perry de Valpine, and Daniel Turek
 }
