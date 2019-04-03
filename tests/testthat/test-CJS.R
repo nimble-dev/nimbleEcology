@@ -157,8 +157,6 @@ test_that("dCJSsv works",
           expect_equal(cm$x, c(0, 1, 0, 0))
 
       # Test imputing value for all NAs
-# TODO: how do I do this for only a few NAs? The problem is right now all of x
-# is a single node (which might be necessary since they're not independent?)
           xNA <- c(NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
