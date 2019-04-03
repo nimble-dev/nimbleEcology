@@ -9,7 +9,9 @@
 #' one to directly sum over the discrete latent state and calculate the probability of
 #' all observations from one site jointly.
 #'
-#' @aliases dOcc rOcc rOcc_s dOcc_v rOcc_v
+#' @aliases dOcc_ss dOcc_sv dOcc_vs dOcc_vv rOcc_ss rOcc_sv rOcc_vs rOcc_vv
+#'
+#' @name dOcc
 #'
 #' @export
 #'
@@ -19,7 +21,7 @@
 #' @param l length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
 #' @param log TRUE (return log probability) or FALSE (return probability)
 #'
-#' @author Perry de Valpine
+#' @author Ben Goldstein and Perry de Valpine
 #'
 #' @details These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
 #' for \link{nimbleModel}.
@@ -46,6 +48,9 @@
 #'\code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability[1:T])}
 #'
 #' @seealso For dynamic occupancy models, see \link{dDynOcc}.
+
+#' @export
+#' @rdname dOcc
 dOcc_ss <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
@@ -62,6 +67,8 @@ dOcc_ss <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 dOcc_sv <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
@@ -79,6 +86,8 @@ dOcc_sv <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 dOcc_vs <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(1),
@@ -98,6 +107,8 @@ dOcc_vs <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 dOcc_vv <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(1),
@@ -117,8 +128,8 @@ dOcc_vv <- nimbleFunction(
   }
 )
 
-
-
+#' @export
+#' @rdname dOcc
 rOcc_ss <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
@@ -133,6 +144,8 @@ rOcc_ss <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 rOcc_sv <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
@@ -149,6 +162,8 @@ rOcc_sv <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 rOcc_vs <- nimbleFunction(
   run = function(n = integer(0),
                  probOcc = double(1),
@@ -164,6 +179,8 @@ rOcc_vs <- nimbleFunction(
   }
 )
 
+#' @export
+#' @rdname dOcc
 rOcc_vv <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(1),
