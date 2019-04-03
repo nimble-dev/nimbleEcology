@@ -12,33 +12,25 @@ source("R/dHMM.R")
 context("Testing dHMM-related functions.")
 
 # -----------------------------------------------------------------------------
-# 1. Test dHMM
+# 1. Test dHMM, distribution for Hidden Markov Model
 test_that("dHMM works", {
-  # Let's do a very simple example with seeds.
-  # Seeds have 3 true states (s = 3):
-  #     1. Alive but not sprouted
-  #     2. Sprouted (visible as plant)
-  #     3. Dead
-  # but only 2 possible observational states (o = 2):
-  #     1. Not sprouted
-  #     2. Sprouted
-  # (this example is going to be a bit silly because I don't think
-  # capture/recapture makes sense for plants)
 
-  # len == length(x) = t
+  # len: length of the data
   len <- 5
+  # Two different data samples
   x1 <- c(1, 1, 1, 2, 1)
   x2 <- c(1, 1, 1, 1, 1)
-  # length(init) == s
+  # length(init) == s and sum(init) == 1; initial state probabilities
   init <- c(0.4, 0.2, 0.4)
 
-  # Z is observation probabilities, dim o x s where o is possible system states
-  # (domain of x). Z says, for each true system state (row), what is the
-  # corresponding probability of observing each response (col).
+  # Z is observation probabilities, dim o x s where o is possible observation
+  # states (domain of x) and s is possible true states. Z says, for each true
+  # system state (row), what is the corresponding probability of observing each
+  # response (col)
   Z <- t(array(
          c(1, 0.2, 1,
            0, 0.8, 0),
-         c(3, 2))) # I'm doing the transpose to specify by rows, but remember that nxxx is backwards
+         c(3, 2)))
 
   # Tt is transition probabilities, s x s.
   Tt <- t(array(
@@ -47,7 +39,7 @@ test_that("dHMM works", {
             0, 0, 1),
           c(3,3)))
 
-
+  # Calculate probabilities by hand
   correctProbX1 <- 1
   correctProbX2 <- 1
   pi1 <- init
@@ -66,7 +58,7 @@ test_that("dHMM works", {
     pi2 <- (Tt[,] %*% asCol(stateprob2) / sumZ2)[ ,1]
   }
 
-
+  # Calculate probabilities of x1 and x2 using dHMM
   probX1 <- dHMM(x = x1, init = init,
                  Z = Z, T = Tt,
                  len = len, log = F)
@@ -74,9 +66,11 @@ test_that("dHMM works", {
                  Z = Z, T = Tt,
                  len = len, log = F)
 
+  # Compare hand-calculated and function-calculated
   expect_equal(probX1, correctProbX1)
   expect_equal(probX2, correctProbX2)
 
+  # Repeat for log prob
   lProbX1 <- dHMM(x = x1, init = init,
                   Z = Z, T = Tt,
                   len = len, log = T)
@@ -87,7 +81,7 @@ test_that("dHMM works", {
   expect_equal(lProbX1, log(correctProbX1))
   expect_equal(lProbX2, log(correctProbX2))
 
-
+  # Repeat for the compiled function
   CdHMM <- compileNimble(dHMM)
   CprobX1 <- CdHMM(x = x1, init = init,
                    Z = Z, T = Tt,
@@ -100,48 +94,67 @@ test_that("dHMM works", {
   expect_equal(ClProbX1, lProbX1)
 
 
-  ## r function works
+  # Check if the random generator rHMM works
+  # These values aren't necessarily true, but this will break if the function
+  # is changed and needs to be re-tested
   set.seed(1234)
   oneSim <- rHMM(1, init, Z, Tt, len = 5)
   expect_equal(oneSim, c(2, 2, 1, 2, 2))
 
-  ## Use in model
+  # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
-    # x[1:4] ~ dCJSvv(probSurvive[1:4], probCapture[1:4], len = 4)
-    # for (i in 1:4) {e
-    #   probSurvive[i] ~ dunif(0,1)
-    #   probCapture[i] ~ dunif(0,1)
-    # }
+    x[1:5] ~ dHMM(init[1:3], Z = Z[1:2,1:3],
+                  T = Tt[1:3, 1:3], len = 5)
+
+    for (i in 1:3) {
+      init[i] ~ dunif(0,1)
+
+      for (j in 1:3) {
+        Tt[i,j] ~ dunif(0,1)
+      }
+
+      Z[1,i] ~ dunif(0,1)
+      Z[2,i] <- 1 - Z[1,i]
+    }
   })
-  m <- nimbleModel(nc, data = list(x = x),
-                   inits = list(probSurvive = probSurvive,
-                                probCapture = probCapture))
+
+  # Create a nimbleModel using the distribution
+  m <- nimbleModel(nc, data = list(x = x1),
+                   inits = list(init = init, Z = Z,
+                                Tt = Tt))
+  # Calculate probability of x from the model
+  m$calculate()
+  MlProbX <- m$getLogProb("x")
+  expect_equal(MlProbX, lProbX1)
+
+  # Compile the model and re-calculate
+  cm <- compileNimble(m)
+  cm$calculate()
+  CMlProbX <- cm$getLogProb("x")
+  expect_equal(CMlProbX, lProbX1)
+
+  # Check simulate
+  set.seed(2468)
+  cm$simulate('x')
+  expect_equal(cm$x, x1)
 
 })
 
 
+# -----------------------------------------------------------------------------
+# 2. Test dHMMo, distribution for Hidden Markov Model
 test_that("dHMMo works", {
-  # Let's do a very simple example with seeds.
-  # Seeds have 3 true states (s = 3):
-  #     1. Alive but not sprouted
-  #     2. Sprouted (visible as plant)
-  #     3. Dead
-  # but only 2 possible observational states (o = 2):
-  #     1. Not sprouted
-  #     2. Sprouted
-  # (this example is going to be a bit silly because I don't think
-  # capture/recapture makes sense for plants)
-
-  # len == length(x) = t
   len <- 5
   x1 <- c(1, 1, 1, 2, 1)
   x2 <- c(1, 1, 1, 1, 1)
   # length(init) == s
   init <- c(0.4, 0.2, 0.4)
 
-  # Z is observation probabilities, dim o x s where o is possible system states
-  # (domain of x). Z says, for each true system state (row), what is the
-  # corresponding probability of observing each response (col).
+  # Z is observation probabilities, dim o x s x t where o is possible
+  # observation states (domain of x), s is possible true system states, and t is
+  # time index. Z says, for each true system state (row), what is the
+  # corresponding probability of observing each response (col) at time t (3rd
+  # dim)
   Z <- array(
          c(1, 0, 0.2, 0.8, 1, 0,
            0.9, 0.1, 0.2, 0.8, 1, 0,
@@ -157,7 +170,7 @@ test_that("dHMMo works", {
             0, 0, 1),
           c(3,3)))
 
-
+  # Calculate the probabilities of x1 and x2 responses given the params
   correctProbX1 <- 1
   correctProbX2 <- 1
   pi1 <- init
@@ -176,7 +189,7 @@ test_that("dHMMo works", {
     pi2 <- (Tt[,] %*% asCol(stateprob2) / sumZ2)[ ,1]
   }
 
-
+  # Calculate probabilities of xs using the function dHMMo
   probX1 <- dHMMo(x = x1, init = init,
                   Z = Z, T = Tt,
                   len = len, log = F)
@@ -184,20 +197,22 @@ test_that("dHMMo works", {
                   Z = Z, T = Tt,
                   len = len, log = F)
 
+  # Compare function and manual
   expect_equal(probX1, correctProbX1)
   expect_equal(probX2, correctProbX2)
 
+  # Repeat for log prob
   lProbX1 <- dHMMo(x = x1, init = init,
                    Z = Z, T = Tt,
-                   len = len, log = T)
+                   len = len, log = TRUE)
   lProbX2 <- dHMMo(x = x2, init = init,
                    Z = Z, T = Tt,
-                   len = len, log = T)
+                   len = len, log = TRUE)
 
   expect_equal(lProbX1, log(correctProbX1))
   expect_equal(lProbX2, log(correctProbX2))
 
-
+  # Repeat for compiled nimbleFunction
   CdHMMo <- compileNimble(dHMMo)
   CprobX1 <- CdHMMo(x = x1, init = init,
                     Z = Z, T = Tt,
@@ -209,14 +224,59 @@ test_that("dHMMo works", {
                      len = len, log = T)
   expect_equal(ClProbX1, lProbX1)
 
+
+  # Check that the random generation function works
+  # Breaks if the function is editated meaningfully
+  set.seed(1234)
+  oneSim <- rHMMo(1, init, Z, Tt, len = 5)
+  expect_equal(oneSim, c(2, 2, 1, 2, 2))
+
+  # Create code for a nimbleModel using dHMMo
+  nc <- nimbleCode({
+    x[1:5] ~ dHMMo(init[1:3], Z = Z[1:2, 1:3, 1:5],
+                  T = Tt[1:3, 1:3], len = 5)
+
+    for (i in 1:3) {
+      init[i] ~ dunif(0,1)
+
+      for (j in 1:3) {
+        Tt[i,j] ~ dunif(0,1)
+      }
+
+      for (k in 1:5) {
+        Z[1,i,k] ~ dunif(0,1)
+        Z[2,i,k] <- 1 - Z[1,i,k]
+      }
+    }
+  })
+  # Build a nimbleModel
+  m <- nimbleModel(nc, data = list(x = x1),
+                   inits = list(init = init, Z = Z,
+                                Tt = Tt))
+
+  # Use the nimbleModel to calculate probabilities and compare
+  m$calculate()
+  MlProbX <- m$getLogProb("x")
+  expect_equal(MlProbX, lProbX1)
+
+  # Compiled model
+  cm <- compileNimble(m)
+  cm$calculate()
+  CMlProbX <- cm$getLogProb("x")
+  expect_equal(CMlProbX, lProbX1)
+
+  # Check simulation
+  set.seed(2468)
+  cm$simulate('x')
+  expect_equal(cm$x, x1)
+
 })
 
-
-
-
+# -----------------------------------------------------------------------------
+# 3. Test that dHMM errors when input assumptions are violated
 test_that("dHMM errors where expected", {
 
-# Start with good stuff and break it one by one
+# Start with good inputs and break it one by one
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
@@ -231,35 +291,110 @@ test_that("dHMM errors where expected", {
             0, 0.7, 0.3,
             0, 0, 1),
           ncol = length(init)))
+  # T isn't square:
   badT <- t(matrix(
           c(0.6, 0.3, 0.1,
             0, 0.7, 0.3),
           ncol = length(init)))
+  # Z doesn't match T:
   badZ <- t(matrix(
           c(0.6, 0.3, 0.1,
             0, 0.7, 0.3),
           ncol = length(init)))
+  # Inits don't sum to 0:
+  badInit <- c(0.1, 0.2, 0.2)
 
-
-
-
-
+# Check for errors when dHMM is given bad input
+  # len != length of x:
   probX <- expect_error(
               dHMM(x = x, init = init,
                    Z = Z, T = Tt,
                    len = 4, log = F))
+  # T isn't square:
   probX <- expect_error(
               dHMM(x = x, init = init,
                    Z = Z, T = badT,
                    len = len, log = F))
+  # Z doesn't match T:
   probX <- expect_error(
               dHMM(x = x, init = init,
                    Z = badZ, T = Tt,
                    len = len, log = F))
+  # Inits don't sum to 1:
+  probX <- expect_error(
+              dHMM(x = x, init = badInit,
+                   Z = Z, T = Tt,
+                   len = len, log = F))
+
+})
+
+# -----------------------------------------------------------------------------
+# 4. Test that dHMMo errors when input assumptions are violated
+
+test_that("dHMMo errors where expected", {
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  Z <- array(
+         c(1, 0, 0.2, 0.8, 1, 0,
+           0.9, 0.1, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           0.95, 0.05, 0.2, 0.8, 0.5, 0.5),
+         c(2, 3, 5))
+
+  Tt <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3,
+            0, 0, 1),
+          ncol = length(init)))
+  badT <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+  Z_unmatched <- array(
+         c(0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 0.5, 0.5),
+         c(2, 2, 5))
+  Z_badtime <- array(
+         c(1, 0, 0.2, 0.8, 1, 0,
+           0.9, 0.1, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0),
+         c(2, 3, 4))
+  badInits <- c(0.1, 0.1, 0.1)
 
 
-
-
+# dHMMo tests
+  # len != length of x:
+  probX <- expect_error(
+              dHMMo(x = x, init = init,
+                   Z = Z, T = Tt,
+                   len = 4, log = F))
+  # T is not square
+  probX <- expect_error(
+              dHMMo(x = x, init = init,
+                   Z = Z, T = badT,
+                   len = len, log = F))
+  # Z time index doesn't match len
+  probX <- expect_error(
+              dHMMo(x = x, init = init,
+                   Z = Z_badtime, T = Tt,
+                   len = len, log = F))
+  # Z doesn't match T
+  probX <- expect_error(
+              dHMMo(x = x, init = init,
+                   Z = Z_unmatched, T = Tt,
+                   len = len, log = F))
+  # Inits don't sum to 1
+  probX <- expect_error(
+              dHMMo(x = x, init = init,
+                   Z = Z_unmatched, T = Tt,
+                   len = len, log = F))
 })
 
 

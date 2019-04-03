@@ -51,7 +51,7 @@
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+#' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
 #' transitionProbs[1:S, 1:S], T)}
 #'
 #' @seealso For dynamic hidden Markov models with time-dependent transitions, see \link{dDHMM} and \link{dDHMMo}.
@@ -65,9 +65,9 @@ dHMM <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (length(Z[1,]) != length(T[1,])) stop("Number of cols in Z must equal number of cols in T.")
-    if (length(T[,1]) != length(T[1,])) stop("T must be a square matrix.")
-    if (sum(init) != 0)
+    if (dim(Z)[2] != dim(T)[1]) stop("Number of cols in Z must equal number of cols in T.")
+    if (dim(T)[1] != dim(T)[2]) stop("T must be a square matrix.")
+    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -95,9 +95,13 @@ dHMMo <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (length(Z[1,,1]) != length(T[1,])) stop("Number of cols in Z must equal number of cols in T.")
-    if (length(T[,1]) != length(T[1,])) stop("T must be a square matrix.")
-    if (length(Z[1,1,]) != len) stop("Length of time dimension of Z must match length of data.")
+    if (dim(Z)[2] != dim(T)[1]) stop("Number of cols in Z must equal number of cols in T.")
+    if (dim(T)[1] != dim(T)[2]) stop("T must be a square matrix.")
+    if (dim(Z)[3] != len) {
+      if (dim(Z)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
+      stop("Length of time dimension of Z must match length of data.")
+    }
+    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -152,6 +156,42 @@ rHMM <- nimbleFunction(
   return(ans)
 })
 
+rHMMo <- nimbleFunction(
+  run = function(n = integer(),    ## Observed capture (state) history
+                 init = double(1),
+                 Z = double(3),
+                 T = double(2),
+                 len = double(0, default = 0)) {
+  returnType(double(1))
+  ans <- numeric(len)
+
+  probInit <- init
+  trueInit <- 0
+
+  r <- runif(1, 0, 1)
+  j <- 1
+  while (r > sum(probInit[1:j])) j <- j + 1
+  trueInit <- j
+
+  trueState <- trueInit
+  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
+  for (i in 1:len) {
+    # Transition to a new true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(T[trueState, 1:j])) j <- j + 1
+    trueState <- j
+
+    # Detect based on the true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(Z[1:j, trueState, i])) j <- j + 1
+    ans[i] <- j
+
+  }
+
+  return(ans)
+})
 
 
 registerDistributions(list(
