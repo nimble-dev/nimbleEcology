@@ -4,7 +4,3 @@ language: r
 sudo: false
 cache:
   packages: true
-before_install:
-  - cd tests/testthat
-install:
-  - R CMD build .
