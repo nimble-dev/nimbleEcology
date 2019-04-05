@@ -8,6 +8,12 @@
 \title{Dynamic Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
 dDHMM(x, init, Z, T, len, log = 0)
+
+dDHMMo(x, init, Z, T, len, log = 0)
+
+rDHMM(n, init, Z, T, len = 0)
+
+rDHMMo(n, init, Z, T, len = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
