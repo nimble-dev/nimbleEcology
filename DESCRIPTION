@@ -6,7 +6,8 @@ Author: Ben Goldstein, Perry de Valpine, Daniel Turek
 Maintainer: Ben Goldstein <ben.goldstein@berkeley.edu>
 Description: TBD
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: BSD_3_clause + file LICENSE | GPL (>= 2)
+Copyright: see COPYRIGHTS file.
 Depends: nimble
 Encoding: UTF-8
 LazyData: true
