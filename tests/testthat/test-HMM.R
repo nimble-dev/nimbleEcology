@@ -1,4 +1,4 @@
-# Test the Cormack-Jolly-Seber distribution nimbleFunction.
+# Test the Hidden Markov Model distribution nimbleFunction.
 
 # -----------------------------------------------------------------------------
 # 0. Load
@@ -270,6 +270,41 @@ test_that("dHMMo works", {
   cm$simulate('x')
   expect_equal(cm$x, x1)
 
+})
+
+test_that("dHMM and dHMMo compatibility", {
+  # len: length of the data
+  len <- 4
+  # Two different data samples
+  x1 <- c(1, 1, 1, 2)
+  x2 <- c(1, 1, 1, 1)
+  # length(init) == s and sum(init) == 1; initial state probabilities
+  init <- c(0.4, 0.2, 0.4)
+
+  Z1 <- t(array(
+         c(1, 0.2, 1,
+           0, 0.8, 0),
+         c(3, 2)))
+
+
+  Z2 <- array(
+         c(1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0),
+         c(2, 3, 4))
+
+
+  # Tt is time-indexed transition probabilities, s x s x t.
+  Tt <- t(array(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3,
+            0, 0, 1),
+          c(3,3)))
+
+  lprob <- dHMM(x1, init, Z1, Tt, len)
+  lprob_o <- dHMMo(x1, init, Z2, Tt, len)
+  expect_equal(lprob, lprob_o)
 })
 
 # -----------------------------------------------------------------------------

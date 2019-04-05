@@ -1,4 +1,7 @@
-# tests for occupancy distribution functions
+# Test the Occupancy distribution nimbleFunction.
+
+# -----------------------------------------------------------------------------
+# 0. Load
 
 library(testthat)
 library(nimble)
