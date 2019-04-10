@@ -1,8 +1,10 @@
 #' Occupancy distribution for use in NIMBLE models
 #'
-#' \code{dOcc_s} and \code{dOcc_v} provide occupancy model distributions for NIMBLE models.
-#' The 's' version uses time-independent (scalar) detection probability while the 'v' version
-#' uses time-dependent (vector) detection probability.
+#' \code{dOcc_**} provides occupancy model distributions for NIMBLE models.
+#' The pair of letters following the 'dOcc_' indicates whether the occupancy probability
+#' and detection probability are scalar (s) or vector (v). For example, dOcc_sc takes scalar
+#' occupancy probability with a vector of detection probabilities.
+#'
 #' Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
 #' a separate scalar datum for each observation,
 #' use of these distributions allows
@@ -16,9 +18,9 @@
 #' @export
 #'
 #' @param x detection/non-detection vector of 0s (not detected) and 1s (detected).
-#' @param probOcc occupancy probability (scalar).
-#' @param probDetect detection probability (scalar for \code{dOcc_s}, vector for \code{dOcc_v}).
-#' @param l length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
+#' @param probOcc occupancy probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).
+#' @param probDetect detection probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).
+#' @param len length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
 #' @param log TRUE (return log probability) or FALSE (return probability)
 #'
 #' @author Ben Goldstein and Perry de Valpine
@@ -27,25 +29,25 @@
 #' for \link{nimbleModel}.
 #'
 #' These are written in the format of user-defined distributions to extend NIMBLE's
-#' use of the BUGS model language.  More information about writing user-defined distributions can be found
+#' use of the BUGS model language. More information about writing user-defined distributions can be found
 #' in the NIMBLE User Manual at \code{https://r-nimble.org}.
 #'
 #' The first argument to a "d" function is always named \code{x} and is given on the
 #' left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
 #' When using these distributions in a NIMBLE model, the user
-#' should not provide the \code{log} argument.  (It is always set to \code{TRUE} when used
+#' should not provide the \code{log} argument. (It is always set to \code{TRUE} when used
 #' in a NIMBLE model.)
 #'
 #' For example, in a NIMBLE model,
 #'
-#' \code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability)}
+#' \code{detections[1:T] ~ dOcc_ss(occupancyProbability, detectionProbability)}
 #'
 #' declares that the \code{detections[1:T]} vector follows an occupancy model distribution
 #' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
 #'
 #' If the detection probabilities are time-dependent, one would use:
 #'
-#'\code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability[1:T])}
+#' \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
 #'
 #' @seealso For dynamic occupancy models, see \link{dDynOcc}.
 
