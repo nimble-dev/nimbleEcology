@@ -15,6 +15,9 @@ dDynOcc_vv <- nimbleFunction(
                  gamma = double(1),
                  p = double(2),
                  log = double(0, default = 0)) {
+    if (length(gamma) <= 1) stop("In dDynOcc_vv gamma must be vector")
+    if (length(phi) <= 1) stop("In dDynOcc_vv phi must be vector")
+
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
     ll <- 0
@@ -62,6 +65,9 @@ dDynOcc_vs <- nimbleFunction(
                  gamma = double(0),
                  p = double(2),
                  log = double(0, default = 0)) {
+    if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
+    if (length(phi) <= 1) stop("In dDynOcc_vs phi must be vector")
+
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
     ll <- 0
@@ -110,6 +116,9 @@ dDynOcc_sv <- nimbleFunction(
                  gamma = double(1),
                  p = double(2),
                  log = double(0, default = 0)) {
+    if (length(gamma) <= 1) stop("In dDynOcc_sv gamma must be vector")
+    if (length(phi) != 1) stop("In dDynOcc_sv phi must be scalar")
+
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
     ll <- 0
@@ -157,6 +166,9 @@ dDynOcc_ss <- nimbleFunction(
                  gamma = double(0),
                  p = double(2),
                  log = double(0, default = 0)) {
+    if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
+    if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
+
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
     ll <- 0
@@ -230,6 +242,6 @@ registerDistributions(list(
                   'nrep = double(1)',
                   'psi1 = double(0)',
                   'phi = double(0)',
-                  'gamma = double(1)',
+                  'gamma = double(0)',
                   'p = double(2)'))
 ))
