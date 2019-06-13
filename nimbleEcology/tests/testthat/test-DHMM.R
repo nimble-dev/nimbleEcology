@@ -7,7 +7,7 @@
 library(testthat)
 library(nimble)
 # Source the file
-source("R/dDHMM.R")
+source("nimbleEcology/R/dDHMM.R")
 # Set the context for testthat
 context("Testing dDHMM-related functions.")
 

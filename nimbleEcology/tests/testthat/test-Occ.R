@@ -5,7 +5,7 @@
 
 library(testthat)
 library(nimble)
-source("R/dOcc.R")
+source("nimbleEcology/R/dOcc.R")
 context("Testing dOcc-related functions.")
 
 # Test scalar-scalar version

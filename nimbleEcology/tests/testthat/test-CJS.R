@@ -7,7 +7,7 @@
 library(testthat)
 library(nimble)
 # Source the file
-source("R/dCJS.R")
+source("nimbleEcology/R/dCJS.R")
 # Set the context for testthat
 context("Testing dCJS-related functions.")
 
