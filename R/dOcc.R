@@ -18,8 +18,8 @@
 #' @export
 #'
 #' @param x detection/non-detection vector of 0s (not detected) and 1s (detected).
-#' @param probOcc occupancy probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).
-#' @param probDetect detection probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).
+#' @param probOcc occupancy probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).
+#' @param probDetect detection probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).
 #' @param len length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
 #' @param log TRUE (return log probability) or FALSE (return probability)
 #'

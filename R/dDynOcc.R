@@ -2,7 +2,32 @@
 # To be filled in with dynamic occupancy model distribution(s).
 #' Dynamic occupancy distribution for use in NIMBLE models
 #'
-#' @aliases dDynOcc
+#' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
+#'
+#' \code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.
+#' Dynamic occupancy models
+#' The pair of letters following the 'dOcc_' indicates whether the probabilities of persistence
+#' and colonization are scalar (s, uniform for all ) or vector (v). For example, dOcc_sc takes scalar
+#' occupancy probability with a vector of detection probabilities.
+#'
+#' Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
+#' a separate scalar datum for each observation,
+#' use of these distributions allows
+#' one to directly sum over the discrete latent state and calculate the probability of
+#' all observations from one site jointly.
+#' @name dDynOcc
+#'
+#' @export
+#'
+#' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
+#' @param nrep a vector of the number of observations per sampling occasion
+#' @param psi1 probability of occupancy in the first sampling period
+#' @param phi persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dOcc_s\*}, vector for \code{dOcc_v\*}
+#' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dOcc_\*s}, vector for \code{dOcc_\*v}
+#' @param p matrix of detection probabilities for each observation. Dimensions should match x
+#' @param log TRUE (return log probability) or FALSE (return probability)
+#'
+#' @author Ben Goldstein and Perry de Valpine
 #'
 #' @export
 dDynOcc_vv <- nimbleFunction(
@@ -15,8 +40,10 @@ dDynOcc_vv <- nimbleFunction(
                  gamma = double(1),
                  p = double(2),
                  log = double(0, default = 0)) {
-    if (length(gamma) <= 1) stop("In dDynOcc_vv gamma must be vector")
-    if (length(phi) <= 1) stop("In dDynOcc_vv phi must be vector")
+    if (length(phi) != dim(x)[1]) stop("Length of phi vector does not match length of data.")
+    if (length(gamma) != dim(x)[1]) stop("Length of gamma vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
+    if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
@@ -65,8 +92,10 @@ dDynOcc_vs <- nimbleFunction(
                  gamma = double(0),
                  p = double(2),
                  log = double(0, default = 0)) {
-    if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
-    if (length(phi) <= 1) stop("In dDynOcc_vs phi must be vector")
+
+    if (length(phi) != dim(x)[1]) stop("Length of phi vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
+    if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
@@ -116,8 +145,9 @@ dDynOcc_sv <- nimbleFunction(
                  gamma = double(1),
                  p = double(2),
                  log = double(0, default = 0)) {
-    if (length(gamma) <= 1) stop("In dDynOcc_sv gamma must be vector")
-    if (length(phi) != 1) stop("In dDynOcc_sv phi must be scalar")
+    if (length(gamma) != dim(x)[1]) stop("Length of gamma vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
+    if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
@@ -166,8 +196,10 @@ dDynOcc_ss <- nimbleFunction(
                  gamma = double(0),
                  p = double(2),
                  log = double(0, default = 0)) {
-    if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
-    if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
+    # if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
+    # if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
+    if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1

@@ -109,8 +109,8 @@ test_that("dDynOcc_vs works", {
   gamma <- 0.5
   p <- matrix(rep(0.8, 10), nrow = 2)
 
-  probX <- dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE)
-  lProbX <- dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = TRUE)
+  probX <- dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE)
+  lProbX <- dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = TRUE)
 
   ProbOccNextTime <- psi1
   ll <- 0
@@ -381,7 +381,13 @@ test_that("dDynOcc_ss works", {
 })
 
 
-test_that("Case errors in dDynOcc_** work", {
+test_that("Case errors in compiled dDynOcc_** work", {
+  CdDynOcc_ss <- compileNimble(dDynOcc_ss)
+  CdDynOcc_sv <- compileNimble(dDynOcc_sv)
+  CdDynOcc_vs <- compileNimble(dDynOcc_vs)
+  CdDynOcc_vv <- compileNimble(dDynOcc_vv)
+
+
   x <- matrix(c(0,0,1,0,1,
                 1,1,1,1,0), nrow = 2)
   nrep <- c(5, 5)
@@ -390,24 +396,34 @@ test_that("Case errors in dDynOcc_** work", {
   gamma <- 0.5
   p <- matrix(rep(0.8, 10), nrow = 2)
 
-  expect_error(dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
 
   phi <- c(0.8, 0.5)
-  expect_error(dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
 
   gamma <- c(0.2, 0.1)
-  expect_error(dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
 
   phi <- 0.3
-  expect_error(dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
-  expect_error(dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  expect_error(CdDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  # expect_error(CdDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
+
+  p <- p[1:2, 1:4]
+
+  expect_error(CdDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  phi <- c(0.3, 0.5)
+  expect_error(CdDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  gamma <- 0.5
+  expect_error(CdDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = FALSE))
+  phi <- 0.3
+  expect_error(CdDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = FALSE))
 
 })
 
