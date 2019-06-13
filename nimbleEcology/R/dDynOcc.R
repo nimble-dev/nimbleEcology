@@ -25,6 +25,7 @@
 #' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dOcc_\*s}, vector for \code{dOcc_\*v}
 #' @param p matrix of detection probabilities for each observation. Dimensions should match x
 #' @param log TRUE (return log probability) or FALSE (return probability)
+#' @param n a vector of length 2 indicating the dimensions of the data to be randomly generated
 #'
 #' @author Ben Goldstein and Perry de Valpine
 #'
@@ -60,7 +61,7 @@ dDynOcc_vv <- nimbleFunction(
           }
           ProbOccAndCount <- ProbOccNextTime *
               exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, p = p[t,1:nrep[t]], log = 1)))
+                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
           ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -114,7 +115,7 @@ dDynOcc_vs <- nimbleFunction(
           }
           ProbOccAndCount <- ProbOccNextTime *
               exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, p = p[t,1:nrep[t]], log = 1)))
+                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
           ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -167,7 +168,7 @@ dDynOcc_sv <- nimbleFunction(
           }
           ProbOccAndCount <- ProbOccNextTime *
               exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, p = p[t,1:nrep[t]], log = 1)))
+                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
           ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -221,7 +222,7 @@ dDynOcc_ss <- nimbleFunction(
           }
           ProbOccAndCount <- ProbOccNextTime *
               exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, p = p[t,1:nrep[t]], log = 1)))
+                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
           ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -241,6 +242,67 @@ dDynOcc_ss <- nimbleFunction(
     if(log) return(ll)
     else return(exp(ll))
     returnType(double(0))
+  }
+)
+
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vv <- nimbleFunction(
+  run = function(n = double(1),
+                 nrep = double(1),
+                 psi1 = double(0),
+                 phi = double(1),
+                 gamma = double(1),
+                 p = double(2)) {
+    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vs <- nimbleFunction(
+  run = function(n = double(1),
+                 nrep = double(1),
+                 psi1 = double(0),
+                 phi = double(1),
+                 gamma = double(0),
+                 p = double(2)) {
+    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_sv <- nimbleFunction(
+  run = function(n = double(1),
+                 nrep = double(1),
+                 psi1 = double(0),
+                 phi = double(0),
+                 gamma = double(1),
+                 p = double(2)) {
+    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_ss <- nimbleFunction(
+  run = function(n = double(1),
+                 nrep = double(1),
+                 psi1 = double(0),
+                 phi = double(0),
+                 gamma = double(0),
+                 p = double(2)) {
+    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    return(val)
+    returnType(double(2))
   }
 )
 

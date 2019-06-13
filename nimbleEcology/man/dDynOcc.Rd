@@ -72,6 +72,10 @@
 \alias{from}
 \alias{site}
 \alias{jointly.}
+\alias{rDynOcc_vv}
+\alias{rDynOcc_vs}
+\alias{rDynOcc_sv}
+\alias{rDynOcc_ss}
 \title{Dynamic occupancy distribution for use in NIMBLE models}
 \usage{
 dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = 0)
@@ -81,6 +85,14 @@ dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = 0)
 dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = 0)
 
 dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
+
+rDynOcc_vv(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_vs(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_sv(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
 }
 \arguments{
 \item{x}{detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period}
@@ -96,6 +108,8 @@ dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
 \item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
 
 \item{log}{TRUE (return log probability) or FALSE (return probability)}
+
+\item{n}{a vector of length 2 indicating the dimensions of the data to be randomly generated}
 }
 \description{
 Dynamic occupancy distribution for use in NIMBLE models

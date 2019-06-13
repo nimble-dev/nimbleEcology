@@ -52,6 +52,10 @@
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
 #' @seealso For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
+#' @import nimble
+#' @importFrom stats rbinom runif dbinom
+
+
 
 NULL
 #> NULL

@@ -1,7 +1,7 @@
 
 library(testthat)
 library(nimble)
-source("R/dDynOcc.R")
+source("nimbleEcology/R/dDynOcc.R")
 context("Testing dDynOcc-related functions.")
 
 
