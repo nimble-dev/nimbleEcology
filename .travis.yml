@@ -7,7 +7,7 @@ cache:
 
 install:
   - R CMD build .
-  - R CMD install nimbleEcology_0.1.0.tar.gz
+  - R CMD install .
 
 # script:
   #- R CMD check nimbleEcology
