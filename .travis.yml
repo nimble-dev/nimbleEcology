@@ -6,7 +6,7 @@ cache:
   packages: true
 
 install:
-  - R CMD build nimbleEcology
+  - R CMD build ./nimbleEcology
 
 # script:
   #- R CMD check nimbleEcology
