@@ -6,9 +6,8 @@ cache:
   packages: true
 
 install:
-  - R -e 'devtools::install_deps(dep = T)'
-
-script:
-  #- R CMD check nimbleEcology
   - R CMD build nimbleEcology
+
+# script:
+  #- R CMD check nimbleEcology
   #- R CMD check nimbleEcology
