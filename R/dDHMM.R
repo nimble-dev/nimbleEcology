@@ -2,7 +2,7 @@
 #'
 #' \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model distributions for NIMBLE models.
 #' "Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
-#' \code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
+#' \code{dDHMMo} alias is used when observation probabilities are indexed by time.
 #' Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 #' one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
 #' model code.
@@ -25,7 +25,7 @@
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #'
-#' @author Perry de Valpine and Daniel Turek
+#' @author Perry de Valpine, Daniel Turek, and Ben Goldstein
 #'
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
@@ -61,6 +61,8 @@
 #'
 #' @seealso For hidden Markov models with time-independent transitions, see \link{dHMM} and \link{dHMMo}.
 #' For simple capture-recapture, see \link{dCJS}.
+
+NULL
 
 #' @export
 #' @rdname dDHMM
@@ -186,7 +188,6 @@ rDHMMo <- nimbleFunction(
   trueInit <- j
 
   trueState <- trueInit
-  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
   for (i in 1:len) {
     # Transition to a new true state
     r <- runif(1, 0, 1)

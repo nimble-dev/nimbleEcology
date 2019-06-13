@@ -15,7 +15,6 @@
 #'
 #' @name dOcc
 #'
-#' @export
 #'
 #' @param x detection/non-detection vector of 0s (not detected) and 1s (detected).
 #' @param probOcc occupancy probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).
@@ -50,6 +49,7 @@
 #' \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
 #'
 #' @seealso For dynamic occupancy models, see \link{dDynOcc}.
+NULL
 
 #' @export
 #' @rdname dOcc

@@ -31,9 +31,9 @@ rOcc_vv(n, probOcc, probDetect, len = 0)
 \arguments{
 \item{x}{detection/non-detection vector of 0s (not detected) and 1s (detected).}
 
-\item{probOcc}{occupancy probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).}
+\item{probOcc}{occupancy probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).}
 
-\item{probDetect}{detection probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_\*v}).}
+\item{probDetect}{detection probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).}
 
 \item{len}{length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).}
 

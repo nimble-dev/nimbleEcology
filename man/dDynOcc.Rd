@@ -2,14 +2,104 @@
 % Please edit documentation in R/dDynOcc.R
 \name{dDynOcc}
 \alias{dDynOcc}
-\alias{rOcc}
-\alias{rOcc_s}
-\alias{dOcc_v}
-\alias{rOcc_v}
+\alias{dDynOcc_ss}
+\alias{dDynOcc_sv}
+\alias{dDynOcc_vs}
+\alias{dDynOcc_vv}
+\alias{\code{dDynOcc_**}}
+\alias{provides}
+\alias{dynamic}
+\alias{occupancy}
+\alias{model}
+\alias{distributions}
+\alias{for}
+\alias{NIMBLE}
+\alias{models.}
+\alias{Dynamic}
+\alias{models}
+\alias{The}
+\alias{pair}
+\alias{of}
+\alias{letters}
+\alias{following}
+\alias{the}
+\alias{'dOcc_'}
+\alias{indicates}
+\alias{whether}
+\alias{probabilities}
+\alias{persistence}
+\alias{and}
+\alias{colonization}
+\alias{are}
+\alias{scalar}
+\alias{(s,}
+\alias{uniform}
+\alias{all}
+\alias{)}
+\alias{or}
+\alias{vector}
+\alias{(v).}
+\alias{For}
+\alias{example,}
+\alias{dOcc_sc}
+\alias{takes}
+\alias{probability}
+\alias{with}
+\alias{a}
+\alias{detection}
+\alias{probabilities.}
+\alias{Compared}
+\alias{to}
+\alias{writing}
+\alias{discrete}
+\alias{latent}
+\alias{state}
+\alias{true}
+\alias{status}
+\alias{separate}
+\alias{datum}
+\alias{each}
+\alias{observation,}
+\alias{use}
+\alias{these}
+\alias{allows}
+\alias{one}
+\alias{directly}
+\alias{sum}
+\alias{over}
+\alias{calculate}
+\alias{observations}
+\alias{from}
+\alias{site}
+\alias{jointly.}
 \title{Dynamic occupancy distribution for use in NIMBLE models}
 \usage{
-dDynOcc()
+dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
+}
+\arguments{
+\item{x}{detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period}
+
+\item{nrep}{a vector of the number of observations per sampling occasion}
+
+\item{psi1}{probability of occupancy in the first sampling period}
+
+\item{phi}{persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dOcc_s\*}, vector for \code{dOcc_v\*}}
+
+\item{gamma}{colonization probability. Probability that an unoccupied cell becomes occupied. \code{dOcc_\*s}, vector for \code{dOcc_\*v}}
+
+\item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
+
+\item{log}{TRUE (return log probability) or FALSE (return probability)}
 }
 \description{
 Dynamic occupancy distribution for use in NIMBLE models
+}
+\author{
+Ben Goldstein and Perry de Valpine
 }

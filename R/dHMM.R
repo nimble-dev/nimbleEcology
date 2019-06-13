@@ -11,8 +11,6 @@
 #'
 #' @name dHMM
 #'
-#' @export
-#'
 #' @param x vector of observation classes, one of which could be defined as "not observed".
 #' @param init vector of initial state probabilities
 #' @param Z time-independent matrix of observation probabilities.
@@ -58,6 +56,7 @@
 #'
 #' @seealso For dynamic hidden Markov models with time-dependent transitions, see \link{dDHMM} and \link{dDHMMo}.
 #' For simple capture-recapture, see \link{dCJS}.
+NULL
 
 #' @export
 #' @rdname dHMM

@@ -17,7 +17,6 @@
 #' all observations from one site jointly.
 #' @name dDynOcc
 #'
-#' @export
 #'
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
 #' @param nrep a vector of the number of observations per sampling occasion
@@ -29,6 +28,8 @@
 #'
 #' @author Ben Goldstein and Perry de Valpine
 #'
+NULL
+#' @rdname dDynOcc
 #' @export
 dDynOcc_vv <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
@@ -82,6 +83,8 @@ dDynOcc_vv <- nimbleFunction(
   }
 )
 
+#' @rdname dDynOcc
+#' @export
 dDynOcc_vs <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
@@ -134,7 +137,8 @@ dDynOcc_vs <- nimbleFunction(
   }
 )
 
-
+#' @rdname dDynOcc
+#' @export
 dDynOcc_sv <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
@@ -186,6 +190,8 @@ dDynOcc_sv <- nimbleFunction(
   }
 )
 
+#' @rdname dDynOcc
+#' @export
 dDynOcc_ss <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species

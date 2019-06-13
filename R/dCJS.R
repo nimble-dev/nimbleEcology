@@ -8,8 +8,6 @@
 #'
 #' @name dCJS
 #'
-#' @export
-#'
 #' @param x capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed.
 #' @param probSurvive survival probability, either a scalar (for dCJSs*) or a vector (for dCJSv*).
 #' @param probCapture capture probability, either a scalar (for dCJS*s) or a vector (for dCJS*v).
@@ -59,8 +57,8 @@ NULL
 #> NULL
 
 
-#' @export
 #' @rdname dCJS
+#' @export
 dCJSss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
@@ -102,8 +100,8 @@ dCJSss <- nimbleFunction(
   }
 )
 
-#' @export
 #' @rdname dCJS
+#' @export
 dCJSsv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
@@ -146,8 +144,8 @@ dCJSsv <- nimbleFunction(
 )
 
 
-#' @export
 #' @rdname dCJS
+#' @export
 dCJSvs <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
@@ -191,8 +189,8 @@ dCJSvs <- nimbleFunction(
 )
 
 
-#' @export
 #' @rdname dCJS
+#' @export
 dCJSvv <- nimbleFunction(
   # It is assumed that the individual has already been captured.
   # Therefore, the first entry in x represents the first possible recapture event.
@@ -239,8 +237,8 @@ dCJSvv <- nimbleFunction(
   }
 )
 
-#' @export
 #' @rdname dCJS
+#' @export
 rCJSss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
@@ -264,8 +262,8 @@ rCJSss <- nimbleFunction(
   }
 )
 
-#' @export
 #' @rdname dCJS
+#' @export
 rCJSsv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(0),
@@ -314,8 +312,8 @@ rCJSvs <- nimbleFunction(
   }
 )
 
-#' @export
 #' @rdname dCJS
+#' @export
 rCJSvv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
