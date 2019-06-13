@@ -4,10 +4,11 @@ language: r
 sudo: false
 cache:
   packages: true
+
 install:
-  #- R CMD check nimbleEcology
-  - R CMD build nimbleEcology
-  - R CMD INSTALL nimbleEcology
+  - R -e 'devtools::install_deps(dep = T)'
 
 script:
-  #- ./run_tests.R
+  #- R CMD check nimbleEcology
+  - R CMD build nimbleEcology
+  #- R CMD check nimbleEcology
