@@ -5,9 +5,9 @@ sudo: false
 cache:
   packages: true
 install:
-  - R CMD check nimbleEcology
+  #- R CMD check nimbleEcology
   - R CMD build nimbleEcology
   - R CMD INSTALL nimbleEcology
 
 script:
-  - ./run_tests.R
+  #- ./run_tests.R
