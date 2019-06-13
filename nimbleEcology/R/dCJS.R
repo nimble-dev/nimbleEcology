@@ -13,7 +13,7 @@
 #' @param probCapture capture probability, either a scalar (for dCJS*s) or a vector (for dCJS*v).
 #' @param len length of capture history (needed for rCJSxx).
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
-#' @param n
+#' @param n length of random sequence
 #'
 #' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'

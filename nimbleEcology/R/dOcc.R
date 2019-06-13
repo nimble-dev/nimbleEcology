@@ -21,6 +21,7 @@
 #' @param probDetect detection probability (scalar for \code{dOcc_\*s}, vector for \code{dOcc_\*v}).
 #' @param len length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).
 #' @param log TRUE (return log probability) or FALSE (return probability)
+#' @param n length of random sequence
 #'
 #' @author Ben Goldstein and Perry de Valpine
 #'

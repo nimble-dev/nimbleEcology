@@ -19,6 +19,7 @@
 #' Dimension of \code{T} is (number of possible system states) x (number of possible system states)
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#' @param n length of random sequence
 #'
 #' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'

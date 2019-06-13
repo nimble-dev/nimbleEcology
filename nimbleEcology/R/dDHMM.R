@@ -24,6 +24,7 @@
 #' x (number of observation times).
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#' @param n length of random sequence
 #'
 #' @author Perry de Valpine, Daniel Turek, and Ben Goldstein
 #'

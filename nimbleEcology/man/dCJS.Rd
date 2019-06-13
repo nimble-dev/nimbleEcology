@@ -39,7 +39,7 @@ rCJSvv(n, probSurvive, probCapture, len = 0)
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 
-\item{n}{}
+\item{n}{length of random sequence}
 }
 \description{
 \code{dCJS**} functions provide a basic distribution for capture history vectors based

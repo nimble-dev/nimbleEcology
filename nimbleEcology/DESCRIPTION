@@ -8,7 +8,10 @@ Description: TBD
     Use four spaces when indenting paragraphs within the Description.
 License: BSD_3_clause + file LICENSE | GPL (>= 2)
 Copyright: see COPYRIGHTS file.
-Depends: nimble
+Depends: 
+  - R (>= 3.1.2)
+  - nimble
+Imports: 
 Encoding: UTF-8
 LazyData: true
 Collate:

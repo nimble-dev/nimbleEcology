@@ -38,6 +38,8 @@ rOcc_vv(n, probOcc, probDetect, len = 0)
 \item{len}{length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).}
 
 \item{log}{TRUE (return log probability) or FALSE (return probability)}
+
+\item{n}{length of random sequence}
 }
 \description{
 \code{dOcc_**} provides occupancy model distributions for NIMBLE models.
