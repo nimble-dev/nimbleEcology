@@ -1,2 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^.*\.tar\.gz$
+\.travis\.yml
+\.RDataTmp
+run_tests\.R
