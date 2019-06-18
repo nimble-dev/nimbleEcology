@@ -9,7 +9,8 @@ Description: Common ecological distributions for NIMBLE models in the form of ni
   Includes Cormack-Jolly-Seber, occupancy, dynamic occupancy, hidden Markov, and dynamic hidden Markov models.
 License: BSD_3_clause + file LICENSE | GPL (>= 2)
 Copyright: see COPYRIGHTS file.
-Depends: R (>= 3.1.2), nimble
+Depends: R (>= 3.1.2)
+Imports: nimble,methods,igraph,coda,R6
 Encoding: UTF-8
 LazyData: true
 URL: 
