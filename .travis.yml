@@ -1,14 +1,21 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: r
-sudo: false
-cache:
-  packages: true
+
+os: osx
+
+notifications:
+  email:
+    recipients:
+      - dochvam@gmail.com
+    on_success: always
+    on_failure: always
+
+branches:
+  only:
+    - master
 
 install:
-  - R CMD build .
-  - R CMD install .
+  - R CMD build nimbleEcology
+  - R CMD INSTALL nimbleEcology
 
-# script:
-  #- R CMD check nimbleEcology
-  #- R CMD check nimbleEcology
