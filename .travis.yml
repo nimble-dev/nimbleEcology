@@ -16,6 +16,7 @@ branches:
     - master
 
 install:
+  - ./installRequirements.R
   - R CMD build nimbleEcology
   - R CMD INSTALL nimbleEcology
 
