@@ -15,8 +15,10 @@ branches:
   only:
     - master
 
+latex: false
+
 install:
-  - ./installRequirements.R
+#  - ./installRequirements.R
   - R CMD build nimbleEcology
-  - R CMD INSTALL nimbleEcology
+  - R CMD INSTALL nimbleEcology --install-tests
 
