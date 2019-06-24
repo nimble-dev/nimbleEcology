@@ -4,3 +4,4 @@
 \.travis\.yml
 \.RDataTmp
 run_tests\.R
+^\.travis\.yml$
