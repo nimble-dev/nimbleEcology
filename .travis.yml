@@ -19,5 +19,5 @@ latex: false
 
 install:
   - R CMD build nimbleEcology
-  - R CMD INSTALL nimbleEcology --install-tests
+  - R CMD INSTALL nimbleEcology
 
