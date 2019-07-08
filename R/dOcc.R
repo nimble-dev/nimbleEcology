@@ -1,6 +1,9 @@
 #' Occupancy distribution for use in NIMBLE models
 #'
 #' \code{dOcc_**} provides occupancy model distributions for NIMBLE models.
+#'
+#' Likelihood of observation x[t] depends on an occupancy probability \code{probOcc[t]} and
+#' detection probability \code{probDetect[t]}.
 #' The pair of letters following the 'dOcc_' indicates whether the occupancy probability
 #' and detection probability are scalar (s) or vector (v). For example, dOcc_sc takes scalar
 #' occupancy probability with a vector of detection probabilities.
@@ -49,7 +52,7 @@
 #'
 #' \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
 #'
-#' @seealso For dynamic occupancy models, see \link{dDynOcc}.
+#' @seealso For dynamic occupancy models, see documentation for \link{dDynOcc}.
 NULL
 
 #' @export

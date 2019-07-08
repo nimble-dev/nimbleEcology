@@ -43,11 +43,14 @@ rOcc_vv(n, probOcc, probDetect, len = 0)
 }
 \description{
 \code{dOcc_**} provides occupancy model distributions for NIMBLE models.
+}
+\details{
+Likelihood of observation x[t] depends on an occupancy probability \code{probOcc[t]} and
+detection probability \code{probDetect[t]}.
 The pair of letters following the 'dOcc_' indicates whether the occupancy probability
 and detection probability are scalar (s) or vector (v). For example, dOcc_sc takes scalar
 occupancy probability with a vector of detection probabilities.
-}
-\details{
+
 Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
 a separate scalar datum for each observation,
 use of these distributions allows
@@ -79,7 +82,7 @@ If the detection probabilities are time-dependent, one would use:
 \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
 }
 \seealso{
-For dynamic occupancy models, see \link{dDynOcc}.
+For dynamic occupancy models, see documentation for \link{dDynOcc}.
 }
 \author{
 Ben Goldstein and Perry de Valpine

@@ -6,72 +6,6 @@
 \alias{dDynOcc_sv}
 \alias{dDynOcc_vs}
 \alias{dDynOcc_vv}
-\alias{\code{dDynOcc_**}}
-\alias{provides}
-\alias{dynamic}
-\alias{occupancy}
-\alias{model}
-\alias{distributions}
-\alias{for}
-\alias{NIMBLE}
-\alias{models.}
-\alias{Dynamic}
-\alias{models}
-\alias{The}
-\alias{pair}
-\alias{of}
-\alias{letters}
-\alias{following}
-\alias{the}
-\alias{'dOcc_'}
-\alias{indicates}
-\alias{whether}
-\alias{probabilities}
-\alias{persistence}
-\alias{and}
-\alias{colonization}
-\alias{are}
-\alias{scalar}
-\alias{(s,}
-\alias{uniform}
-\alias{all}
-\alias{)}
-\alias{or}
-\alias{vector}
-\alias{(v).}
-\alias{For}
-\alias{example,}
-\alias{dOcc_sc}
-\alias{takes}
-\alias{probability}
-\alias{with}
-\alias{a}
-\alias{detection}
-\alias{probabilities.}
-\alias{Compared}
-\alias{to}
-\alias{writing}
-\alias{discrete}
-\alias{latent}
-\alias{state}
-\alias{true}
-\alias{status}
-\alias{separate}
-\alias{datum}
-\alias{each}
-\alias{observation,}
-\alias{use}
-\alias{these}
-\alias{allows}
-\alias{one}
-\alias{directly}
-\alias{sum}
-\alias{over}
-\alias{calculate}
-\alias{observations}
-\alias{from}
-\alias{site}
-\alias{jointly.}
 \alias{rDynOcc_vv}
 \alias{rDynOcc_vs}
 \alias{rDynOcc_sv}
@@ -112,8 +46,50 @@ rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
 \item{n}{a vector of length 2 indicating the dimensions of the data to be randomly generated}
 }
 \description{
-Dynamic occupancy distribution for use in NIMBLE models
+\code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.
+}
+\details{
+Dynamic occupancy models
+model occurrence at a series of sites over many replicate timesteps. The likelihood of an observation in site s
+at time t depends on the state of the site at time t-1, the transitition probability of persistence \code{phi[t]}
+or colonization \code{gamma[t]} and a detection probability code{p[s, t]}.
+
+The pair of letters following the 'dDynOcc_' indicates whether the probabilities of persistence
+and colonization are a constant scalar (s) or time-indexed vector (v). For example, dOcc_sv takes scalar
+persistence probability phi with a vector of colonization probabilities gamma.
+
+Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
+a separate scalar datum for each observation,
+use of these distributions allows
+one to directly sum over the discrete latent state and calculate the probability of
+all observations from one site jointly.
+}
+\seealso{
+For regular occupancy models, see documentation for dOcc.
 }
 \author{
 Ben Goldstein and Perry de Valpine
+
+
+These are written in the format of user-defined distributions to extend NIMBLE's
+use of the BUGS model language. More information about writing user-defined distributions can be found
+in the NIMBLE User Manual at \code{https://r-nimble.org}.
+
+The first argument to a "d" function is always named \code{x} and is given on the
+left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
+When using these distributions in a NIMBLE model, the user
+should not provide the \code{log} argument. (It is always set to \code{TRUE} when used
+in a NIMBLE model.)
+
+For example, in a NIMBLE model,
+
+\code{detections[1:S, 1:T] ~ dDynOcc_ss(nrep, psi1 = init_prob, phi = persistence_prob,
+\n gamma = colonization_prob, p = p[1:S, 1:T])}
+
+declares that the \code{detections[1:T]} vector follows a dynamic occupancy model distribution
+with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
+
+If the colonization probabilities are time-dependent, one would use:
+
+\code{detections[1:T] ~ dDynOcc_sv(occupancyProbability, detectionProbability[1:T])}
 }
