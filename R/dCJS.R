@@ -1,16 +1,16 @@
 #' Cormack-Jolly-Seber distribution for use in NIMBLE models
 #'
-#' \code{dCJS**} functions provide a basic distribution for capture history vectors based
+#' \code{dCJS_**} functions provide a basic distribution for capture history vectors based
 #'  on survival and capture probabilities. The different aliases are for scalar ("s", time-independent)
 #'  versus vector ("v", time-dependent) survival and capture probabilities, in that order.
 #'
-#' @aliases dCJSss dCJSsv dCJSvs dCJSvv rCJSss rCJSsv rCJSvs rCJSvv
+#' @aliases dCJS_ss dCJS_sv dCJS_vs dCJS_vv rCJS_ss rCJS_sv rCJS_vs rCJS_vv
 #'
 #' @name dCJS
 #'
 #' @param x capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed.
-#' @param probSurvive survival probability, either a scalar (for dCJSs*) or a vector (for dCJSv*).
-#' @param probCapture capture probability, either a scalar (for dCJS*s) or a vector (for dCJS*v).
+#' @param probSurvive survival probability, either a scalar (for dCJS_s*) or a vector (for dCJS_v*).
+#' @param probCapture capture probability, either a scalar (for dCJS_*s) or a vector (for dCJS_*v).
 #' @param len length of capture history (needed for rCJSxx).
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #' @param n length of random sequence
@@ -31,14 +31,14 @@
 #'
 #' For example,
 #'
-#' \code{captures[1:T] ~ dCSJss(survive, capture, T)}
+#' \code{captures[1:T] ~ dCSJ_ss(survive, capture, T)}
 #'
 #' declares a vector node, \code{captures[1:T]}, that follows a capture-recapture distribution
 #' with scalar survival probability \code{survive} and scalar capture probability \code{capture}
 #' (assuming \code{survive} and \code{capture} are defined elsewhere in the model).
 #' If time-dependent survival and capture probabilities are needed, use
 #'
-#' \code{captures[1:T] ~ dCSJss(survive[1:T], capture[1:T], T)}.
+#' \code{captures[1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}.
 #'
 #' In fact, the \code{len} argument (\code{T} in these examples) will be ignored during model
 #' probability calculations.  It will be used only for simulations.
@@ -55,15 +55,11 @@
 #' @import nimble
 #' @importFrom stats rbinom runif dbinom
 
-
-
 NULL
-#> NULL
-
 
 #' @rdname dCJS
 #' @export
-dCJSss <- nimbleFunction(
+dCJS_ss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(),
@@ -106,7 +102,7 @@ dCJSss <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-dCJSsv <- nimbleFunction(
+dCJS_sv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(1),
@@ -150,7 +146,7 @@ dCJSsv <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-dCJSvs <- nimbleFunction(
+dCJS_vs <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(),
@@ -195,7 +191,7 @@ dCJSvs <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-dCJSvv <- nimbleFunction(
+dCJS_vv <- nimbleFunction(
   # It is assumed that the individual has already been captured.
   # Therefore, the first entry in x represents the first possible recapture event.
   # probSurvive[t] represents survival from t-1 to t.
@@ -243,7 +239,7 @@ dCJSvv <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-rCJSss <- nimbleFunction(
+rCJS_ss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(),
@@ -268,7 +264,7 @@ rCJSss <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-rCJSsv <- nimbleFunction(
+rCJS_sv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(0),
                  probCapture = double(1),
@@ -293,7 +289,7 @@ rCJSsv <- nimbleFunction(
 
 #' @export
 #' @rdname dCJS
-rCJSvs <- nimbleFunction(
+rCJS_vs <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(0),
@@ -318,7 +314,7 @@ rCJSvs <- nimbleFunction(
 
 #' @rdname dCJS
 #' @export
-rCJSvv <- nimbleFunction(
+rCJS_vv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(1),
@@ -348,36 +344,36 @@ rCJSvv <- nimbleFunction(
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
 # 2. Establish default len = 0 via reparameterization mechanism.
 registerDistributions(list(
-  dCJSss = list(
-    BUGSdist = "dCJSss(probSurvive, probCapture, len)",
-    Rdist = "dCJSss(probSurvive, probCapture, len = 0)",
+  dCJS_ss = list(
+    BUGSdist = "dCJS_ss(probSurvive, probCapture, len)",
+    Rdist = "dCJS_ss(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(0)', 'len = double(0)'),
     pqAvail = FALSE))
   )
 
 registerDistributions(list(
-  dCJSsv = list(
-    BUGSdist = "dCJSsv(probSurvive, probCapture, len)",
-    Rdist = "dCJSsv(probSurvive, probCapture, len = 0)",
+  dCJS_sv = list(
+    BUGSdist = "dCJS_sv(probSurvive, probCapture, len)",
+    Rdist = "dCJS_sv(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(1)', 'len = double(0)'),
     pqAvail = FALSE))
   )
 
 registerDistributions(list(
-  dCJSvs = list(
-    BUGSdist = "dCJSvs(probSurvive, probCapture, len)",
-    Rdist = "dCJSvs(probSurvive, probCapture, len = 0)",
+  dCJS_vs = list(
+    BUGSdist = "dCJS_vs(probSurvive, probCapture, len)",
+    Rdist = "dCJS_vs(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(0)', 'len = double(0)'),
     pqAvail = FALSE))
   )
 
 registerDistributions(list(
-  dCJSvv = list(
-    BUGSdist = "dCJSvv(probSurvive, probCapture, len)",
-    Rdist = "dCJSvv(probSurvive, probCapture, len = 0)",
+  dCJS_vv = list(
+    BUGSdist = "dCJS_vv(probSurvive, probCapture, len)",
+    Rdist = "dCJS_vv(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double(0)'),
     pqAvail = FALSE))

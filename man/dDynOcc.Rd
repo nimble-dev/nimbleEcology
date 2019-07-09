@@ -35,9 +35,9 @@ rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
 
 \item{psi1}{probability of occupancy in the first sampling period}
 
-\item{phi}{persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dOcc_s\*}, vector for \code{dOcc_v\*}}
+\item{phi}{persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}}
 
-\item{gamma}{colonization probability. Probability that an unoccupied cell becomes occupied. \code{dOcc_\*s}, vector for \code{dOcc_\*v}}
+\item{gamma}{colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}}
 
 \item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
 
@@ -84,12 +84,13 @@ in a NIMBLE model.)
 For example, in a NIMBLE model,
 
 \code{detections[1:S, 1:T] ~ dDynOcc_ss(nrep, psi1 = init_prob, phi = persistence_prob,
-\n gamma = colonization_prob, p = p[1:S, 1:T])}
+gamma = colonization_prob, p = p[1:S, 1:T])}
 
 declares that the \code{detections[1:T]} vector follows a dynamic occupancy model distribution
 with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
 
 If the colonization probabilities are time-dependent, one would use:
 
-\code{detections[1:T] ~ dDynOcc_sv(occupancyProbability, detectionProbability[1:T])}
+\code{detections[1:T] ~ dDynOcc_sv(nrep, psi1 = init_prob, phi = persistence_prob,
+gamma = colonization_prob[1:T], p = p[1:S, 1:T])}
 }

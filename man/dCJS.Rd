@@ -2,38 +2,38 @@
 % Please edit documentation in R/dCJS.R
 \name{dCJS}
 \alias{dCJS}
-\alias{dCJSss}
-\alias{dCJSsv}
-\alias{dCJSvs}
-\alias{dCJSvv}
-\alias{rCJSss}
-\alias{rCJSsv}
-\alias{rCJSvs}
-\alias{rCJSvv}
+\alias{dCJS_ss}
+\alias{dCJS_sv}
+\alias{dCJS_vs}
+\alias{dCJS_vv}
+\alias{rCJS_ss}
+\alias{rCJS_sv}
+\alias{rCJS_vs}
+\alias{rCJS_vv}
 \title{Cormack-Jolly-Seber distribution for use in NIMBLE models}
 \usage{
-dCJSss(x, probSurvive, probCapture, len = 0, log = 0)
+dCJS_ss(x, probSurvive, probCapture, len = 0, log = 0)
 
-dCJSsv(x, probSurvive, probCapture, len = 0, log = 0)
+dCJS_sv(x, probSurvive, probCapture, len = 0, log = 0)
 
-dCJSvs(x, probSurvive, probCapture, len = 0, log = 0)
+dCJS_vs(x, probSurvive, probCapture, len = 0, log = 0)
 
-dCJSvv(x, probSurvive, probCapture, len = 0, log = 0)
+dCJS_vv(x, probSurvive, probCapture, len = 0, log = 0)
 
-rCJSss(n, probSurvive, probCapture, len = 0)
+rCJS_ss(n, probSurvive, probCapture, len = 0)
 
-rCJSsv(n, probSurvive, probCapture, len = 0)
+rCJS_sv(n, probSurvive, probCapture, len = 0)
 
-rCJSvs(n, probSurvive, probCapture, len = 0)
+rCJS_vs(n, probSurvive, probCapture, len = 0)
 
-rCJSvv(n, probSurvive, probCapture, len = 0)
+rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
 \item{x}{capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed.}
 
-\item{probSurvive}{survival probability, either a scalar (for dCJSs*) or a vector (for dCJSv*).}
+\item{probSurvive}{survival probability, either a scalar (for dCJS_s*) or a vector (for dCJS_v*).}
 
-\item{probCapture}{capture probability, either a scalar (for dCJS*s) or a vector (for dCJS*v).}
+\item{probCapture}{capture probability, either a scalar (for dCJS_*s) or a vector (for dCJS_*v).}
 
 \item{len}{length of capture history (needed for rCJSxx).}
 
@@ -42,7 +42,7 @@ rCJSvv(n, probSurvive, probCapture, len = 0)
 \item{n}{length of random sequence}
 }
 \description{
-\code{dCJS**} functions provide a basic distribution for capture history vectors based
+\code{dCJS_**} functions provide a basic distribution for capture history vectors based
  on survival and capture probabilities. The different aliases are for scalar ("s", time-independent)
  versus vector ("v", time-dependent) survival and capture probabilities, in that order.
 }
@@ -61,14 +61,14 @@ in a NIMBLE model.)
 
 For example,
 
-\code{captures[1:T] ~ dCSJss(survive, capture, T)}
+\code{captures[1:T] ~ dCSJ_ss(survive, capture, T)}
 
 declares a vector node, \code{captures[1:T]}, that follows a capture-recapture distribution
 with scalar survival probability \code{survive} and scalar capture probability \code{capture}
 (assuming \code{survive} and \code{capture} are defined elsewhere in the model).
 If time-dependent survival and capture probabilities are needed, use
 
-\code{captures[1:T] ~ dCSJss(survive[1:T], capture[1:T], T)}.
+\code{captures[1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}.
 
 In fact, the \code{len} argument (\code{T} in these examples) will be ignored during model
 probability calculations.  It will be used only for simulations.

@@ -3,6 +3,7 @@
 #' \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model distributions for NIMBLE models.
 #' "Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
 #' \code{dDHMMo} alias is used when observation probabilities are indexed by time.
+#'
 #' Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 #' one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
 #' model code.
@@ -57,7 +58,7 @@
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+#' \code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
 #' transitionProbs[1:S, 1:S, 1:T], T)}
 #'
 #' @seealso For hidden Markov models with time-independent transitions, see \link{dHMM} and \link{dHMMo}.

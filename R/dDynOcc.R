@@ -24,8 +24,8 @@
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
 #' @param nrep a vector of the number of observations per sampling occasion
 #' @param psi1 probability of occupancy in the first sampling period
-#' @param phi persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dOcc_s\*}, vector for \code{dOcc_v\*}
-#' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dOcc_\*s}, vector for \code{dOcc_\*v}
+#' @param phi persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}
+#' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}
 #' @param p matrix of detection probabilities for each observation. Dimensions should match x
 #' @param log TRUE (return log probability) or FALSE (return probability)
 #' @param n a vector of length 2 indicating the dimensions of the data to be randomly generated
