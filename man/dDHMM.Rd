@@ -8,6 +8,12 @@
 \title{Dynamic Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
 dDHMM(x, init, Z, T, len, log = 0)
+
+dDHMMo(x, init, Z, T, len, log = 0)
+
+rDHMM(n, init, Z, T, len = 0)
+
+rDHMMo(n, init, Z, T, len = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
@@ -26,16 +32,19 @@ x (number of observation times).}
 \item{len}{length of observations (needed for rDHMM)}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
+
+\item{n}{length of random sequence}
 }
 \description{
 \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model distributions for NIMBLE models.
 "Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
-\code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
+\code{dDHMMo} alias is used when observation probabilities are indexed by time.
+}
+\details{
 Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
 model code.
-}
-\details{
+
 These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
 for \link{nimbleModel}.
 
@@ -61,7 +70,7 @@ this case, \code{S} is the number of system states, \code{O} is the number of ob
 
 If the observation probabilities are time-dependent, one would use:
 
-\code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+\code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
 transitionProbs[1:S, 1:S, 1:T], T)}
 }
 \references{
@@ -74,5 +83,5 @@ For hidden Markov models with time-independent transitions, see \link{dHMM} and 
 For simple capture-recapture, see \link{dCJS}.
 }
 \author{
-Perry de Valpine and Daniel Turek
+Perry de Valpine, Daniel Turek, and Ben Goldstein
 }

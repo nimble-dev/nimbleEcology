@@ -7,7 +7,13 @@
 \alias{rHMMo}
 \title{Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
-dHMM(x, length, init, Z, T, log = 0)
+dHMM(x, init, Z, T, len = 0, log = 0)
+
+dHMMo(x, init, Z, T, len = 0, log = 0)
+
+rHMM(n, init, Z, T, len = 0)
+
+rHMMo(n, init, Z, T, len = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
@@ -18,16 +24,18 @@ dHMM(x, length, init, Z, T, log = 0)
 Dimension of \code{Z} is (number of possible observation classes) x (number of possible system states)}
 
 \item{T}{time-independent matrix of system state-transition probabilities.
-Dimension of \code{T} is (number of possible system states) x  (number of possible system states)}
+Dimension of \code{T} is (number of possible system states) x (number of possible system states)}
+
+\item{len}{length of observations (needed for rDHMM)}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 
-\item{len}{length of observations (needed for rDHMM)}
+\item{n}{length of random sequence}
 }
 \description{
 \code{dHMM} and \code{dHMMo} provide hidden Markov model distributions for NIMBLE models.
-"Dynamic" here means that the matrix of state transition probabilities in indexed by time.  The
-\code{dDHMMo} version additionally allows observation probabilities to be indexed by time.
+"Dynamic" here means that the matrix of state transition probabilities is indexed by time.  The
+\code{dHMMo} version additionally allows observation probabilities to be indexed by time.
 Compared to writing NIMBLE models with discrete latent states, use of these DHMM distributions allows
 one to directly integrate over such discrete latent states and hence leave them out of the NIMBLE
 model code.
@@ -58,7 +66,7 @@ this case, \code{S} is the number of system states and \code{O} is the number of
 
 If the observation probabilities are time-dependent, one would use:
 
-\code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+\code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
 transitionProbs[1:S, 1:S], T)}
 }
 \references{
@@ -71,5 +79,5 @@ For dynamic hidden Markov models with time-dependent transitions, see \link{dDHM
 For simple capture-recapture, see \link{dCJS}.
 }
 \author{
-Perry de Valpine and Daniel Turek
+Ben Goldstein, Perry de Valpine, and Daniel Turek
 }

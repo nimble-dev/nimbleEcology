@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dochvam/nimbleEcology.svg?branch=master)](https://travis-ci.org/dochvam/nimbleEcology)
+
 # Distributions for NIMBLE that are useful for ecological models
 
 This repository has *unfinished, untested, incomplete, draft* code for several distributions that can be used in NIMBLE models for common population ecology statistical models.  These include distributions for:

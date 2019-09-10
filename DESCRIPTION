@@ -1,19 +1,23 @@
 Package: nimbleEcology
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Distributions for Ecological Models in NIMBLE
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
-Depends: nimble
+Author: Ben Goldstein, Perry de Valpine, Daniel Turek
+Maintainer: Ben Goldstein <ben.goldstein@berkeley.edu>
+Date: 2019-06-13
+Description: Common ecological distributions for NIMBLE models in the form of nimbleFunctions. 
+  Includes Cormack-Jolly-Seber, occupancy, dynamic occupancy, hidden Markov, and dynamic hidden Markov models.
+License: BSD_3_clause + file LICENSE | GPL (>= 2)
+Copyright: see COPYRIGHTS file.
+Depends: R (>= 3.1.2)
+Imports: nimble,methods,igraph,coda,R6
 Encoding: UTF-8
 LazyData: true
+URL: 
 Collate:
   dDynOcc.R
   dCJS.R
   dDHMM.R
   dHMM.R
   dOcc.R
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

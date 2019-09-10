@@ -2,14 +2,95 @@
 % Please edit documentation in R/dDynOcc.R
 \name{dDynOcc}
 \alias{dDynOcc}
-\alias{rOcc}
-\alias{rOcc_s}
-\alias{dOcc_v}
-\alias{rOcc_v}
+\alias{dDynOcc_ss}
+\alias{dDynOcc_sv}
+\alias{dDynOcc_vs}
+\alias{dDynOcc_vv}
+\alias{rDynOcc_vv}
+\alias{rDynOcc_vs}
+\alias{rDynOcc_sv}
+\alias{rDynOcc_ss}
 \title{Dynamic occupancy distribution for use in NIMBLE models}
 \usage{
-dDynOcc()
+dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = 0)
+
+dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
+
+rDynOcc_vv(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_vs(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_sv(n, nrep, psi1, phi, gamma, p)
+
+rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
+}
+\arguments{
+\item{x}{detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period}
+
+\item{nrep}{a vector of the number of observations per sampling occasion}
+
+\item{psi1}{probability of occupancy in the first sampling period}
+
+\item{phi}{persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}}
+
+\item{gamma}{colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}}
+
+\item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
+
+\item{log}{TRUE (return log probability) or FALSE (return probability)}
+
+\item{n}{a vector of length 2 indicating the dimensions of the data to be randomly generated}
 }
 \description{
-Dynamic occupancy distribution for use in NIMBLE models
+\code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.
+}
+\details{
+Dynamic occupancy models
+model occurrence at a series of sites over many replicate timesteps. The likelihood of an observation in site s
+at time t depends on the state of the site at time t-1, the transitition probability of persistence \code{phi[t]}
+or colonization \code{gamma[t]} and a detection probability code{p[s, t]}.
+
+The pair of letters following the 'dDynOcc_' indicates whether the probabilities of persistence
+and colonization are a constant scalar (s) or time-indexed vector (v). For example, dOcc_sv takes scalar
+persistence probability phi with a vector of colonization probabilities gamma.
+
+Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
+a separate scalar datum for each observation,
+use of these distributions allows
+one to directly sum over the discrete latent state and calculate the probability of
+all observations from one site jointly.
+}
+\seealso{
+For regular occupancy models, see documentation for dOcc.
+}
+\author{
+Ben Goldstein and Perry de Valpine
+
+
+These are written in the format of user-defined distributions to extend NIMBLE's
+use of the BUGS model language. More information about writing user-defined distributions can be found
+in the NIMBLE User Manual at \code{https://r-nimble.org}.
+
+The first argument to a "d" function is always named \code{x} and is given on the
+left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
+When using these distributions in a NIMBLE model, the user
+should not provide the \code{log} argument. (It is always set to \code{TRUE} when used
+in a NIMBLE model.)
+
+For example, in a NIMBLE model,
+
+\code{detections[1:S, 1:T] ~ dDynOcc_ss(nrep, psi1 = init_prob, phi = persistence_prob,
+gamma = colonization_prob, p = p[1:S, 1:T])}
+
+declares that the \code{detections[1:T]} vector follows a dynamic occupancy model distribution
+with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
+
+If the colonization probabilities are time-dependent, one would use:
+
+\code{detections[1:T] ~ dDynOcc_sv(nrep, psi1 = init_prob, phi = persistence_prob,
+gamma = colonization_prob[1:T], p = p[1:S, 1:T])}
 }
