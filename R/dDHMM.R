@@ -70,7 +70,7 @@ NULL
 #' @rdname dDHMM
 dDHMM <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
-                 init = double(1),##
+                 init = double(1),
                  Z = double(2),
                  T = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
