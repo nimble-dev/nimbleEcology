@@ -14,7 +14,7 @@
 #' one to directly sum over the discrete latent state and calculate the probability of
 #' all observations from one site jointly.
 #'
-#' @aliases dOcc_ss dOcc_sv dOcc_vs dOcc_vv rOcc_ss rOcc_sv rOcc_vs rOcc_vv
+#' @aliases dOcc_s dOcc_v
 #'
 #' @name dOcc
 #'
@@ -57,7 +57,7 @@ NULL
 
 #' @export
 #' @rdname dOcc
-dOcc_ss <- nimbleFunction(
+dOcc_s <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
                  probDetect = double(0),
@@ -75,7 +75,7 @@ dOcc_ss <- nimbleFunction(
 
 #' @export
 #' @rdname dOcc
-dOcc_sv <- nimbleFunction(
+dOcc_v <- nimbleFunction(
   run = function(x = double(1),
                  probOcc = double(0),
                  probDetect = double(1),
@@ -94,146 +94,51 @@ dOcc_sv <- nimbleFunction(
 
 #' @export
 #' @rdname dOcc
-dOcc_vs <- nimbleFunction(
-  run = function(x = double(1),
-                 probOcc = double(1),
-                 probDetect = double(0),
-                 len = integer(0, default = 0),
-                 log = logical(0, default = 0)) {
-    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
-    if (length(x) != length(probOcc)) stop("Length of data does not match length of occupancy vector.")
-
-    returnType(double(0))
-    prob_x_given_occupied <- dbinom(x, prob = probDetect, size = 1, log = FALSE)
-    prob_x_given_unoccupied <- x == 0
-    log_prob_x <- sum(log(prob_x_given_occupied * probOcc + prob_x_given_unoccupied * (1 - probOcc)))
-
-    if (log) return(log_prob_x)
-    return(exp(log_prob_x))
-  }
-)
-
-#' @export
-#' @rdname dOcc
-dOcc_vv <- nimbleFunction(
-  run = function(x = double(1),
-                 probOcc = double(1),
-                 probDetect = double(1),
-                 len = integer(0, default = 0),
-                 log = logical(0, default = 0)) {
-    if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
-    if (length(x) != length(probOcc)) stop("Length of data does not match length of occupancy vector.")
-    if (length(x) != length(probDetect)) stop("Length of data does not match length of detection vector.")
-
-    returnType(double(0))
-    prob_x_given_occupied <- dbinom(x, prob = probDetect, size = 1, log = FALSE)
-    prob_x_given_unoccupied <- x == 0
-    log_prob_x <- sum(log(prob_x_given_occupied * probOcc + prob_x_given_unoccupied * (1 - probOcc)))
-    if (log) return(log_prob_x)
-    return(exp(log_prob_x))
-  }
-)
-
-#' @export
-#' @rdname dOcc
-rOcc_ss <- nimbleFunction(
+rOcc_s <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
                  probDetect = double(0),
                  len = integer(0, default = 0)) {
-    if (len == 0) stop("Argument 'len' must be specified in rOcc_ss form.")
+    if (len == 0) stop("Argument 'len' must be given for rOcc_s (or if a nimble model with dOcc_s is used for simulation).")
     returnType(double(1))
-    k <- len
-    z <- rbinom(1, prob = probOcc, size = 1)
-    if (z == 0) return(numeric(k))
-    return(rbinom(k, prob = probDetect, size = 1))
+    u <- runif(1, 0, 1)
+    if (u > probOcc) return(numeric(0, length = len))
+    return(rbinom(len, prob = probDetect, size = 1))
   }
 )
 
 #' @export
 #' @rdname dOcc
-rOcc_sv <- nimbleFunction(
+rOcc_v <- nimbleFunction(
   run = function(n = integer(),
                  probOcc = double(0),
                  probDetect = double(1),
                  len = integer(0, default = 0)) {
-    if (len != length(probDetect)) {
-      stop("If specified, argument 'len' must match length of probDetect.")
+    if(len != 0) {
+      if (len != length(probDetect)) {
+        stop("If argument 'len' is given, it must match length of probDetect.")
+      }
     }
     returnType(double(1))
     k <- length(probDetect)
-    z <- rbinom(1, prob = probOcc, size = 1)
-    if (z == 0) return(numeric(k))
+    u <- runif(1, 0, 1)
+    if(u > probOcc) return(numeric(0, length = k))
     return(rbinom(k, prob = probDetect, size = 1))
   }
 )
-
-#' @export
-#' @rdname dOcc
-rOcc_vs <- nimbleFunction(
-  run = function(n = integer(0),
-                 probOcc = double(1),
-                 probDetect = double(0),
-                 len = integer(0, default = 0)) {
-    if (len != length(probOcc)) {
-      stop("If specified, argument 'len' must match length of probOcc")
-    }
-    returnType(double(1))
-    k <- length(probOcc)
-    z <- rbinom(k, prob = probOcc, size = 1)
-    return(rbinom(k, prob = probDetect, size = 1) * z)
-  }
-)
-
-#' @export
-#' @rdname dOcc
-rOcc_vv <- nimbleFunction(
-  run = function(n = integer(),
-                 probOcc = double(1),
-                 probDetect = double(1),
-                 len = integer(0, default = 0)) {
-    if (length(probDetect) != length(probOcc)) {
-      stop("Occupancy and detection vectors are of different lengths.")
-    }
-    if (len != length(probDetect)) {
-      stop("If specified, argument 'len' must match length of probDetect and probOcc.")
-    }
-    returnType(double(1))
-    k <- length(probDetect)
-    z <- rbinom(k, prob = probOcc, size = 1)
-    return(rbinom(k, prob = probDetect, size = 1) * z)
-  }
-)
-
 
 registerDistributions(list(
-  dOcc_ss = list(
-    BUGSdist = "dOcc_ss(probOcc, probDetect, len)",
-    Rdist = "dOcc_ss(probOcc, probDetect, len)",
+  dOcc_s = list(
+    BUGSdist = "dOcc_s(probOcc, probDetect, len)",
+    Rdist = "dOcc_s(probOcc, probDetect, len)",
     discrete = TRUE,
     types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)', 'len = integer(0)'),
     pqAvail = FALSE)))
 
 registerDistributions(list(
-  dOcc_sv = list(
-    BUGSdist = "dOcc_sv(probOcc, probDetect, len)",
-    Rdist = "dOcc_sv(probOcc, probDetect, len)",
+  dOcc_v = list(
+    BUGSdist = "dOcc_v(probOcc, probDetect, len)",
+    Rdist = c("dOcc_v(probOcc, probDetect, len)"),
     discrete = TRUE,
     types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)', 'len = integer(0)'),
-    pqAvail = FALSE)))
-
-registerDistributions(list(
-  dOcc_vs = list(
-    BUGSdist = "dOcc_vs(probOcc, probDetect, len)",
-    Rdist = "dOcc_vs(probOcc, probDetect, len)",
-    discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(0)', 'len = integer(0)'),
-    pqAvail = FALSE)))
-
-registerDistributions(list(
-  dOcc_vv = list(
-    BUGSdist = "dOcc_vv(probOcc, probDetect, len)",
-    Rdist = "dOcc_vv(probOcc, probDetect, len)",
-    discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(1)', 'probDetect = double(1)', 'len = integer(0)'),
     pqAvail = FALSE)))

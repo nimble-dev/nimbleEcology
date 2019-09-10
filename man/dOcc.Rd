@@ -2,31 +2,19 @@
 % Please edit documentation in R/dOcc.R
 \name{dOcc}
 \alias{dOcc}
-\alias{dOcc_ss}
-\alias{dOcc_sv}
-\alias{dOcc_vs}
-\alias{dOcc_vv}
-\alias{rOcc_ss}
-\alias{rOcc_sv}
-\alias{rOcc_vs}
-\alias{rOcc_vv}
+\alias{dOcc_s}
+\alias{dOcc_v}
+\alias{rOcc_s}
+\alias{rOcc_v}
 \title{Occupancy distribution for use in NIMBLE models}
 \usage{
-dOcc_ss(x, probOcc, probDetect, len = 0, log = 0)
+dOcc_s(x, probOcc, probDetect, len = 0, log = 0)
 
-dOcc_sv(x, probOcc, probDetect, len = 0, log = 0)
+dOcc_v(x, probOcc, probDetect, len = 0, log = 0)
 
-dOcc_vs(x, probOcc, probDetect, len = 0, log = 0)
+rOcc_s(n, probOcc, probDetect, len = 0)
 
-dOcc_vv(x, probOcc, probDetect, len = 0, log = 0)
-
-rOcc_ss(n, probOcc, probDetect, len = 0)
-
-rOcc_sv(n, probOcc, probDetect, len = 0)
-
-rOcc_vs(n, probOcc, probDetect, len = 0)
-
-rOcc_vv(n, probOcc, probDetect, len = 0)
+rOcc_v(n, probOcc, probDetect, len = 0)
 }
 \arguments{
 \item{x}{detection/non-detection vector of 0s (not detected) and 1s (detected).}

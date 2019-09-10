@@ -21,3 +21,6 @@ Collate:
   dHMM.R
   dOcc.R
 RoxygenNote: 6.1.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

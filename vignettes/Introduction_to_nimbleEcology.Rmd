@@ -1,0 +1,268 @@
+---
+title: "Introduction to nimbleEcology"
+author: "Perry de Valpine"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to nimbleEcology}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Welcome to `nimbleEcology`.  This package provides distributions that can be used in `nimble` models for common ecological model components.  These include:
+
+- Cormack-Jolly-Seber (CJS) capture-recapture models.
+- Dynamic hidden Markov models (DHMMs), which are used in multi-state and multi-event capture-recapture models.
+- Occupancy models.
+- Dynamic occupancy models.
+- N-mixture models.
+
+# What is nimble?
+
+NIMBLE is a system for writing hierarchical statistical models and algorithms.  It is distributed in R package [nimble](https://CRAN.R-project.org/package=nimble).  NIMBLE stands for "Numerical Inference for statistical Models using Bayesian and Likelihood Estimation".  NIMBLE includes:
+
+1. A dialect of the BUGS model language that is extensible.  This means that NIMBLE uses almost the same model code as WinBUGS, OpenBUGS, and JAGS.  Being "extensible" means that it is possible to write new functions and distributions and use them in your models.
+
+2. An algorithm library including Markov chain Monte Carlo (MCMC) and other methods.
+
+3. A compiler that generates C++ for each model and algorithm, compiles the C++, and lets you use it from R.  You don't need to know anything about C++ to use nimble.
+
+More information about nimble can be found at [https://r-nimble.org](https://r-nimble.org).
+
+The paper that describes nimble is [here](https://www.tandfonline.com/doi/full/10.1080/10618600.2016.1172487).
+
+### Getting help
+
+The best way to seek user support is the nimble-users list.  Information on how to join can be found at [https://r-nimble.org](https://r-nimble.org).
+
+# The concept of using new distributions for ecological model components.
+
+The distributions provided in `nimbleEcology` let you simplify model code and the algorithms that use it, such as MCMC.  For the ecological models in `nimbleEcology`, the simplification comes from removing some discrete latent states from the model and instead doing the corresponding probability (or likelihood) calculations in a specialized distribution.
+
+For each of the ecological model components provided by `nimbleEcology`, here are the discrete latent states that are replaced by use of a specialized distribution:
+
+- CJS (basic capture-recapture): Latent alive-or-dead states.
+- DHMMs: Latent individual state, such as location or breeding status, as well as alive-or-dead.
+- Occupancy: Latent occupancy status of a site.
+- Dynamic occupancy: latent occupancy status of a site at a time.
+- N-mixture: Latent number of individuals available to be sampled.
+
+Before going further, let's illustrate with a basic occupancy model.
+
+## Illustration: A simple occupancy model
+
+Occupancy models are used for data from repeated visits to a set of sites, where the detection (1) or non-detection (0) of a species of interest is recorded on each visit.  Define `y[i, j]` as the observation from site `i` on visit `j`.  `y[i, j]` is 1 if the species was seen and 0 if not.
+
+Typical model code for for an occupancy model would be as follows.  Naturally, this is written for `nimble`, but the same model code should work for JAGS or BUGS (WinBUGS or OpenBUGS).
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+library(nimble)
+library(nimbleEcology)
+```
+
+```{r}
+occupancy_code <- nimbleCode({
+  psi ~ dunif(0,1)
+  p ~ dunif (0,1)
+  for(i in 1:nSites) {
+    z[i] ~ dbern(psi)
+    for(j in 1:nVisits) {
+      y[i, j] ~ dbern(z[i] * p)
+    }
+  }
+})
+```
+
+In this code:
+
+- `psi` is occupancy probability;
+- `p` is detection probability;
+- `z[i]` is the latent state of whether a site is really occupied (`z[i]` = 1) or not (`z[i]` = 0);
+- `nSites` is the number of sites; and
+- `nVisits` is the number of sampling visits to each site.
+
+The new version of this model using `nimbleEcology`'s specialized occupancy distribution will only work in `nimble` (not JAGS or BUGS).  It is:
+```{r}
+occupancy_code_new <- nimbleCode({
+  psi ~ dunif(0,1)
+  p ~ dunif (0,1)
+  for(i in 1:nSites) {
+    y[i, 1:nVisits] ~ dOcc_s(probOcc = psi, probDetect = p, len = nVisits)
+  }
+})
+```
+
+In the new code, the vector of data from all visits to site `i`, namely `y[i, 1:nVisits]`, has its likelihood contribution calculated in one step, `dOcc_s`.  This occupancy distribution calculates the total probability of the data by summing over the cases that the site is occupied or unoccupied. That means that `z[i]` is not needed in the model, and MCMC will not need to sample over `z[i]`.  Details of all calculations, and discussion of the pros and cons of changing models in this way, are given later this vignette.
+
+The `_s` part of `dOcc_s` means that `p` is a scalar, i.e. it does not vary with visit.  If it should vary with visit, sometimes described as being time-dependent, it would need to be provided as a vector, and the distribution function should be `dOcc_v`.  In other model components, there may be notation such as `sv` if there are two parameters that can be time-independent (`s`) or time-dependent (`v`).
+
+### MCMC with both versions of the example occupancy model.
+
+We can run an MCMC for this model in the following steps:
+
+1. Build the model.
+2. Configure the MCMC.
+3. Build the MCMC.
+4. Compile the model and MCMC.
+5. Run the MCMC.
+6. Extract the samples.
+
+The function `nimbleMCMC` does all of these steps for you.  The function `runMCMC` does steps 5-6 for you, with convenient management of options such as discarding burn-in samples.  The full set of steps allows great control over how you use a model and configure and use an MCMC.  We will go through the steps 1-4 and then use `runMCMC` for steps 5-6.  
+
+In this example, we also need simulated data.  We can use the same model to create simulated data, rather than writing separate R code for that purpose.
+
+#### Build the model
+
+```{r}
+occupancy_model <- nimbleModel(occupancy_code, 
+                               constants = list(nSites = 50, nVisits = 5))
+```
+
+#### Simulate data
+
+```{r}
+occupancy_model$psi <- 0.7
+occupancy_model$p <- 0.15
+simNodes <- occupancy_model$getDependencies(c("psi", "p"), self = FALSE)
+occupancy_model$simulate(simNodes)
+occupancy_model$z
+head(occupancy_model$y, 10) ## first 10 rows
+occupancy_model$setData('y') ## set "y" as data
+```
+
+#### Configure and build the MCMC
+
+```{r}
+MCMCconf <- configureMCMC(occupancy_model)
+MCMC <- buildMCMC(occupancy_model)
+```
+
+#### Compile the model and MCMC
+
+```{r}
+## These can be done in one step, but many people
+## find it convenient to do it in two steps.
+Coccupancy_model <- compileNimble(occupancy_model)
+CMCMC <- compileNimble(MCMC, project = occupancy_model)
+```
+
+#### Run the MCMC and extract the samples
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+samples <- runMCMC(CMCMC, niter = 10000, nburnin = 500, thin = 10)
+```
+
+### Do it all for the new version of the model
+
+Next we show all of the same steps, except for simulating data, using the new version of the model.
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+occupancy_model_new <- nimbleModel(occupancy_code_new, 
+                                   constants = list(nSites = 50, nVisits = 5),
+                                   data = list(y = occupancy_model$y),
+                                   inits = list(psi = 0.7, p = 0.15))
+MCMC_new <- buildMCMC(occupancy_model_new) ## This will use default call to configureMCMC.
+Coccupancy_model_new <- compileNimble(occupancy_model_new)
+CMCMC_new <- compileNimble(MCMC_new, project = occupancy_model_new)
+samples_new <- runMCMC(CMCMC_new, niter = 10000, nburnin = 500, thin = 10)
+```
+
+We see that the results of the two versions match closely.
+
+```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE}
+library(tidyverse)
+S1 <- gather(as.data.frame(samples), key = "Parameter", value = "Value")
+S2 <- gather(as.data.frame(samples_new), key = "Parameter", value = "Value")
+Scombo <- bind_rows(list(familiar = S1, new = S2), .id = 'Version')
+library(ggplot2)
+ggplot(data = Scombo, aes(x = Value)) +
+  geom_density(aes(group = Version, color = Version)) + 
+  facet_grid(cols = vars(Parameter))
+```
+
+The posterior density plots show that the familiar, conventional version of the model yields the same posterior distribution as the new version, which uses `dOcc_s`.
+
+### Use the new version for something different: maximum likelihood or maximum a posteriori estimation.
+
+It is useful that the new way to write the model does not have discrete latent states.  Since this example also does not have other latent states or random effects, we can use it simply as a likelihood or posterior density calculator.  More about how to do so can be found in the nimble User Manual.  Here we illustrate making a compiled `nimbleFunction` for likelihood calculations for parameters `psi` and `p` and maximizing the likelihood using R's `optim`.
+
+```{r}
+CalcLogLik <- nimbleFunction(
+  setup = function(model, nodes)
+    calcNodes <- model$getDependencies(nodes, self = FALSE),
+  run = function(v = double(1)) {
+    values(model, nodes) <<- v
+    return(model$calculate(calcNodes))
+    returnType(double(0))
+  }
+)
+OccLogLik <- CalcLogLik(occupancy_model_new, c("psi", "p"))
+COccLogLik <- compileNimble(OccLogLik, project = occupancy_model_new)
+optim(c(0.5, 0.5), COccLogLik$run, control = list(fnscale = -1))$par
+```
+
+# Distributions provided in `nimbleEcology`
+
+In this section, we introduce each of the `nimbleEcology` distributions in more detail.
+
+## Capture-recapture (CJS)
+
+Cormack-Jolly-Seber models give the probability of a capture history for an individual, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides variants for time-independent and time-dependent survival and/or detection probability.  
+
+Define $\phi_t$ as survival from time $t-1$ to $t$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  (Be careful with indexing. Sometimes $\phi_t$ might be defined as survival from time $t$ to $t+1$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, is not included in $\mathbf{y}$ because it is known to be 1 since this model conditions on first capture.  
+
+There are multiple ways to write the CJS probability.  We will do so in a state-space format because that leads to the more general DHMM case next. The probability of observations given parameters, $P(\mathbf{y} | \mathbf{\phi}, \mathbf{p})$, is factored as:
+\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
+\]
+
+Each factor $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
+\[
+P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = I(y_t = 1) (A_t p_t) + I(y_t = 0) (A_t (1-p_t) + (1-A_t))
+\]
+The indicator function $I(y_t = 1)$ is 1 if it y_t is 1, 0 otherwise, and vice-versa for $I(y_t = 0)$. Here $A_t$ is the probability that the individual is alive at time $t$ given $y_{1:t-1}$, the data up to the previous time.  This is calculated as:
+\[
+A_t = G_{t-1} \phi_t
+\]
+where $G_{t}$ is the probability that the individual is alive at time $t$ given $y_{1:t}$, the data up to the current time.  This is calculated as:
+\[
+G_{t} = I(y_t = 1) 1 + I(y_t = 0) \frac{A_t (1-p_t)}{A_t (1-p_t) + (1-A_t)}
+\]
+The sequential calculation is initialized with $G_0 = 1$.  For time step $t$, we calculate $A_t$, then $P(y_t | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$, then $G_t$, leaving us ready for time step $t+1$.  This is a trivial hidden Markov model where the latent state, alive or dead, is not written explicitly.
+
+In the cases with time-independent survival or capture probability, we simply drop the time indexing for the corresponding parameter.
+
+## Dynamic hidden Markov models (DHMM)
+
+We again use
+
+\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
+\]
+
+Each factor $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
+\[
+P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = \sum_i A_{t, i} p_{t, i, y_t}
+\]
+
+\[
+A_{t, i} = \sum_j G_{t-1, j} \phi_{t, j, i}
+\]
+
+\[
+G_{t, i} = \frac{A_{t, i} p_{t, i, y_t}}{P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})}
+\]
+
+
+## Occupancy
+
+## Dynamic occupancy
+
+## N-mixture
