@@ -43,9 +43,9 @@
 #' In fact, the \code{len} argument (\code{T} in these examples) will be ignored during model
 #' probability calculations.  It will be used only for simulations.
 #'
-#' \emph{Ignored elements of \code{survive} and \code{capture} when they are vectors:} Note that the last element of \code{survive},
-#' if present, will be ignored.  Also the first element of \code{capture} will be ignored, since the first
-#' element of the capture history is assumed to be 1, indicated first capture.
+#' It is important to use the time indexing correctly for survival.  \code{probSurvive[t]} is the survival
+#' probabilty from time \code{t-1} to time \code{t}.  Time indexing for detection is more obvious:
+#' \code{probDetect[t]} is the detection probability at time \code{t}.
 #'
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
@@ -76,7 +76,7 @@ dCJS_ss <- nimbleFunction(
     ## logProbData will be the final answer
     logProbData <- 0
     lenX <- length(x)
-    if (lenX == 0) {  ## l < 1 should not occur, but just in case:
+    if (lenX == 0) {  ## lenX < 1 should not occur, but just in case:
       return(0)
     }
     for (t in 1:lenX) {
@@ -112,7 +112,7 @@ dCJS_sv <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
-    if (length(x) != length(probCapture)) stop("Length of data does not match length of capture vector.")
+    if (length(x) != length(probCapture)) stop("Length of probCapture does not match length of data.")
 
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
@@ -156,8 +156,7 @@ dCJS_vs <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
-    if (length(x) != length(probSurvive)) stop("Length of data does not match length of survival vector.")
-
+    if (length(x) != length(probSurvive)) stop("Length of probSurvive does not match length of data.")
 
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
@@ -205,8 +204,8 @@ dCJS_vv <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
-    if (length(x) != length(probSurvive)) stop("Length of data does not match length of survival vector.")
-    if (length(x) != length(probCapture)) stop("Length of data does not match length of capture vector.")
+    if (length(x) != length(probSurvive)) stop("Length of probSurvive does not match length of data.")
+    if (length(x) != length(probCapture)) stop("Length of probCapture does not match length of data.")
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -245,7 +244,9 @@ rCJS_ss <- nimbleFunction(
                  probCapture = double(),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
-    ans <- numeric(len)
+    if(len < 0)
+      stop("len must be non-negative.")
+    ans <- numeric(length = len, init = FALSE)
     alive <- 1
     if (len <= 0) return(ans)
     for (i in 1:len) {
@@ -270,7 +271,11 @@ rCJS_sv <- nimbleFunction(
                  probCapture = double(1),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
-    ans <- numeric(len)
+    if(len < 0)
+      stop("len must be non-negative.")
+    if(length(probCapture) != len)
+      stop("Length of probCapture is not the same as len.")
+    ans <- numeric(length = len, init = FALSE)
     alive <- 1
     if (len <= 0) return(ans)
     for (i in 1:len) {
@@ -295,7 +300,11 @@ rCJS_vs <- nimbleFunction(
                  probCapture = double(0),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
-    ans <- numeric(len)
+    if(len < 0)
+      stop("len must be non-negative.")
+    if(length(probSurvive) != len)
+      stop("Length of probSurvive is not the same as len.")
+    ans <- numeric(length = len, init = FALSE)
     alive <- 1
     if (len <= 0) return(ans)
     for (i in 1:len) {
@@ -320,7 +329,13 @@ rCJS_vv <- nimbleFunction(
                  probCapture = double(1),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
-    ans <- numeric(len)
+    if(len < 0)
+      stop("len must be non-negative.")
+    if(length(probSurvive) != len)
+      stop("Length of probSurvive is not the same as len.")
+    if(length(probCapture) != len)
+      stop("Length of probCapture is not the same as len.")
+    ans <- numeric(lenth = len, init = FALSE)
     alive <- 1
     if (len <= 0) return(ans)
     for (i in 1:len) {

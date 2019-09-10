@@ -13,7 +13,7 @@ Depends: R (>= 3.4.0), nimble
 Imports: 
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/dochvam/nimbleEcology
+URL: https://github.com/nimble-dev/nimbleEcology
 Collate:
   dDynOcc.R
   dCJS.R
@@ -21,3 +21,6 @@ Collate:
   dHMM.R
   dOcc.R
 RoxygenNote: 6.1.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
