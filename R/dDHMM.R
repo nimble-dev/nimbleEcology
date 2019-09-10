@@ -79,7 +79,7 @@ dDHMM <- nimbleFunction(
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMM.")
     if (length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
-    if (len != dim(T)[3]) stop("Length of x does not match len in dDHMM.")
+    if (len-1 != dim(T)[3]) stop("Length of x does not match len in dDHMM.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0

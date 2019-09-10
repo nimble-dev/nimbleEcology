@@ -13,6 +13,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
+  ##,eval = FALSE ## uncomment this to build quickly without running code.
 )
 ```
 
@@ -210,13 +211,13 @@ optim(c(0.5, 0.5), COccLogLik$run, control = list(fnscale = -1))$par
 
 # Distributions provided in `nimbleEcology`
 
-In this section, we introduce each of the `nimbleEcology` distributions in more detail.
+In this section, we introduce each of the `nimbleEcology` distributions in more detail.  We will summarize the calculations using mathematical notation then describe how to use the distributions in a `nimble` model.
 
 ## Capture-recapture (CJS)
 
-Cormack-Jolly-Seber models give the probability of a capture history for an individual, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides variants for time-independent and time-dependent survival and/or detection probability.  
+Cormack-Jolly-Seber models give the probability of a capture history for an individual, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides variants for time-independent and time-dependent survival and/or detection probability.  Of course, the survival and detection parameters for the CJS probability may themselves depend on other parameters and/or random effects.
 
-Define $\phi_t$ as survival from time $t-1$ to $t$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  (Be careful with indexing. Sometimes $\phi_t$ might be defined as survival from time $t$ to $t+1$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, is not included in $\mathbf{y}$ because it is known to be 1 since this model conditions on first capture.  
+Define $\phi_t$ as survival from time $t-1$ to $t$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  We use "time" and "sampling occasion" as synonyms in this context, so $T$ is the number of sampling occasions.  (Be careful with indexing. Sometimes you might see $\phi_t$ defined as survival from time $t$ to $t+1$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, is not included in $\mathbf{y}$ because it is known to be 1 since this model conditions on first capture.  
 
 There are multiple ways to write the CJS probability.  We will do so in a state-space format because that leads to the more general DHMM case next. The probability of observations given parameters, $P(\mathbf{y} | \mathbf{\phi}, \mathbf{p})$, is factored as:
 \[
@@ -227,7 +228,7 @@ Each factor $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
 \[
 P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = I(y_t = 1) (A_t p_t) + I(y_t = 0) (A_t (1-p_t) + (1-A_t))
 \]
-The indicator function $I(y_t = 1)$ is 1 if it y_t is 1, 0 otherwise, and vice-versa for $I(y_t = 0)$. Here $A_t$ is the probability that the individual is alive at time $t$ given $y_{1:t-1}$, the data up to the previous time.  This is calculated as:
+The indicator function $I(y_t = 1)$ is 1 if it $y_t$ is 1, 0 otherwise, and vice-versa for $I(y_t = 0)$. Here $A_t$ is the probability that the individual is alive at time $t$ given $y_{1:t-1}$, the data up to the previous time.  This is calculated as:
 \[
 A_t = G_{t-1} \phi_t
 \]
@@ -239,29 +240,95 @@ The sequential calculation is initialized with $G_0 = 1$.  For time step $t$, we
 
 In the cases with time-independent survival or capture probability, we simply drop the time indexing for the corresponding parameter.
 
-## Dynamic hidden Markov models (DHMM)
+### CJS distributions in `nimbleEcology`
 
-We again use
+CJS models are available in four distributions in `nimbleEcology`.  These differ only in whether survival probability and/or capture probability are time-dependent or time-independent, yielding four combinations:
 
+- `dCJS_ss`: Both are time-independent (scalar).
+- `dCJS_sv`: Survival is time-independent (scalar).  Capture probability is time-dependent (vector).
+- `dCJS_vs`: Survival is time-dependent (vector).  Capture probability is time-independent (scalar).
+- `dCJS_vv`: Both are time-dependent (vector).
+
+The reason that different functions are needed for scalar vs. vector arguments is that `nimble` is statically typed.  This may be relaxed somewhat in the future.
+
+The usage for each is similar.  An example for `dCJS_vs` is:
+
+`y[i, 1:T] ~ dCJS_sv(probSurvive = phi, probCapture = p[i, 1:T], len = T)`
+
+Note the following points:
+
+- `y[i, 1:T]` is a vector capture-history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.  
+- Arguments to `dCJS_sv` are named.  As in R, this is optional but helpful.  Without names, the order matters.
+- `probSurvive` is provided as a scalar value, as if there is a variable called `phi`.
+- In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is `phi_t` above, namely the probability of survival from occasion $t-1$ to $t$. 
+- `probCapture` is provided as a vector value, as if there is a matrix variable called `p`.  The value of `probCapture` could be any vector from any variable in the model.
+- The $t^{\mbox{th}}$ element of `probCapture` is $\phi_t$ above, namely the probability of capture, if alive, at time $t$.
+- The length parameter `len` is in some cases redundant (the information could be determined by the length of other inputs), but nevertheless it is required.
+
+## Hidden Markov models (HMMs) and Dynamic hidden Markov models (DHMMs)
+
+Hidden Markov models give the probability of detection history that can handle:
+
+- detections in different states, such as locations or breeding states,
+- incorrect state information, such as if breeding state might not be observed correctly,
+- probabilities of transitions between states.
+
+In a HMM, "dead" is simply another state, and "unobserved" is a possible observation.  Thus, HMMs are generalzation of the CJS models. In capture-recapture, HMMs encompass multi-state and multi-event models.
+
+We again use the factorization
 \[
 P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
 \]
+In the case of an HMM, $y_t$ is the recorded state at time $t$, taking an integer value, with the possibility that one possible value corresponds to "unobserved".
 
-Each factor $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
+Define $A_{t,i}$ as the probability that the individual is in state $i$ at time $t$, given $y_{1:t-1}$, the data up to the previous time.  Define $p_{t,i,j}$ as the probability that, at time $t$, an individual in state $i$ is observed in state $j$.  Then $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
 \[
 P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = \sum_i A_{t, i} p_{t, i, y_t}
 \]
+where $j = y_t$ is the observed state of the individual.
 
+Define $G_{t, i}$ as the probability that the individual is in state $i$ at time $t$ given $y_{1:t}$, the data up to the current time.  Define $\phi_{t, i, j}$ as the probability that, from time $t-1$ to $t$, an individual in state $i$ transitions to state $j$.  Then the calculation of $A_{t, j}$ for each possible state $j$ is given by:
 \[
-A_{t, i} = \sum_j G_{t-1, j} \phi_{t, j, i}
+A_{t, j} = \sum_i G_{t-1, i} \phi_{t, i, j}
 \]
 
+Finally, calculation of $G_{t, i}$ for each possible state $i$ is done by conditioning on $y_t$ as follows:
 \[
 G_{t, i} = \frac{A_{t, i} p_{t, i, y_t}}{P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})}
 \]
 
+The calculation of the total probability of a detection history with uncertain state information starts by initializing $A_{1, i}$ to some choice of initial (or prior) probability of being in each state before any observations are made.  Then, starting with $t = 1$, we calculate $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$.  If $t < T$, we prepare for time step $t+1$ by calculating $G_{t, i}$ for each $i$ followed by $A_{t+1, i}$ for each $i$.
+
+If the transition probabilities, $\phi_{t, i, j}$, actually depend on $t$, we refer to the model as "Dynamic", namely a DHMM instead of an HMM.  It may also be the case that observation probabilities $p_{t, i, j}$ depend on $t$ or not.
+
+## HMM and DHMM distributions in `nimbleEcology`
+
+HMMs and DHMMs are available in four distributions in `nimbleEcology`.  These differ only in whether transition and/or observation probabilities are time-dependent or time-independent, yielding four combinations:
+
+- `dHMM`: Both are time-independent.
+- `dDHMM`: State transitions are time-dependent (dynamic).  Observation probabilities are time-independent.
+- `dHMMo`: Observation probabilities are time-dependent. State transitions are time-independent (not dynamic).
+- `dDHMMo`: Both are time-dependent.
+
+In this notation, the leading `D` is for "dynamic" (time-dependent state transitions), while the trailing "o" is for "observations" being time-dependent.
+
+The usage for each is similar.  An example for `dDHMM` is:
+
+`y[i, 1:T] ~ dDHMM(init = initial_probs[i, 1:T], Z = obsProbs[1:nStates, 1:nStates], T = transProbs[i, 1:nStates, 1:nStates, 1:T], len = T)`
+
+Note the following points:
+
+- As above, this is written as if `i` indexes individuals in the model, but this is arbitrary as an example.
+- `init[i]` is the initial probability of being in state `i`, namely `A_{0, i}` above.
+- `Z[i, j]` (I decided to wait to see if we rename these.)
+- `T[i, j, t]`
+- `len`
 
 ## Occupancy
+
+An occupancy model gives the probability of a series of detection/non-detection records for a species during multiple visits to one site.
+
+Define $y_t$ to be the observation at time $t$, with $y_t = 1$ for a detection and $y_t = 0$ for a non-detection.  Again, we use "time" as a synonym for "sampling occasion".  Again, define the vector of observations as $\mathbf{y} = (y_1, \ldots, y_T)$, where $T$ is the number of sampling occasions.
 
 ## Dynamic occupancy
 
