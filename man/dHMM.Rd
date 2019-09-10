@@ -69,6 +69,48 @@ If the observation probabilities are time-dependent, one would use:
 \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
 transitionProbs[1:S, 1:S], T)}
 }
+\examples{
+\dontrun{
+# Set up constants and initial values for defining the model
+len <- 5 # length of dataset
+dat <- c(1,2,1,1,2) # A vector of observations
+init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
+Z <- t(array( # A matrix of observation probabilities
+       c(1, 0.2, 1,
+         0, 0.8, 0), c(3, 2)))
+Tt <- t(array( # A matrix of transition probabilities
+        c(0.6, 0.3, 0.1,
+          0, 0.7, 0.3,
+          0, 0, 1), c(3,3)))
+
+# Define code for a nimbleModel
+ nc <- nimbleCode({
+   x[1:5] ~ dHMM(init[1:3], Z = Z[1:2,1:3],
+                 T = Tt[1:3, 1:3], len = 5)
+
+   for (i in 1:3) {
+     init[i] ~ dunif(0,1)
+
+     for (j in 1:3) {
+       Tt[i,j] ~ dunif(0,1)
+     }
+
+     Z[1,i] ~ dunif(0,1)
+     Z[2,i] <- 1 - Z[1,i]
+   }
+ })
+
+# Build the model
+HMM_model <- nimbleModel(nc,
+                         data = list(x = dat),
+                         inits = list(init = init,
+                                      Z = Z,
+                                      Tt = Tt)))
+# Calculate log probability of data from the model
+HMM_model$calculate()
+# Use the model for a variety of other purposes...
+}
+}
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics

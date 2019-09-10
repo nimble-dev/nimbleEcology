@@ -73,9 +73,34 @@ If time-dependent survival and capture probabilities are needed, use
 In fact, the \code{len} argument (\code{T} in these examples) will be ignored during model
 probability calculations.  It will be used only for simulations.
 
-\emph{Ignored elements of \code{survive} and \code{capture} when they are vectors:} Note that the last element of \code{survive},
-if present, will be ignored.  Also the first element of \code{capture} will be ignored, since the first
-element of the capture history is assumed to be 1, indicated first capture.
+It is important to use the time indexing correctly for survival.  \code{probSurvive[t]} is the survival
+probabilty from time \code{t-1} to time \code{t}.  Time indexing for detection is more obvious:
+\code{probDetect[t]} is the detection probability at time \code{t}.
+}
+\examples{
+\dontrun{
+# Set up constants and initial values for defining the model
+dat <- c(1,1,0,0) # A vector of observations
+probSurvive <- 0.6
+probCapture <- 0.4
+
+
+# Define code for a nimbleModel
+nc <- nimbleCode({
+  x[1:4] ~ dCJSss(probSurvive, probCapture, len = 4)
+  probSurvive ~ dunif(0,1)
+  probCapture ~ dunif(0,1)
+})
+
+# Build the model, providing data and initial values
+CJS_model <- nimbleModel(nc, data = list(x = dat),
+                         inits = list(probSurvive = probSurvive,
+                                      probCapture = probCapture))
+
+# Calculate log probability of data from the model
+CJS_model$calculate()
+# Use the model for a variety of other purposes...
+}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

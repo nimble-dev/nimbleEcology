@@ -64,6 +64,46 @@ use of these distributions allows
 one to directly sum over the discrete latent state and calculate the probability of
 all observations from one site jointly.
 }
+\examples{
+\dontrun{
+# Set up constants and initial values for defining the model
+x <- matrix(c(0,0,1,0,1,
+              1,1,1,1,0), nrow = 2)
+nrep <- c(5, 5)
+psi1 <- 0.7
+phi <- c(0.4, 0.8)
+gamma <- c(0.2, 0.1)
+p <- matrix(rep(0.8, 10), nrow = 2)
+
+# Define code for a nimbleModel
+ nc <- nimbleCode({
+
+   x[1:2, 1:5] ~ dDynOcc_vv(nrep[1:2], psi1, phi[1:2], gamma[1:2], p[1:2,1:5])
+
+   psi1 ~ dunif(0,1)
+
+   for (i in 1:2) {
+     phi[i] ~ dunif(0,1)
+     gamma[i] ~ dunif(0,1)
+   }
+
+   for (i in 1:2) {
+     for (j in 1:5) {
+       p[i,j] ~ dunif(0,1)
+     }
+   }
+ })
+
+# Build the model, providing data and initial values
+DynOcc_model <- nimbleModel(nc, data = list(x = dat, nrep = nrep),
+                            inits = list(p = p, phi = phi,
+                                         psi1 = psi1, gamma = gamma))
+
+# Calculate log probability of data from the model
+DynOcc_model$calculate()
+# Use the model for a variety of other purposes...
+}
+}
 \seealso{
 For regular occupancy models, see documentation for dOcc.
 }

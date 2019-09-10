@@ -54,6 +54,32 @@
 #' @seealso For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
 #' @import nimble
 #' @importFrom stats rbinom runif dbinom
+#'
+#' @examples
+#' \dontrun{
+#' # Set up constants and initial values for defining the model
+#' dat <- c(1,1,0,0) # A vector of observations
+#' probSurvive <- 0.6
+#' probCapture <- 0.4
+#'
+#'
+#' # Define code for a nimbleModel
+#' nc <- nimbleCode({
+#'   x[1:4] ~ dCJSss(probSurvive, probCapture, len = 4)
+#'   probSurvive ~ dunif(0,1)
+#'   probCapture ~ dunif(0,1)
+#' })
+#'
+#' # Build the model, providing data and initial values
+#' CJS_model <- nimbleModel(nc, data = list(x = dat),
+#'                          inits = list(probSurvive = probSurvive,
+#'                                       probCapture = probCapture))
+#'
+#' # Calculate log probability of data from the model
+#' CJS_model$calculate()
+#' # Use the model for a variety of other purposes...
+#' }
+
 
 NULL
 

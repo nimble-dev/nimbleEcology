@@ -32,6 +32,47 @@
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
+#' @examples
+#' \dontrun{
+#' # Set up constants and initial values for defining the model
+#' dat <- c(1,2,1,1) # A vector of observations
+#' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
+#' Z <- t(array( # A matrix of observation probabilities
+#'        c(1, 0.2, 1,
+#'          0, 0.8, 0), c(3, 2)))
+#'
+#' Tt <- array(rep(0.5, 36), # A matrix of time-indexed transition probabilities
+#'             c(3,3,4))
+#'
+#' # Define code for a nimbleModel
+#'  nc <- nimbleCode({
+#'    x[1:4] ~ dDHMM(init[1:3], Z = Z[1:2,1:3],
+#'                   T = Tt[1:3, 1:3, 1:4], len = 4)
+#'
+#'    for (i in 1:3) {
+#'      init[i] ~ dunif(0,1)
+#'
+#'      for (j in 1:3) {
+#'        for (t in 1:4) {
+#'          Tt[i,j,t] ~ dunif(0,1)
+#'        }
+#'      }
+#'
+#'      Z[1,i] ~ dunif(0,1)
+#'      Z[2,i] <- 1 - Z[1,i]
+#'    }
+#'  })
+#'
+#' # Build the model, providing data and initial values
+#' DHMM_model <- nimbleModel(nc,
+#'                           data = list(x = dat),
+#'                           inits = list(init = init,
+#'                                        Z = Z,
+#'                                        Tt = Tt)))
+#' # Calculate log probability of x from the model
+#' DHMM_model$calculate()
+#' # Use the model for a variety of other purposes...
+#' }
 #'
 #' @details These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
 #' for \link{nimbleModel}.

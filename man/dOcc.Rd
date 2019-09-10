@@ -69,6 +69,31 @@ If the detection probabilities are time-dependent, one would use:
 
 \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
 }
+\examples{
+\dontrun{
+# Set up constants and initial values for defining the model
+dat <- c(1,1,0,0) # A vector of observations
+probSurvive <- 0.6
+probCapture <- 0.4
+
+
+# Define code for a nimbleModel
+nc <- nimbleCode({
+  x[1:4] ~ dCJSss(probSurvive, probCapture, len = 4)
+  probSurvive ~ dunif(0,1)
+  probCapture ~ dunif(0,1)
+})
+
+# Build the model, providing data and initial values
+Occ_model <- nimbleModel(nc, data = list(x = dat),
+                         inits = list(probOcc = probOcc,
+                                      probDetect = probDetect))
+
+# Calculate log probability of data from the model
+Occ_model$calculate()
+# Use the model for a variety of other purposes...
+}
+}
 \seealso{
 For dynamic occupancy models, see documentation for \link{dDynOcc}.
 }
