@@ -135,74 +135,21 @@ dDHMMo <- nimbleFunction(
 #' @rdname dDHMM
 rDHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
-                 init = double(1),
+                 init = double(1), ## probabilities of state at time 1
                  Z = double(2),
                  T = double(3),
                  len = double(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
+  result <- numeric(init = FALSE, length = len)
 
-  probInit <- init
-  trueInit <- 0
+  trueState <- rmulti(1, size = 1, prob = init)
 
-  r <- runif(1, 0, 1)
-  j <- 1
-  while (r > sum(probInit[1:j])) j <- j + 1
-  trueInit <- j
-
-  trueState <- trueInit
-  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
-  for (i in 1:len) {
+  for (t in 1:len) {
+    result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
     # Transition to a new true state
-    r <- runif(1, 0, 1)
-    j <- 1
-    while (r > sum(T[trueState, 1:j, i])) j <- j + 1
-    trueState <- j
-
-    # Detect based on the true state
-    r <- runif(1, 0, 1)
-    j <- 1
-    while (r > sum(Z[1:j, trueState])) j <- j + 1
-    ans[i] <- j
+    if(t < len)
+      trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
   }
-
-  return(ans)
-})
-
-
-#' @export
-#' @rdname dDHMM
-rDHMMo <- nimbleFunction(
-  run = function(n = integer(),    ## Observed capture (state) history
-                 init = double(1),
-                 Z = double(3),
-                 T = double(3),
-                 len = double(0, default = 0)) {
-  returnType(double(1))
-  ans <- numeric(len)
-
-  probInit <- init
-  trueInit <- 0
-
-  r <- runif(1, 0, 1)
-  j <- 1
-  while (r > sum(probInit[1:j])) j <- j + 1
-  trueInit <- j
-
-  trueState <- trueInit
-  for (i in 1:len) {
-    # Transition to a new true state
-    r <- runif(1, 0, 1)
-    j <- 1
-    while (r > sum(T[trueState, 1:j, i])) j <- j + 1
-    trueState <- j
-
-    # Detect based on the true state
-    r <- runif(1, 0, 1)
-    j <- 1
-    while (r > sum(Z[1:j, trueState, i])) j <- j + 1
-    ans[i] <- j
-  }
-
   return(ans)
 })

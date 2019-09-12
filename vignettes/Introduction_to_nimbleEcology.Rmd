@@ -215,7 +215,7 @@ In this section, we introduce each of the `nimbleEcology` distributions in more 
 
 ## Capture-recapture (CJS)
 
-Cormack-Jolly-Seber models give the probability of a capture history for an individual, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides variants for time-independent and time-dependent survival and/or detection probability.  Of course, the survival and detection parameters for the CJS probability may themselves depend on other parameters and/or random effects.
+Cormack-Jolly-Seber models give the probability of a capture history for each of many individuals, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides a distribution for individual capture histories, with variants for time-independent and time-dependent survival and/or detection probability.  Of course, the survival and detection parameters for the CJS probability may themselves depend on other parameters and/or random effects. The rest of this summary will focus on one individual's capture history.
 
 Define $\phi_t$ as survival from time $t-1$ to $t$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  We use "time" and "sampling occasion" as synonyms in this context, so $T$ is the number of sampling occasions.  (Be careful with indexing. Sometimes you might see $\phi_t$ defined as survival from time $t$ to $t+1$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, is not included in $\mathbf{y}$ because it is known to be 1 since this model conditions on first capture.  
 
@@ -262,7 +262,7 @@ Note the following points:
 - `probSurvive` is provided as a scalar value, as if there is a variable called `phi`.
 - In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is `phi_t` above, namely the probability of survival from occasion $t-1$ to $t$. 
 - `probCapture` is provided as a vector value, as if there is a matrix variable called `p`.  The value of `probCapture` could be any vector from any variable in the model.
-- The $t^{\mbox{th}}$ element of `probCapture` is $\phi_t$ above, namely the probability of capture, if alive, at time $t$.
+- `probCapture[t]` (i.e., the $t^{\mbox{th}}$ element of `probCapture`, which is `p[i, t]` in this example) is $\phi_t$ above, namely the probability of capture, if alive, at time $t$.
 - The length parameter `len` is in some cases redundant (the information could be determined by the length of other inputs), but nevertheless it is required.
 
 ## Hidden Markov models (HMMs) and Dynamic hidden Markov models (DHMMs)
@@ -273,33 +273,33 @@ Hidden Markov models give the probability of detection history that can handle:
 - incorrect state information, such as if breeding state might not be observed correctly,
 - probabilities of transitions between states.
 
-In a HMM, "dead" is simply another state, and "unobserved" is a possible observation.  Thus, HMMs are generalzation of the CJS models. In capture-recapture, HMMs encompass multi-state and multi-event models.
+In a HMM, "dead" is simply another state, and "unobserved" is a possible observation.  Thus, HMMs are generalizations of the CJS model. In capture-recapture, HMMs encompass multi-state and multi-event models.
 
 We again use the factorization
 \[
 P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
 \]
-In the case of an HMM, $y_t$ is the recorded state at time $t$, taking an integer value, with the possibility that one possible value corresponds to "unobserved".
+In the case of an HMM, $y_t$ is the recorded state at time $t$, taking an integer value, with the possibility that one possible value corresponds to "unobserved".  Define $S$ as the number of possible states and $K$ as the number of possible observed states.  Observed states need not correspond to real states.  For example, often there is an observed state for "unobserved".  Another example is that two real states might never be distinguishable in observations, so they may correpond to only one observed state.
 
-Define $A_{t,i}$ as the probability that the individual is in state $i$ at time $t$, given $y_{1:t-1}$, the data up to the previous time.  Define $p_{t,i,j}$ as the probability that, at time $t$, an individual in state $i$ is observed in state $j$.  Then $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
+Define $A_{i, t}$ as the probability that the individual is in state $i$ at time $t$, given $y_{1:t-1}$, the data up to the previous time.  Define $p_{i,j,t}$ as the probability that, at time $t$, an individual in state $i$ is observed in state $j$.  Then $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$ is calculated as:
 \[
-P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = \sum_i A_{t, i} p_{t, i, y_t}
+P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = \sum_{i=1}^S A_{i, t} p_{i, y_t, t}
 \]
 where $j = y_t$ is the observed state of the individual.
 
-Define $G_{t, i}$ as the probability that the individual is in state $i$ at time $t$ given $y_{1:t}$, the data up to the current time.  Define $\phi_{t, i, j}$ as the probability that, from time $t-1$ to $t$, an individual in state $i$ transitions to state $j$.  Then the calculation of $A_{t, j}$ for each possible state $j$ is given by:
+Define $G_{i, t}$ as the probability that the individual is in state $i$ at time $t$ given $y_{1:t}$, the data up to the current time.  Define $\psi_{i, j, t}$ as the probability that, from time $t$ to $t+1$, an individual in state $i$ transitions to state $j$. *Note that the time-step is different here ($t$ to $t+1$) than for the CJS model above (which uses $t-1$ to $t$).* Then the calculation of $A_{j,t}$ for each possible state $j$ is given by:
 \[
-A_{t, j} = \sum_i G_{t-1, i} \phi_{t, i, j}
+A_{j, t} = \sum_{i-1}^S G_{i, t-1} \psi_{i, j, t-1}, \mbox{ for } j=1,\ldots,S
 \]
 
-Finally, calculation of $G_{t, i}$ for each possible state $i$ is done by conditioning on $y_t$ as follows:
+Finally, calculation of $G_{i, t}$ for each possible state $i$ is done by conditioning on $y_t$ as follows:
 \[
-G_{t, i} = \frac{A_{t, i} p_{t, i, y_t}}{P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})}
+G_{i, t} = \frac{A_{i, t} p_{i, y_t, t}}{P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})}, \mbox{ for } j=1,\ldots,S
 \]
 
-The calculation of the total probability of a detection history with uncertain state information starts by initializing $A_{1, i}$ to some choice of initial (or prior) probability of being in each state before any observations are made.  Then, starting with $t = 1$, we calculate $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$.  If $t < T$, we prepare for time step $t+1$ by calculating $G_{t, i}$ for each $i$ followed by $A_{t+1, i}$ for each $i$.
+The calculation of the total probability of a detection history with uncertain state information starts by initializing $A_{i, 1}$ to some choice of initial (or prior) probability of being in each state before any observations are made.  Then, starting with $t = 1$, we calculate $P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})$.  If $t < T$, we prepare for time step $t+1$ by calculating $G_{i, t}$ for each $i$ followed by $A_{i, t+1}$ for each $i$.
 
-If the transition probabilities, $\phi_{t, i, j}$, actually depend on $t$, we refer to the model as "Dynamic", namely a DHMM instead of an HMM.  It may also be the case that observation probabilities $p_{t, i, j}$ depend on $t$ or not.
+If the transition probabilities, $\psi_{i, j, t}$, actually depend on $t$, we refer to the model as "Dynamic", namely a DHMM instead of an HMM.  It may also be the case that observation probabilities $p_{i, j, t}$ depend on $t$ or not.
 
 ## HMM and DHMM distributions in `nimbleEcology`
 
@@ -314,22 +314,126 @@ In this notation, the leading `D` is for "dynamic" (time-dependent state transit
 
 The usage for each is similar.  An example for `dDHMM` is:
 
-`y[i, 1:T] ~ dDHMM(init = initial_probs[i, 1:T], Z = obsProbs[1:nStates, 1:nStates], T = transProbs[i, 1:nStates, 1:nStates, 1:T], len = T)`
+`y[i, 1:T] ~ dDHMM(init = initial_probs[i, 1:T], obs = obsProbs[1:nStates, 1:nCat], trans = transProbs[i, 1:nStates, 1:nStates, 1:T], len = T)`
 
 Note the following points:
 
 - As above, this is written as if `i` indexes individuals in the model, but this is arbitrary as an example.
-- `init[i]` is the initial probability of being in state `i`, namely `A_{0, i}` above.
-- `Z[i, j]` (I decided to wait to see if we rename these.)
-- `T[i, j, t]`
-- `len`
+- `nStates` is $S$ above.
+- `nCat` is $K$ above.
+- `init[i]` is the initial probability of being in state `i`, namely `A_{i, 1}` above.
+- `obj[i, j]` (i.e., `obsProbs[i, j]` in this example) is probability of observing an individual who is truly in state `i` as being in state `j`.  This is $p_{i, j}$ above if indexing by $t$ is not needed.  If observation probabilities are time-dependent (in `dHMMo` and `dDHMMo`), then `obs[i, j, t]` is $p_{i, j, t}$ above.
+- `trans[i, j, t]` (i.e., `transProb[i, j, t]` in this example) is the probability that an individual changes from state `i` to state `j` during time step `t` to `t+1`.  This is `\psi_{i,j,t}` above.  
+- `len` is the length of the observation record, `T` in this example.
+- `len` must match the length of the data, `y[i, 1:T]` in this example.
+- The dimensions of `obs` must be $S \times K$ in the time-independent case (`dHMM` or `dDHMM`) or $S \times K \times T$ in the time-dependent case (`dHMMo` or `dDHMMo`).
+- The dimensions of `trans` must be $S \times S$ in the time-independent case (`dHMM` or `dHMMo`) or $S \times S \times (T-1)$ in the time-dependent case (`dDHMM` or `dDHMMo`).  The last dimension is one less than $T$ because no transition to time $T+1$ is needed.
+
+*In the code, Z is transpose to what we described here, so we need to sort this out.*
 
 ## Occupancy
 
-An occupancy model gives the probability of a series of detection/non-detection records for a species during multiple visits to one site.
+An occupancy model gives the probability of a series of detection/non-detection records for a species during multiple visits to each of multiple site.  The occupancy distributions in `nimbleEcology` give the probability of the detection history for one site, so this summary focuses on data from one site.
 
 Define $y_t$ to be the observation at time $t$, with $y_t = 1$ for a detection and $y_t = 0$ for a non-detection.  Again, we use "time" as a synonym for "sampling occasion".  Again, define the vector of observations as $\mathbf{y} = (y_1, \ldots, y_T)$, where $T$ is the number of sampling occasions.
 
+Define $\psi$ as the probability that a site is occupied. Define $p_t$ as the probability of a detection on sampling occasion $t$ if the site is occupied, and $\mathbf{p} = (p_1, \ldots, p_T)$.  Then the probability of the data given the parameters is:
+\[
+P(\mathbf{y} | \psi, \mathbf{p}) = \psi \prod_{t = 1}^T p_t^{y_t} (1-p_t)^{1-y_t} + (1-\psi) I\left(\sum_{t=1}^T y_t= 0 \right) 
+\]
+The indicator function usage in the last term, $I(\cdot)$, is 1 if the given summation is 0, i.e. if no detections were made.  Otherwise it is 0.
+
+### Occupancy models in `nimbleEcology`
+
+Occupancy models are available in two distributions in `nimbleEcology`.  These differ only in whether detection probability depends on time or not:
+
+- `dOcc_s`: Detection probability is time-independent (scalar).
+- `dOcc_v`: Detection probability is time-dependent (vector).
+
+An example for `dOcc_v` is:
+
+`y[i, 1:T] ~ dOcc_v(probOcc = psi, probDetect = p[i, 1:T], len = T)`
+
+Note the following points:
+
+- As in the examples above, this is written as if `i` indexes individual, but the variables could be arranged in other ways.
+- `y[i, 1:T]` is the detection record.
+- `probOcc` is the probability of occupancy, $\psi$ above.
+- `probDetect` is the vector of detection probabilities, $\mathbf{p}$ above.  In the case of `dOcc_s`, `probDetect` would be a scalar.
+- `len` is the length of the detection record.
+
 ## Dynamic occupancy
 
+*We may want to generalize this and the code for different start and stop indices for each year.*
+
+Dynamic occupancy models give the probability of detection records from multiple seasons (primary periods) in each of which there were multiple sampling occasions (secondary periods) at each of multiple sites.  The dynamic occupancy distribution in `nimbleEcology` provides probability calculations for data from one site at a time.
+
+We will use "year" for primary periods and "time" or "sampling occasion" as above for secondary periods.  Define $y_{r, t}$ as the observation (1 or 0) on sampling occasion $t$ of year $r$.  Define $\mathbf{y}_r$ as the detection history in year $r$, i.e. $\mathbf{y}_r = (y_{r, 1}, \ldots, y_{r, T})$ .  Define $\phi_t$ as the probability of being occupied at time $t+1$ given the site was occupied at time $t$, called "persistence".  Define $\gamma_t$ as the probability of being occupied at time $t+1$ given the site was unoccupied at time $t$, called "colonization".  Define $p_{r, t}$ as the detection probability on sampling occasion $t$ of year $r$.
+
+The probability of all the data given parameters is:
+\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p}) =  \prod_{r = 1}^R P(y_{r} | y_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})
+\]
+Each factor $P(y_{r} | y_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})$ is calculated as:
+\[
+P(y_{r} | y_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p}) = A_{r} \prod_{t = 1}^T p_{r,t}^{y_{r,t}} (1-p_{r,t})^{1-y_{r,t}} + (1-A_{r}) I\left(\sum_{t=1}^T y_{r,t} = 0 \right)
+\]
+Here $A_r$ is the probability that the site is occupied in year $r$ given observations up to the previous year $\mathbf{y}_{1:r-1}$.  Otherwise, this equation is just like the occupancy model above, except there are indices for year $r$ in many places.  $A_r$ is calculated as:
+\[
+A_r = G_{r-1} \phi_{r-1} + (1-G_{r-1}) \gamma_{r-1} 
+\]
+Here $G_r$ is the probability that the site is occupied given the data up to time $r$, $\mathbf{y}_{1:r}$.  This is calculated as 
+\[
+G_r = \frac{A_{r} \prod_{t = 1}^T p_{r,t}^{y_{r,t}} (1-p_{r,t})^{1-y_{r,t}}}{P(y_{r} | y_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})}
+\]
+
+The sequential calculation is initiated with $A_1$, which is natural to think of as "$\psi_1$", probability of occupancy in the first year.  Then for year $r$, starting with $r = 1$, we calculate $P(y_{r} | y_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})$.  If $r < R$, we calculate $G_r$ and then $A_{r+1}$, leaving us ready to increment $r$ and iterate.
+
+*In the code, we need that phi are gamma are one shorter than number of years*
+
+### Dynamic occupancy models in `nimbleEcology`
+
+Dynamic occupancy models are available in four distributions in `nimbleEcology`. These differ in whether persistence and/or colonization probabilities are time-dependent, with a "s" (time-independent) and "v" (time-dependent) notation similar to the distributions above.  The distributions are:
+
+- `dDynOcc_ss`
+- `dDynOcc_sv`
+- `dDynOcc_vs`
+- `dDynOcc_vv`
+
+Note the following points:
+
 ## N-mixture
+
+An N-mixture model gives the probability of a set of counts from repeated visits to each of multiple sites.  The N-mixture distribution in `nimbleEcology` gives probability calculations for data from one site.
+
+Define $y_t$ as the number of individuals counted at the site on sampling occasion (time) $t$.  Define $\mathbf{y} = (y_1, \ldots, y_t)$.  Define $\lambda$ as the average density of individuals, such that the true number of individuals, $N$, follows a Poisson distribution with mean $\lambda$.  Define $p_t$ to be the detection probability for each individual at time $t$, and $\mathbf{p} = (p_1, \ldots, p_t)$.
+
+The probability of the data given the parameters is:
+\[
+P(\mathbf{y} | \lambda, \mathbf{p}) = \sum_{N = 1}^\infty P(N | \lambda) \prod_{t = 1}^T P(y_t | N)
+\]
+where $P(N | \lambda)$ is a Poisson probability and $P(y_t | N)$ is a binomial probability.  That is, $y_t \sim \mbox{binomial}(N, p_t)$, and the $y_t$s are independent.
+
+In practice, the summation over $N$ can start at a value greater than 0 and must be truncated at some value $\lt \infty$.  Two options are provided for the range of summation:
+
+1. Start the summation at the largest value of $y_t$ (there must be at least this many individuals) and truncate it at a value of $N$ provided by the user.
+2. The following heuristic can be used.
+
+If we consider a single $y_t$, then $N - y_t | y_t \sim \mbox{Poisson}(\lambda (1-p_t))$ (*See opening example of Royle and Dorazio*).  Thus, a natural upper end for the summation range of $N$ would be $y_t$ plus a very high quantile of The $\mbox{Poisson}(\lambda (1-p_t))$ distribution.  For a set of observations, a natural choice would be the maximum of such values across the observation times.  We use the 0.99999 quantile to be conservative.
+
+Correspondingly, the summation can begin at smallest of the 0.00001 quantiles of $N | y_t$. If $p_t$ is small, this can be considerably larger than the maximum value of $y_t$, allowing more efficient computation.
+
+*Describe structural zeros.*
+
+### N-mixture models in `nimbleEcology`
+
+An example is:
+
+`y[i, 1:T] ~ dNmix(lambda = lambda, p = p[1:T], knownZero = 0, len = T)`
+
+- `lambda` is $\lambda$ above.
+- `p[1:t]` is $\mathbf{p}$ above.
+- `knownZero` is 1 if the `lambda` should be replaced with 0 and an easy answer can be returned without summing over $N$.
+- `len` is $T$.
+
+
