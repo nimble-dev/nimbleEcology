@@ -1,9 +1,5 @@
 
-library(testthat)
-library(nimble)
-source("nimbleEcology/R/dDynOcc.R")
 context("Testing dDynOcc-related functions.")
-
 
 test_that("dDynOcc_vv works", {
   x <- matrix(c(0,0,1,0,1,

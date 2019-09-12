@@ -2,12 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-
-# Packages
-library(testthat)
-library(nimble)
-# Source the file
-source("nimbleEcology/R/dDHMM.R")
 # Set the context for testthat
 context("Testing dDHMM-related functions.")
 

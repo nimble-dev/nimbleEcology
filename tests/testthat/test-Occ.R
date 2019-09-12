@@ -2,10 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-
-library(testthat)
-library(nimble)
-source("nimbleEcology/R/dOcc.R")
 context("Testing dOcc-related functions.")
 
 # Test scalar-scalar version
