@@ -178,7 +178,7 @@ rDHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1), ## probabilities of state at time 1
                  Z = double(2),
-                 T = double(3),
+                 T = double(2),
                  len = double(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
@@ -190,7 +190,30 @@ rDHMM <- nimbleFunction(
     result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
     # Transition to a new true state
     if(t < len)
-      trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+      trueState <- rmulti(1, size = 1, prob = T[trueState, ])
   }
   return(ans)
 })
+
+#' @export
+#' @rdname dDHMM
+rDHMMo <- nimbleFunction(
+  run = function(n = integer(),    ## Observed capture (state) history
+                 init = double(1), ## probabilities of state at time 1
+                 Z = double(2),
+                 T = double(3),
+                 len = double(0, default = 0)) {
+    returnType(double(1))
+    ans <- numeric(len)
+    result <- numeric(init = FALSE, length = len)
+
+    trueState <- rmulti(1, size = 1, prob = init)
+
+    for (t in 1:len) {
+      result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
+      # Transition to a new true state
+      if(t < len)
+        trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+    }
+    return(ans)
+  })
