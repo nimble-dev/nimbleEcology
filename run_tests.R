@@ -31,7 +31,7 @@ if (length(grep('^-', argv, invert = TRUE))) {
     allTests <- paste0('test-', argv[!grepl('^-', argv)], '.R')
 } else {
     # Run a default set of tests.
-    allTests <- list.files('tests')
+    allTests <- list.files('tests/testthat')
     allTests <- allTests[grepl('test-.*\\.R', allTests)]
 }
 
@@ -94,7 +94,7 @@ runTest <- function(test, logToFile = FALSE, runViaTestthat = TRUE) {
     }
     Sys.setenv(MAKEFLAGS = '-j1')  # Work around broken job pipe when GNU make is run under mclapply.
     if (logToFile) {
-        logDir <- '/tmp/log/nimble'
+        logDir <- 'log'
         dir.create(logDir, recursive = TRUE, showWarnings = FALSE)
         stderr.log <- file.path(logDir, paste0('test-', name, '.stderr'))
         stdout.log <- file.path(logDir, paste0('test-', name, '.stdout'))
