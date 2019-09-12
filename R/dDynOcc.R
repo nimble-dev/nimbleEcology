@@ -384,7 +384,8 @@ registerDistributions(list(
                   'psi1 = double(0)',
                   'phi = double(1)',
                   'gamma = double(1)',
-                  'p = double(2)')),
+                  'p = double(2)'),
+        mixedSizes = TRUE),
     dDynOcc_vs = list(
         BUGSdist = "dDynOcc_vs(nrep, psi1, phi, gamma, p)",
         Rdist = "dDynOcc_vs(nrep, psi1, phi, gamma, p)",
@@ -393,7 +394,8 @@ registerDistributions(list(
                   'psi1 = double(0)',
                   'phi = double(1)',
                   'gamma = double(0)',
-                  'p = double(2)')),
+                  'p = double(2)'),
+        mixedSizes = TRUE),
     dDynOcc_sv = list(
         BUGSdist = "dDynOcc_sv(nrep, psi1, phi, gamma, p)",
         Rdist = "dDynOcc_sv(nrep, psi1, phi, gamma, p)",
@@ -402,7 +404,8 @@ registerDistributions(list(
                   'psi1 = double(0)',
                   'phi = double(0)',
                   'gamma = double(1)',
-                  'p = double(2)')),
+                  'p = double(2)'),
+        mixedSizes = TRUE),
     dDynOcc_ss = list(
         BUGSdist = "dDynOcc_ss(nrep, psi1, phi, gamma, p)",
         Rdist = "dDynOcc_ss(nrep, psi1, phi, gamma, p)",

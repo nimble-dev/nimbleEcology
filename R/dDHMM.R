@@ -41,8 +41,8 @@
 #'        c(1, 0.2, 1,
 #'          0, 0.8, 0), c(3, 2)))
 #'
-#' Tt <- array(rep(0.5, 36), # A matrix of time-indexed transition probabilities
-#'             c(3,3,4))
+#' Tt <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+#'             c(3,3,3))
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
@@ -90,7 +90,7 @@
 #' For example, in a NIMBLE model,
 #'
 #' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S],
-#' transitionProbs[1:S, 1:S, 1:T], T)}
+#' transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 #'
 #' declares that the \code{observedStates[1:T]} vector follows a dynamic hidden Markov model distribution
 #' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.  In
@@ -99,8 +99,8 @@
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
-#' transitionProbs[1:S, 1:S, 1:T], T)}
+#' \code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:(T-1)],
+#' transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 #'
 #' @seealso For hidden Markov models with time-independent transitions, see \link{dHMM} and \link{dHMMo}.
 #' For simple capture-recapture, see \link{dCJS}.
@@ -114,13 +114,13 @@ dDHMM <- nimbleFunction(
                  init = double(1),
                  Z = double(2),
                  T = double(3),
-                 len = double(),## length of x (needed as a separate param for rDHMM)
+                 len = integer(0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMM.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMM.")
     if (length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
-    if (len-1 != dim(T)[3]) stop("Length of x does not match len in dDHMM.")
+    if (len - 1 != dim(T)[3]) stop("Length of x does not match len in dDHMM.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -146,14 +146,14 @@ dDHMMo <- nimbleFunction(
                  init = double(1),##
                  Z = double(3),
                  T = double(3),
-                 len = double(),## length of x (needed as a separate param for rDHMM)
+                 len = integer(0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMMo.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMMo.")
     if (length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMMo.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
-    if (len != dim(T)[3]) stop("dim(T)[3] does not match len in dDHMMo.")
-    if (len != dim(Z)[3]) stop("dim(Z)[3] does not match len in dDHMMo.")
+    if (len - 1 != dim(T)[3]) stop("dim(T)[3] does not match len in dDHMMo.")
+    if (len - 1 != dim(Z)[3]) stop("dim(Z)[3] does not match len in dDHMMo.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -179,7 +179,7 @@ rDHMM <- nimbleFunction(
                  init = double(1), ## probabilities of state at time 1
                  Z = double(2),
                  T = double(3),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
   result <- numeric(init = FALSE, length = len)
@@ -189,8 +189,31 @@ rDHMM <- nimbleFunction(
   for (t in 1:len) {
     result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
     # Transition to a new true state
-    if(t < len)
+    if (t < len)
       trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
   }
   return(ans)
 })
+
+registerDistributions(list(
+    dDHMM = list(
+        BUGSdist = "dDHMM(x, init, Z, T, len)",
+        Rdist = "dDHMM(x, init, Z, T, len)",
+        types = c('value = double(1)',    ## Observed capture (state) history
+                  'init = double(1)',
+                  'Z = double(2)',
+                  'T = double(3)',
+                  'len = integer(0)'),
+        mixedSizes = TRUE)))
+registerDistributions(list(
+    dDHMMo = list(
+        BUGSdist = "dDHMMo(x, init, Z, T, len)",
+        Rdist = "dDHMMo(x, init, Z, T, len)",
+        types = c('value = double(1)',    ## Observed capture (state) history
+                  'init = double(1)',
+                  'Z = double(3)',
+                  'T = double(3)',
+                  'len = integer(0)'),
+        mixedSizes = TRUE)
+))
+

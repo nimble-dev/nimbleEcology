@@ -248,7 +248,12 @@ registerDistributions(list(
     BUGSdist = "dHMM(init, Z, T, len)",
     Rdist = "dHMM(init, Z, T, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'init = double(1)', 'Z = double(2)', 'T = double(2)', 'len = double(0)'),
+    types = c('value = double(1)',
+              'init = double(1)',
+              'Z = double(2)',
+              'T = double(2)',
+              'len = double(0)'),
+    mixedSizes = TRUE,
     pqAvail = FALSE))
   )
 
@@ -257,7 +262,12 @@ registerDistributions(list(
     BUGSdist = "dHMMo(init, Z, T, len)",
     Rdist = "dHMMo(init, Z, T, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'init = double(1)', 'Z = double(3)', 'T = double(2)', 'len = double(0)'),
+    types = c('value = double(1)',
+              'init = double(1)',
+              'Z = double(3)',
+              'T = double(2)',
+              'len = double(0)'),
+    mixedSizes = TRUE,
     pqAvail = FALSE))
   )
 
