@@ -6,32 +6,82 @@
 \alias{dDynOcc_sv}
 \alias{dDynOcc_vs}
 \alias{dDynOcc_vv}
-\alias{rDynOcc_vv}
-\alias{rDynOcc_vs}
-\alias{rDynOcc_sv}
-\alias{rDynOcc_ss}
+\alias{dDynOcc_vvm}
+\alias{dDynOcc_vsm}
+\alias{dDynOcc_svm}
+\alias{dDynOcc_ssm}
+\alias{rDynOcc_vvm}
+\alias{rDynOcc_vsm}
+\alias{rDynOcc_svm}
+\alias{rDynOcc_ssm}
+\alias{dDynOcc_vvv}
+\alias{dDynOcc_vsv}
+\alias{dDynOcc_svv}
+\alias{dDynOcc_ssv}
+\alias{rDynOcc_vvv}
+\alias{rDynOcc_vsv}
+\alias{rDynOcc_svv}
+\alias{rDynOcc_ssv}
+\alias{dDynOcc_vvs}
+\alias{dDynOcc_vss}
+\alias{dDynOcc_svs}
+\alias{dDynOcc_sss}
+\alias{rDynOcc_vvs}
+\alias{rDynOcc_vss}
+\alias{rDynOcc_svs}
+\alias{rDynOcc_sss}
 \title{Dynamic occupancy distribution for use in NIMBLE models}
 \usage{
-dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-rDynOcc_vv(n, nrep, psi1, phi, gamma, p)
+rDynOcc_vvm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_vs(n, nrep, psi1, phi, gamma, p)
+rDynOcc_vsm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_sv(n, nrep, psi1, phi, gamma, p)
+rDynOcc_svm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
+rDynOcc_ssm(n, psi1, phi, gamma, p, start, end)
+
+dDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+rDynOcc_vvv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_vsv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_svv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_ssv(n, psi1, phi, gamma, p, start, end)
+
+dDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = 0)
+
+rDynOcc_vvs(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_vss(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_svs(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_sss(n, psi1, phi, gamma, p, start, end)
 }
 \arguments{
 \item{x}{detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period}
-
-\item{nrep}{a vector of the number of observations per sampling occasion}
 
 \item{psi1}{probability of occupancy in the first sampling period}
 
@@ -44,6 +94,8 @@ rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
 \item{log}{TRUE (return log probability) or FALSE (return probability)}
 
 \item{n}{a vector of length 2 indicating the dimensions of the data to be randomly generated}
+
+\item{nrep}{a vector of the number of observations per sampling occasion}
 }
 \description{
 \code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.

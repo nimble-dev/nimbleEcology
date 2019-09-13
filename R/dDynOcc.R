@@ -112,7 +112,7 @@ dDynOcc_vvm <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
     if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
-    if (length(gamma) != dim(x)[1] - 1 - 1) stop("Length of gamma vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -221,7 +221,7 @@ dDynOcc_svm <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(gamma) != dim(x)[1] - 1 - 1) stop("Length of gamma vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -452,7 +452,7 @@ dDynOcc_vvv <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
     if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
-    if (length(gamma) != dim(x)[1] - 1 - 1) stop("Length of gamma vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
@@ -788,7 +788,7 @@ dDynOcc_vvs <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
     if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
-    if (length(gamma) != dim(x)[1] - 1 - 1) stop("Length of gamma vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
@@ -842,7 +842,6 @@ dDynOcc_vss <- nimbleFunction(
                  log = double(0, default = 0)) {
 
     if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
-    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
@@ -895,7 +894,6 @@ dDynOcc_svs <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
     if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
-    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1
