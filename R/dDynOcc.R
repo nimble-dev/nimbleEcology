@@ -945,9 +945,6 @@ dDynOcc_sss <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    # if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
-    # if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
-    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- psi1

@@ -4,6 +4,9 @@ language: R
 r:
   - 3.5
 
+cache:
+  packages: true
+
 notifications:
   email:
     recipients:
@@ -12,4 +15,4 @@ notifications:
     on_failure: always
 
 script:
-  - ./run_tests.R
+  - run_tests.R

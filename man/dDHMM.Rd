@@ -12,8 +12,6 @@ dDHMM(x, init, Z, T, len, log = 0)
 dDHMMo(x, init, Z, T, len, log = 0)
 
 rDHMM(n, init, Z, T, len = 0)
-
-rDHMMo(n, init, Z, T, len = 0)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
@@ -61,7 +59,7 @@ in a NIMBLE model.)
 For example, in a NIMBLE model,
 
 \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:O, 1:S],
-transitionProbs[1:S, 1:S, 1:T], T)}
+transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 
 declares that the \code{observedStates[1:T]} vector follows a dynamic hidden Markov model distribution
 with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.  In
@@ -70,8 +68,8 @@ this case, \code{S} is the number of system states, \code{O} is the number of ob
 
 If the observation probabilities are time-dependent, one would use:
 
-\code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
-transitionProbs[1:S, 1:S, 1:T], T)}
+\code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:(T-1)],
+transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 }
 \examples{
 \dontrun{
@@ -82,8 +80,8 @@ Z <- t(array( # A matrix of observation probabilities
        c(1, 0.2, 1,
          0, 0.8, 0), c(3, 2)))
 
-Tt <- array(rep(0.5, 36), # A matrix of time-indexed transition probabilities
-            c(3,3,4))
+Tt <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+            c(3,3,3))
 
 # Define code for a nimbleModel
  nc <- nimbleCode({
