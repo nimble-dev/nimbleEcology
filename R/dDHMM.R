@@ -114,7 +114,7 @@ dDHMM <- nimbleFunction(
                  init = double(1),
                  Z = double(2),
                  T = double(3),
-                 len = integer(0),## length of x (needed as a separate param for rDHMM)
+                 len = integer(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMM.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMM.")
@@ -146,7 +146,7 @@ dDHMMo <- nimbleFunction(
                  init = double(1),##
                  Z = double(3),
                  T = double(3),
-                 len = integer(0),## length of x (needed as a separate param for rDHMM)
+                 len = integer(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMMo.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMMo.")
@@ -179,7 +179,7 @@ rDHMM <- nimbleFunction(
                  init = double(1), ## probabilities of state at time 1
                  Z = double(2),
                  T = double(3),
-                 len = integer(0, default = 0)) {
+                 len = integer()) {
   returnType(double(1))
   ans <- numeric(len)
   result <- numeric(init = FALSE, length = len)
@@ -203,7 +203,7 @@ registerDistributions(list(
                   'init = double(1)',
                   'Z = double(2)',
                   'T = double(3)',
-                  'len = integer(0)'),
+                  'len = integer()'),
         mixedSizes = TRUE)))
 registerDistributions(list(
     dDHMMo = list(
@@ -213,7 +213,7 @@ registerDistributions(list(
                   'init = double(1)',
                   'Z = double(3)',
                   'T = double(3)',
-                  'len = integer(0)'),
+                  'len = integer()'),
         mixedSizes = TRUE)
 ))
 
