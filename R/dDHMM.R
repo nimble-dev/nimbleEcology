@@ -178,8 +178,8 @@ rDHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1), ## probabilities of state at time 1
                  Z = double(2),
-                 T = double(3),
-                 len = integer()) {
+                 T = double(2),
+                 len = double(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
   result <- numeric(init = FALSE, length = len)
@@ -189,31 +189,31 @@ rDHMM <- nimbleFunction(
   for (t in 1:len) {
     result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
     # Transition to a new true state
-    if (t < len)
-      trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+    if(t < len)
+      trueState <- rmulti(1, size = 1, prob = T[trueState, ])
   }
   return(ans)
 })
 
-registerDistributions(list(
-    dDHMM = list(
-        BUGSdist = "dDHMM(x, init, Z, T, len)",
-        Rdist = "dDHMM(x, init, Z, T, len)",
-        types = c('value = double(1)',    ## Observed capture (state) history
-                  'init = double(1)',
-                  'Z = double(2)',
-                  'T = double(3)',
-                  'len = integer()'),
-        mixedSizes = TRUE)))
-registerDistributions(list(
-    dDHMMo = list(
-        BUGSdist = "dDHMMo(x, init, Z, T, len)",
-        Rdist = "dDHMMo(x, init, Z, T, len)",
-        types = c('value = double(1)',    ## Observed capture (state) history
-                  'init = double(1)',
-                  'Z = double(3)',
-                  'T = double(3)',
-                  'len = integer()'),
-        mixedSizes = TRUE)
-))
+#' @export
+#' @rdname dDHMM
+rDHMMo <- nimbleFunction(
+  run = function(n = integer(),    ## Observed capture (state) history
+                 init = double(1), ## probabilities of state at time 1
+                 Z = double(2),
+                 T = double(3),
+                 len = double(0, default = 0)) {
+    returnType(double(1))
+    ans <- numeric(len)
+    result <- numeric(init = FALSE, length = len)
 
+    trueState <- rmulti(1, size = 1, prob = init)
+
+    for (t in 1:len) {
+      result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
+      # Transition to a new true state
+      if(t < len)
+        trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+    }
+    return(ans)
+  })

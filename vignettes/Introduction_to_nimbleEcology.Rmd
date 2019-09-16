@@ -13,7 +13,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
-  ##,eval = FALSE ## uncomment this to build quickly without running code.
+  ,eval = FALSE ## uncomment this to build quickly without running code.
 )
 ```
 
