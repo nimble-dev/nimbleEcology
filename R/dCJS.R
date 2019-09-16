@@ -361,7 +361,7 @@ rCJS_vv <- nimbleFunction(
       stop("Length of probSurvive is not the same as len.")
     if(length(probCapture) != len)
       stop("Length of probCapture is not the same as len.")
-    ans <- numeric(lenth = len, init = FALSE)
+    ans <- numeric(length = len, init = FALSE)
     alive <- 1
     if (len <= 0) return(ans)
     for (i in 1:len) {
