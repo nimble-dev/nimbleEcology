@@ -114,13 +114,13 @@ dDHMM <- nimbleFunction(
                  init = double(1),
                  Z = double(2),
                  T = double(3),
-                 len = integer(),## length of x (needed as a separate param for rDHMM)
+                 len = double(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMM.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMM.")
     if (length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
-    if (len - 1 != dim(T)[3]) stop("Length of x does not match len in dDHMM.")
+    if (len - 1 != dim(T)[3]) stop("len - 1 does not match dim(T)[3] in dDHMM.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -131,8 +131,9 @@ dDHMM <- nimbleFunction(
       Zpi <- Z[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != lengthX)   pi <- (T[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != lengthX) pi <- (T[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
     }
+
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
@@ -146,14 +147,14 @@ dDHMMo <- nimbleFunction(
                  init = double(1),##
                  Z = double(3),
                  T = double(3),
-                 len = integer(),## length of x (needed as a separate param for rDHMM)
+                 len = double(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(init) != dim(Z)[2]) stop("Length of init does not match ncol of Z in dDHMMo.")
     if (length(init) != dim(T)[1]) stop("Length of init does not match dim(T)[1] in dDHMMo.")
     if (length(init) != dim(T)[2]) stop("Length of init does not match dim(T)[2] in dDHMMo.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
-    if (len - 1 != dim(T)[3]) stop("dim(T)[3] does not match len in dDHMMo.")
-    if (len - 1 != dim(Z)[3]) stop("dim(Z)[3] does not match len in dDHMMo.")
+    if (len - 1 != dim(T)[3]) stop("dim(T)[3] does not match len - 1 in dDHMMo.")
+    if (len != dim(Z)[3]) stop("dim(Z)[3] does not match len in dDHMMo.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -176,44 +177,144 @@ dDHMMo <- nimbleFunction(
 #' @rdname dDHMM
 rDHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
-                 init = double(1), ## probabilities of state at time 1
+                 init = double(1),
                  Z = double(2),
-                 T = double(2),
-                 len = double(0, default = 0)) {
+                 T = double(3),
+                 len = double()) {
   returnType(double(1))
   ans <- numeric(len)
-  result <- numeric(init = FALSE, length = len)
 
-  trueState <- rmulti(1, size = 1, prob = init)
+  trueInit <- 0
 
-  for (t in 1:len) {
-    result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
+  r <- runif(1, 0, 1)
+  j <- 1
+  while (r > sum(init[1:j])) j <- j + 1
+  trueInit <- j
+
+  trueState <- trueInit
+  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
+  for (i in 1:len) {
+    # Detect based on the true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(Z[1:j, trueState])) j <- j + 1
+    ans[i] <- j
+
     # Transition to a new true state
-    if(t < len)
-      trueState <- rmulti(1, size = 1, prob = T[trueState, ])
+    if (i != len) {
+      r <- runif(1, 0, 1)
+      j <- 1
+      while (r > sum(T[trueState, 1:j, i])) j <- j + 1
+      trueState <- j
+    }
   }
+
   return(ans)
 })
+# rDHMM <- nimbleFunction(
+#   run = function(n = integer(),    ## Observed capture (state) history
+#                  init = double(1), ## probabilities of state at time 1
+#                  Z = double(2),
+#                  T = double(3),
+#                  len = integer()) {
+#   returnType(double(1))
+#   ans <- numeric(len)
+#
+#   trueState <- rmulti(n = 1, size = 1, prob = init)
+#
+#   for (t in 1:len) {
+#     thisstate <- which(trueState == 1)
+#     ans[t] <- which(rmulti(1, size = 1, prob = Z[, thisstate]) == 1)
+#     # Transition to a new true state
+#     if (t < len)
+#       trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+#   }
+#   return(ans)
+# })
 
 #' @export
 #' @rdname dDHMM
 rDHMMo <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
-                 init = double(1), ## probabilities of state at time 1
-                 Z = double(2),
+                 init = double(1),
+                 Z = double(3),
                  T = double(3),
-                 len = double(0, default = 0)) {
-    returnType(double(1))
-    ans <- numeric(len)
-    result <- numeric(init = FALSE, length = len)
+                 len = double()) {
+  returnType(double(1))
+  ans <- numeric(len)
 
-    trueState <- rmulti(1, size = 1, prob = init)
+  trueInit <- 0
 
-    for (t in 1:len) {
-      result[t] <- rmulti(1, size = 1, prob  = Z[,trueState])
-      # Transition to a new true state
-      if(t < len)
-        trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+  r <- runif(1, 0, 1)
+  j <- 1
+  while (r > sum(init[1:j])) j <- j + 1
+  trueState <- j
+
+  for (i in 1:len) {
+    # Detect based on the true state
+    r <- runif(1, 0, 1)
+    j <- 1
+    while (r > sum(Z[1:j, trueState, i])) j <- j + 1
+    ans[i] <- j
+
+    # Transition to a new true state
+    if (i != len) {
+      r <- runif(1, 0, 1)
+      j <- 1
+      while (r > sum(T[trueState, 1:j, i])) j <- j + 1
+      trueState <- j
     }
-    return(ans)
-  })
+  }
+  return(ans)
+})
+# rDHMMo <- nimbleFunction(
+#   run = function(n = integer(),    ## Observed capture (state) history
+#                  init = double(1), ## probabilities of state at time 1
+#                  Z = double(3),
+#                  T = double(3),
+#                  len = integer()) {
+#     returnType(double(1))
+#     ans <- numeric(len)
+#
+#     trueState <- rmulti(1, size = 1, prob = init)
+#
+#     for (t in 1:len) {
+#       thisstate <- which(trueState == 1)
+#       ans[t] <- which(rmulti(1, size = 1, prob = Z[, thisstate, t]) == 1)
+#       # Transition to a new true state
+#       if (t < len)
+#         trueState <- rmulti(1, size = 1, prob = T[trueState, , t])
+#     }
+#     return(ans)
+#   })
+
+
+
+registerDistributions(list(
+  dDHMM = list(
+    BUGSdist = "dDHMM(init, Z, T, len)",
+    Rdist = "dDHMM(init, Z, T, len)",
+    discrete = TRUE,
+    types = c('value = double(1)',
+              'init = double(1)',
+              'Z = double(2)',
+              'T = double(3)',
+              'len = double()'),
+    mixedSizes = TRUE,
+    pqAvail = FALSE))
+  )
+
+registerDistributions(list(
+  dDHMMo = list(
+    BUGSdist = "dDHMMo(init, Z, T, len)",
+    Rdist = "dDHMMo(init, Z, T, len)",
+    discrete = TRUE,
+    types = c('value = double(1)',
+              'init = double(1)',
+              'Z = double(3)',
+              'T = double(3)',
+              'len = double()'),
+    mixedSizes = TRUE,
+    pqAvail = FALSE))
+  )
+

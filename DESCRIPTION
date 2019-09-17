@@ -10,7 +10,6 @@ Description: Common ecological distributions for NIMBLE models in the form of ni
 License: BSD_3_clause + file LICENSE | GPL (>= 2)
 Copyright: see COPYRIGHTS file.
 Depends: R (>= 3.4.0), nimble
-Imports: 
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/nimble-dev/nimbleEcology
@@ -21,6 +20,8 @@ Collate:
   dHMM.R
   dOcc.R
 RoxygenNote: 6.1.1
-Suggests: knitr,
-    rmarkdown
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 2.1.0)
 VignetteBuilder: knitr

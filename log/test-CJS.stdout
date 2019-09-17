@@ -1,0 +1,10 @@
+nimble version 0.8.0 is loaded.
+For more information on NIMBLE and a User Manual,
+please visit http://R-nimble.org.
+
+Attaching package: ‘nimble’
+
+The following object is masked from ‘package:stats’:
+
+    simulate
+

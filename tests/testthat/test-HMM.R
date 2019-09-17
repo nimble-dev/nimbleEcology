@@ -68,10 +68,10 @@ test_that("dHMM works", {
   # Repeat for log prob
   lProbX1 <- dHMM(x = x1, init = init,
                   Z = Z, T = Tt,
-                  len = len, log = T)
+                  len = len, log = TRUE)
   lProbX2 <- dHMM(x = x2, init = init,
                   Z = Z, T = Tt,
-                  len = len, log = T)
+                  len = len, log = TRUE)
 
   expect_equal(lProbX1, log(correctProbX1))
   expect_equal(lProbX2, log(correctProbX2))
@@ -80,12 +80,12 @@ test_that("dHMM works", {
   CdHMM <- compileNimble(dHMM)
   CprobX1 <- CdHMM(x = x1, init = init,
                    Z = Z, T = Tt,
-                   len = len, log = F)
+                   len = len, log = FALSE)
   expect_equal(CprobX1, probX1)
 
   ClProbX1 <- CdHMM(x = x1, init = init,
                     Z = Z, T = Tt,
-                    len = len, log = T)
+                    len = len, log = TRUE)
   expect_equal(ClProbX1, lProbX1)
 
 
@@ -211,12 +211,12 @@ test_that("dHMMo works", {
   CdHMMo <- compileNimble(dHMMo)
   CprobX1 <- CdHMMo(x = x1, init = init,
                     Z = Z, T = Tt,
-                    len = len, log = F)
+                    len = len, log = FALSE)
   expect_equal(CprobX1, probX1)
 
   ClProbX1 <- CdHMMo(x = x1, init = init,
                      Z = Z, T = Tt,
-                     len = len, log = T)
+                     len = len, log = TRUE)
   expect_equal(ClProbX1, lProbX1)
 
 

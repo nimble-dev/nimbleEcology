@@ -1,3 +1,5 @@
+#!/usr/local/bin/Rscript
+
 help_message <-
 "Run tests in nimbleEcology/tests/
 Usage:
@@ -64,7 +66,8 @@ runTest <- function(test, logToFile = FALSE, runViaTestthat = TRUE) {
         script <- paste0('library(methods);',
                          'library(testthat);',
                          'library(nimble);',
-                         'tryCatch(test_package("nimble", "^', name, '$",',
+                         'library(nimbleEcology);',
+                         'tryCatch(test_package("nimbleEcology", "^', name, '$",',
                          '                      reporter = ', reporter, '),',
                          '  error = function(e) quit(status = 1))')
         command <- c(runner, '-e', custom_shQuote(script))
@@ -90,7 +93,8 @@ runTest <- function(test, logToFile = FALSE, runViaTestthat = TRUE) {
     return(FALSE)
 }
 
+
 for (test in allTests) {
-    runTest(test)
+  runTest(test)
 }
 

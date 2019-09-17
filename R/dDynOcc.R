@@ -317,18 +317,29 @@ dDynOcc_ssm <- nimbleFunction(
   }
 )
 
-
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vvm <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(1),
                  p = double(2),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -337,14 +348,26 @@ rDynOcc_vvm <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vsm <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(0),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(),
                  p = double(2),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -353,14 +376,26 @@ rDynOcc_vsm <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_svm <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(0),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(1),
                  p = double(2),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -369,14 +404,26 @@ rDynOcc_svm <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_ssm <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(0),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(),
                  p = double(2),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -657,14 +704,26 @@ dDynOcc_ssv <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vvv <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(1),
                  p = double(1),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -673,14 +732,26 @@ rDynOcc_vvv <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vsv <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(),
                  p = double(1),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -689,14 +760,26 @@ rDynOcc_vsv <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_svv <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(1),
                  p = double(1),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -705,14 +788,26 @@ rDynOcc_svv <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_ssv <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(),
                  p = double(1),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -987,14 +1082,26 @@ dDynOcc_sss <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vvs <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(1),
                  p = double(),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -1003,14 +1110,26 @@ rDynOcc_vvs <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_vss <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(1),
                  gamma = double(),
                  p = double(),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -1019,14 +1138,26 @@ rDynOcc_vss <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_svs <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(1),
                  p = double(),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -1035,14 +1166,26 @@ rDynOcc_svs <- nimbleFunction(
 #' @rdname dDynOcc
 #' @export
 rDynOcc_sss <- nimbleFunction(
-  run = function(n = double(1),
+  run = function(n = double(),
                  psi1 = double(),
                  phi = double(),
                  gamma = double(),
                  p = double(),
                  start = double(1),
                  end = double(1)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
     return(val)
     returnType(double(2))
   }

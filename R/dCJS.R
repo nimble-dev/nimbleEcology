@@ -109,14 +109,16 @@ dCJS_ss <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (x[t] == 1) {
-        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
-        probThisObs <- probAlive * probCapture
-        probAliveGivenHistory <- 1
-      } else {
-        probAliveNotSeen <- probAlive * (1 - probCapture)
-        probThisObs <- probAliveNotSeen + (1 - probAlive)
-        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      if (!is.na(x[t])) {
+        if (x[t] == 1) {
+          ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+          probThisObs <- probAlive * probCapture
+          probAliveGivenHistory <- 1
+        } else {
+          probAliveNotSeen <- probAlive * (1 - probCapture)
+          probThisObs <- probAliveNotSeen + (1 - probAlive)
+          probAliveGivenHistory <- probAliveNotSeen / probThisObs
+        }
       }
       logProbData <- logProbData + log(probThisObs)
     }
@@ -152,14 +154,16 @@ dCJS_sv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (x[t] == 1) {
-        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
-        probThisObs <- probAlive * probCapture[t]
-        probAliveGivenHistory <- 1
-      } else {
-        probAliveNotSeen <- probAlive * (1 - probCapture[t])
-        probThisObs <- probAliveNotSeen + (1 - probAlive)
-        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      if (!is.na(x[t])) {
+        if (x[t] == 1) {
+          ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+          probThisObs <- probAlive * probCapture[t]
+          probAliveGivenHistory <- 1
+        } else {
+          probAliveNotSeen <- probAlive * (1 - probCapture[t])
+          probThisObs <- probAliveNotSeen + (1 - probAlive)
+          probAliveGivenHistory <- probAliveNotSeen / probThisObs
+        }
       }
       logProbData <- logProbData + log(probThisObs)
     }
@@ -196,14 +200,16 @@ dCJS_vs <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t]
-      if (x[t] == 1) {
-        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
-        probThisObs <- probAlive * probCapture
-        probAliveGivenHistory <- 1
-      } else {
-        probAliveNotSeen <- probAlive * (1 - probCapture)
-        probThisObs <- probAliveNotSeen + (1 - probAlive)
-        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      if (!is.na(x[t])) {
+        if (x[t] == 1) {
+          ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+          probThisObs <- probAlive * probCapture
+          probAliveGivenHistory <- 1
+        } else {
+          probAliveNotSeen <- probAlive * (1 - probCapture)
+          probThisObs <- probAliveNotSeen + (1 - probAlive)
+          probAliveGivenHistory <- probAliveNotSeen / probThisObs
+        }
       }
       logProbData <- logProbData + log(probThisObs)
     }
@@ -243,14 +249,16 @@ dCJS_vv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t]
-      if (x[t] == 1) {
-        ## ProbThisObs = P(x(t) | x(1)...x(t-1))
-        probThisObs <- probAlive * probCapture[t]
-        probAliveGivenHistory <- 1
-      } else {
-        probAliveNotSeen <- probAlive * (1 - probCapture[t])
-        probThisObs <- probAliveNotSeen + (1 - probAlive)
-        probAliveGivenHistory <- probAliveNotSeen / probThisObs
+      if (!is.na(x[t])) {
+        if (x[t] == 1) {
+          ## ProbThisObs = P(x(t) | x(1)...x(t-1))
+          probThisObs <- probAlive * probCapture[t]
+          probAliveGivenHistory <- 1
+        } else {
+          probAliveNotSeen <- probAlive * (1 - probCapture[t])
+          probThisObs <- probAliveNotSeen + (1 - probAlive)
+          probAliveGivenHistory <- probAliveNotSeen / probThisObs
+        }
       }
       logProbData <- logProbData + log(probThisObs)
     }
@@ -293,7 +301,7 @@ rCJS_ss <- nimbleFunction(
 #' @export
 rCJS_sv <- nimbleFunction(
   run = function(n = integer(),
-                 probSurvive = double(0),
+                 probSurvive = double(),
                  probCapture = double(1),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
@@ -323,7 +331,7 @@ rCJS_sv <- nimbleFunction(
 rCJS_vs <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
-                 probCapture = double(0),
+                 probCapture = double(),
                  len = double(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if(len < 0)
@@ -389,7 +397,7 @@ registerDistributions(list(
     BUGSdist = "dCJS_ss(probSurvive, probCapture, len)",
     Rdist = "dCJS_ss(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(0)', 'len = double(0)'),
+    types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double()', 'len = double()'),
     pqAvail = FALSE))
   )
 
@@ -398,7 +406,7 @@ registerDistributions(list(
     BUGSdist = "dCJS_sv(probSurvive, probCapture, len)",
     Rdist = "dCJS_sv(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probSurvive = double(0)', 'probCapture = double(1)', 'len = double(0)'),
+    types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double(1)', 'len = double()'),
     pqAvail = FALSE))
   )
 
@@ -407,7 +415,7 @@ registerDistributions(list(
     BUGSdist = "dCJS_vs(probSurvive, probCapture, len)",
     Rdist = "dCJS_vs(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(0)', 'len = double(0)'),
+    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double()', 'len = double()'),
     pqAvail = FALSE))
   )
 
@@ -416,6 +424,7 @@ registerDistributions(list(
     BUGSdist = "dCJS_vv(probSurvive, probCapture, len)",
     Rdist = "dCJS_vv(probSurvive, probCapture, len = 0)",
     discrete = TRUE,
-    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double(0)'),
+    types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double()'),
     pqAvail = FALSE))
 )
+

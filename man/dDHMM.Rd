@@ -9,9 +9,11 @@
 \usage{
 dDHMM(x, init, Z, T, len, log = 0)
 
-dDHMMo(x, init, Z, T, len, log = 0)
+dDHMMo(x, init, Z, T, len, log)
 
-rDHMM(n, init, Z, T, len = 0)
+rDHMM(n, init, Z, T, len)
+
+rDHMMo(n, init, Z, T, len)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
