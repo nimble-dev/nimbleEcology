@@ -1,4 +1,4 @@
-#!/usr/local/bin/Rscript
+#!/usr/bin/env Rscript
 
 help_message <-
 "Run tests in nimbleEcology/tests/
