@@ -14,5 +14,9 @@ notifications:
     on_success: always
     on_failure: always
 
+install:
+  - R CMD build .
+  - R CMD INSTALL . --install-tests
+
 script:
   - run_tests.R
