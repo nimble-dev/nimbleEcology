@@ -19,4 +19,4 @@ install:
   - R CMD INSTALL . --install-tests
 
 script:
-  - ./run_tests.R
+  - Rscript ./run_tests.R
