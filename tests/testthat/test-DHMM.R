@@ -150,19 +150,19 @@ test_that("Testing dDHMM", {
   }
   expect_identical(CmxSim, mxSim)
 
-  # Test imputing value for all NAs
-  xNA <- rep(NA, length(x))
-  mNA <- nimbleModel(nc, data = list(x = xNA),
-                     inits = list(init = init, Z = Z,
-                                  Tt = Tt))
-  mNAConf <- configureMCMC(mNA)
-  mNAConf$addMonitors('x')
-  mNA_MCMC <- buildMCMC(mNAConf)
-  cmNA <- compileNimble(mNA, mNA_MCMC)
-  set.seed(0)
-  cmNA$mNA_MCMC$run(10)
-# Did the imputed values come back?
-  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+# # Test imputing value for all NAs
+#   xNA <- rep(NA, length(x))
+#   mNA <- nimbleModel(nc, data = list(x = xNA),
+#                      inits = list(init = init, Z = Z,
+#                                   Tt = Tt))
+#   mNAConf <- configureMCMC(mNA)
+#   mNAConf$addMonitors('x')
+#   mNA_MCMC <- buildMCMC(mNAConf)
+#   cmNA <- compileNimble(mNA, mNA_MCMC)
+#   set.seed(0)
+#   cmNA$mNA_MCMC$run(10)
+# # Did the imputed values come back?
+#   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 
 })
 
@@ -312,25 +312,21 @@ test_that("Testing dDHMMo", {
   }
   expect_identical(CmxSim, mxSim)
 
-# Test imputing value for all NAs
-  xNA <- rep(NA, length(x))
-  mNA <- nimbleModel(nc, data = list(x = xNA),
-                     inits = list(init = init, Z = Z,
-                                  Tt = Tt))
-  mNAConf <- configureMCMC(mNA)
-  mNAConf$addMonitors('x')
-  mNA_MCMC <- buildMCMC(mNAConf)
-  cmNA <- compileNimble(mNA, mNA_MCMC)
-  set.seed(0)
-  cmNA$mNA_MCMC$run(10)
-# Did the imputed values come back?
-  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+# # Test imputing value for all NAs
+#   xNA <- rep(NA, length(x))
+#   mNA <- nimbleModel(nc, data = list(x = xNA),
+#                      inits = list(init = init, Z = Z,
+#                                   Tt = Tt))
+#   mNAConf <- configureMCMC(mNA)
+#   mNAConf$addMonitors('x')
+#   mNA_MCMC <- buildMCMC(mNAConf)
+#   cmNA <- compileNimble(mNA, mNA_MCMC)
+#   set.seed(0)
+#   cmNA$mNA_MCMC$run(10)
+# # Did the imputed values come back?
+#   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 
 })
-
-# TODO:
-# Check that time-indexed with all the same probs for each time matches
-# non-time-indexed
 
 test_that("dDHMM and dDHMMo compatibility", {
   # len: length of the data
