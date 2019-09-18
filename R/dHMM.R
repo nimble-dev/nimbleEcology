@@ -13,10 +13,10 @@
 #'
 #' @param x vector of observation classes, one of which could be defined as "not observed".
 #' @param init vector of initial state probabilities
-#' @param Z time-independent matrix of observation probabilities.
-#' Dimension of \code{Z} is (number of possible observation classes) x (number of possible system states)
-#' @param T time-independent matrix of system state-transition probabilities.
-#' Dimension of \code{T} is (number of possible system states) x (number of possible system states)
+#' @param probObs time-independent matrix of observation probabilities.
+#' Dimension of \code{probObs} is (number of possible observation classes) x (number of possible system states)
+#' @param probTrans time-independent matrix of system state-transition probabilities.
+#' Dimension of \code{probTrans} is (number of possible system states) x (number of possible system states)
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #' @param n length of random sequence
@@ -33,28 +33,28 @@
 #' len <- 5 # length of dataset
 #' dat <- c(1,2,1,1,2) # A vector of observations
 #' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
-#' Z <- t(array( # A matrix of observation probabilities
+#' probObs <- t(array( # A matrix of observation probabilities
 #'        c(1, 0.2, 1,
 #'          0, 0.8, 0), c(3, 2)))
-#' Tt <- t(array( # A matrix of transition probabilities
+#' probTrans <- t(array( # A matrix of transition probabilities
 #'         c(0.6, 0.3, 0.1,
 #'           0, 0.7, 0.3,
 #'           0, 0, 1), c(3,3)))
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
-#'    x[1:5] ~ dHMM(init[1:3], Z = Z[1:2,1:3],
-#'                  T = Tt[1:3, 1:3], len = 5)
+#'    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:2,1:3],
+#'                  probTrans = probTrans[1:3, 1:3], len = 5)
 #'
 #'    for (i in 1:3) {
 #'      init[i] ~ dunif(0,1)
 #'
 #'      for (j in 1:3) {
-#'        Tt[i,j] ~ dunif(0,1)
+#'        probTrans[i,j] ~ dunif(0,1)
 #'      }
 #'
-#'      Z[1,i] ~ dunif(0,1)
-#'      Z[2,i] <- 1 - Z[1,i]
+#'      probTrans[1,i] ~ dunif(0,1)
+#'      probTrans[2,i] <- 1 - probTrans[1,i]
 #'    }
 #'  })
 #'
@@ -62,8 +62,8 @@
 #' HMM_model <- nimbleModel(nc,
 #'                          data = list(x = dat),
 #'                          inits = list(init = init,
-#'                                       Z = Z,
-#'                                       Tt = Tt)))
+#'                                       probObs = probObs,
+#'                                       probTrans = probTrans)))
 #' # Calculate log probability of data from the model
 #' HMM_model$calculate()
 #' # Use the model for a variety of other purposes...
@@ -105,24 +105,24 @@ NULL
 dHMM <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
                  init = double(1),##
-                 Z = double(2),
-                 T = double(2),
+                 probObs = double(2),
+                 probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(Z)[2] != dim(T)[1]) stop("Number of cols in Z must equal number of cols in T.")
-    if (dim(T)[1] != dim(T)[2]) stop("T must be a square matrix.")
+    if (dim(probObs)[2] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(Z)[1]
+    nStates <- dim(probObs)[1]
     for (t in 1:len) {
       if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- Z[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (T[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -135,28 +135,28 @@ dHMM <- nimbleFunction(
 dHMMo <- nimbleFunction(
   run = function(x = double(1),    ## Observed capture (state) history
                  init = double(1),##
-                 Z = double(3),
-                 T = double(2),
+                 probObs = double(3),
+                 probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(Z)[2] != dim(T)[1]) stop("Number of cols in Z must equal number of cols in T.")
-    if (dim(T)[1] != dim(T)[2]) stop("T must be a square matrix.")
-    if (dim(Z)[3] != len) {
-      if (dim(Z)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
+    if (dim(probObs)[2] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("T must be a square matrix.")
+    if (dim(probObs)[3] != len) {
+      if (dim(probObs)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
       stop("Length of time dimension of Z must match length of data.")
     }
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(Z)[1]
+    nStates <- dim(probObs)[1]
     for (t in 1:len) {
       if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- Z[x[t],,t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[x[t],,t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (T[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -169,8 +169,8 @@ dHMMo <- nimbleFunction(
 rHMM <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1),
-                 Z = double(2),
-                 T = double(2),
+                 probObs = double(2),
+                 probTrans = double(2),
                  len = double(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
@@ -189,13 +189,13 @@ rHMM <- nimbleFunction(
     # Transition to a new true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(T[trueState, 1:j])) j <- j + 1
+    while (r > sum(probTrans[trueState, 1:j])) j <- j + 1
     trueState <- j
 
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(Z[1:j, trueState])) j <- j + 1
+    while (r > sum(probObs[1:j, trueState])) j <- j + 1
     ans[i] <- j
 
   }
@@ -208,8 +208,8 @@ rHMM <- nimbleFunction(
 rHMMo <- nimbleFunction(
   run = function(n = integer(),    ## Observed capture (state) history
                  init = double(1),
-                 Z = double(3),
-                 T = double(2),
+                 probObs = double(3),
+                 probTrans = double(2),
                  len = double(0, default = 0)) {
   returnType(double(1))
   ans <- numeric(len)
@@ -228,13 +228,13 @@ rHMMo <- nimbleFunction(
     # Transition to a new true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(T[trueState, 1:j])) j <- j + 1
+    while (r > sum(probTrans[trueState, 1:j])) j <- j + 1
     trueState <- j
 
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(Z[1:j, trueState, i])) j <- j + 1
+    while (r > sum(probObs[1:j, trueState, i])) j <- j + 1
     ans[i] <- j
 
   }
@@ -245,13 +245,13 @@ rHMMo <- nimbleFunction(
 
 registerDistributions(list(
   dHMM = list(
-    BUGSdist = "dHMM(init, Z, T, len)",
-    Rdist = "dHMM(init, Z, T, len = 0)",
+    BUGSdist = "dHMM(init, probObs, probTrans, len)",
+    Rdist = "dHMM(init, probObs, probTrans, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)',
               'init = double(1)',
-              'Z = double(2)',
-              'T = double(2)',
+              'probObs = double(2)',
+              'probTrans = double(2)',
               'len = double(0)'),
     mixedSizes = TRUE,
     pqAvail = FALSE))
@@ -259,13 +259,13 @@ registerDistributions(list(
 
 registerDistributions(list(
   dHMMo = list(
-    BUGSdist = "dHMMo(init, Z, T, len)",
-    Rdist = "dHMMo(init, Z, T, len = 0)",
+    BUGSdist = "dHMMo(init, probObs, probTrans, len)",
+    Rdist = "dHMMo(init, probObs, probTrans, len = 0)",
     discrete = TRUE,
     types = c('value = double(1)',
               'init = double(1)',
-              'Z = double(3)',
-              'T = double(2)',
+              'probObs = double(3)',
+              'probTrans = double(2)',
               'len = double(0)'),
     mixedSizes = TRUE,
     pqAvail = FALSE))
