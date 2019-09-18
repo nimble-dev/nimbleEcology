@@ -15,7 +15,7 @@ notifications:
     on_failure: always
 
 install:
-  - R CMD check .
+  - R CMD check . --as-cran
   - R CMD build .
   - R CMD INSTALL . --install-tests
 
