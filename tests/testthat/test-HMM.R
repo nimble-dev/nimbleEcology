@@ -88,14 +88,6 @@ test_that("dHMM works", {
                     len = len, log = TRUE)
   expect_equal(ClProbX1, lProbX1)
 
-
-  # Check if the random generator rHMM works
-  # These values aren't necessarily true, but this will break if the function
-  # is changed and needs to be re-tested
-  set.seed(1234)
-  oneSim <- rHMM(1, init, Z, Tt, len = 5)
-  expect_equal(oneSim, c(2, 2, 1, 2, 2))
-
   # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
     x[1:5] ~ dHMM(init[1:3], Z = Z[1:2,1:3],
@@ -128,11 +120,35 @@ test_that("dHMM works", {
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX1)
 
-  # Check simulate
-  set.seed(2468)
-  cm$simulate('x')
-  expect_equal(cm$x, x1)
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    xSim[i,] <- rHMM(1, init, Z, Tt, len = length(x1))
+  set.seed(1)
+  CrHMM <- compileNimble(rHMM)
+  CxSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    CxSim[i,] <- CrHMM(1, init, Z, Tt, len = length(x1))
+  expect_identical(xSim, CxSim)
 
+  simNodes <- m$getDependencies(c('init', 'Z', 'Tt'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -220,12 +236,6 @@ test_that("dHMMo works", {
   expect_equal(ClProbX1, lProbX1)
 
 
-  # Check that the random generation function works
-  # Breaks if the function is editated meaningfully
-  set.seed(1234)
-  oneSim <- rHMMo(1, init, Z, Tt, len = 5)
-  expect_equal(oneSim, c(2, 2, 1, 2, 2))
-
   # Create code for a nimbleModel using dHMMo
   nc <- nimbleCode({
     x[1:5] ~ dHMMo(init[1:3], Z = Z[1:2, 1:3, 1:5],
@@ -260,11 +270,35 @@ test_that("dHMMo works", {
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX1)
 
-  # Check simulation
-  set.seed(2468)
-  cm$simulate('x')
-  expect_equal(cm$x, x1)
+# Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    xSim[i,] <- rHMMo(1, init, Z, Tt, len = length(x1))
+  set.seed(1)
+  CrHMMo <- compileNimble(rHMMo)
+  CxSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    CxSim[i,] <- CrHMMo(1, init, Z, Tt, len = length(x1))
+  expect_identical(xSim, CxSim)
 
+  simNodes <- m$getDependencies(c('init', 'Z', 'Tt'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 test_that("dHMM and dHMMo compatibility", {

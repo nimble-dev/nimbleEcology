@@ -65,18 +65,7 @@ test_that("dDynOcc_vvm works", {
     x[1:4, 1:5] ~ dDynOcc_vvm(psi1, phi[1:3],
                               gamma[1:3], p[1:4,1:5],
                               start[1:4], end[1:4])
-    # psi1 ~ dunif(0,1)
-    #
-    # for (i in 1:3) {
-    #   phi[i] ~ dunif(0,1)
-    #   gamma[i] ~ dunif(0,1)
-    # }
-    #
-    # for (i in 1:4) {
-    #   for (j in 1:5) {
-    #     p[i,j] ~ dunif(0,1)
-    #   }
-    # }
+
   })
 
   m <- nimbleModel(code = nc, data = list(x = x),
@@ -95,7 +84,37 @@ test_that("dDynOcc_vvm works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, )
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vvm(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vvm <- compileNimble(rDynOcc_vvm)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vvm(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
+
 })
 
 
@@ -195,7 +214,37 @@ test_that("dDynOcc_vsm works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vsm(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vsm <- compileNimble(rDynOcc_vsm)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vsm(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
+
 })
 
 test_that("dDynOcc_svm works", {
@@ -295,7 +344,36 @@ test_that("dDynOcc_svm works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_svm(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_svm <- compileNimble(rDynOcc_svm)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_svm(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -391,7 +469,36 @@ test_that("dDynOcc_ssm works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_ssm(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_ssm <- compileNimble(rDynOcc_ssm)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_ssm(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -532,6 +639,36 @@ test_that("dDynOcc_vvv works", {
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vvv(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vvv <- compileNimble(rDynOcc_vvv)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vvv(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
+
 })
 
 
@@ -629,7 +766,36 @@ test_that("dDynOcc_vsv works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vsv(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vsv <- compileNimble(rDynOcc_vsv)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vsv(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 test_that("dDynOcc_svv works", {
@@ -727,7 +893,36 @@ test_that("dDynOcc_svv works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_svv(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_svv <- compileNimble(rDynOcc_svv)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_svv(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -821,7 +1016,36 @@ test_that("dDynOcc_ssv works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_ssv(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_ssv <- compileNimble(rDynOcc_ssv)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_ssv(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -962,7 +1186,36 @@ test_that("dDynOcc_vvs works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vvs(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vvs <- compileNimble(rDynOcc_vvs)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vvs(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -1058,7 +1311,36 @@ test_that("dDynOcc_vss works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_vss(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_vss <- compileNimble(rDynOcc_vss)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_vss(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 test_that("dDynOcc_svs works", {
@@ -1154,7 +1436,36 @@ test_that("dDynOcc_svs works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_svs(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_svs <- compileNimble(rDynOcc_svs)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_svs(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 
@@ -1246,7 +1557,36 @@ test_that("dDynOcc_sss works", {
 
   set.seed(2468)
   cm$simulate('x')
-  # expect_equal(cm$x, matrix(c(0, 0, 1, 0, 1, 1, 1, 1, 1, 0), nrow = 2))
+
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    xSim[i,,] <- rDynOcc_sss(1, psi1, phi, gamma, p, start, end)
+  set.seed(1)
+  CrDynOcc_sss <- compileNimble(rDynOcc_sss)
+  CxSim <- array(NA, dim = c(nSim, dim(x)))
+  for(i in 1:nSim)
+    CxSim[i,,] <- CrDynOcc_sss(1, psi1, phi, gamma, p, start, end)
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, dim(x)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 })
 
 

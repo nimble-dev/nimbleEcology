@@ -62,14 +62,7 @@ test_that("dCJS_ss works",
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
 
-      # Simulate some data to test random generation
-          set.seed(2468)
-          cm$simulate('x')
-          expect_equal(cm$x, c(0, 1, 0, 0))
-
       # Test imputing value for all NAs
-# TODO: how do I do this for only a few NAs? The problem is right now all of x
-# is a single node (which might be necessary since they're not independent?)
           xNA <- c(NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
@@ -84,6 +77,36 @@ test_that("dCJS_ss works",
 
       # Did the imputed values come back?
           expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
+      # Test simulation code
+          set.seed(1)
+          nSim <- 10
+          xSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            xSim[i,] <- rCJS_ss(1, probSurvive, probCapture, len = length(x))
+          set.seed(1)
+          CrCJS_ss <- compileNimble(rCJS_ss)
+          CxSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            CxSim[i,] <- CrCJS_ss(1, probSurvive, probCapture, len = length(x))
+          expect_identical(xSim, CxSim)
+
+          simNodes <- m$getDependencies(c('probSurvive', 'probCapture'), self = FALSE)
+          mxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            m$simulate(simNodes, includeData = TRUE)
+            mxSim[i,] <- m$x
+          }
+          expect_identical(mxSim, xSim)
+
+          CmxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            cm$simulate(simNodes, includeData = TRUE)
+            CmxSim[i,] <- cm$x
+          }
+          expect_identical(CmxSim, mxSim)
         })
 
 # -----------------------------------------------------------------------------
@@ -165,6 +188,36 @@ test_that("dCJS_sv works",
 
       # Did the imputed values come back?
           expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
+      # Test simulation code
+          set.seed(1)
+          nSim <- 10
+          xSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            xSim[i,] <- rCJS_sv(1, probSurvive, probCapture, len = length(x))
+          set.seed(1)
+          CrCJS_sv <- compileNimble(rCJS_sv)
+          CxSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            CxSim[i,] <- CrCJS_sv(1, probSurvive, probCapture, len = length(x))
+          expect_identical(xSim, CxSim)
+
+          simNodes <- m$getDependencies(c('probSurvive', 'probCapture'), self = FALSE)
+          mxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            m$simulate(simNodes, includeData = TRUE)
+            mxSim[i,] <- m$x
+          }
+          expect_identical(mxSim, xSim)
+
+          CmxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            cm$simulate(simNodes, includeData = TRUE)
+            CmxSim[i,] <- cm$x
+          }
+          expect_identical(CmxSim, mxSim)
         })
 
 # -----------------------------------------------------------------------------
@@ -232,8 +285,6 @@ test_that("dCJS_vs works",
           expect_equal(cm$x, c(0, 1, 0, 0))
 
       # Test imputing value for all NAs
-# TODO: how do I do this for only a few NAs? The problem is right now all of x
-# is a single node (which might be necessary since they're not independent?)
           xNA <- c(NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
@@ -248,6 +299,36 @@ test_that("dCJS_vs works",
 
       # Did the imputed values come back?
           expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
+      # Test simulation code
+          set.seed(1)
+          nSim <- 10
+          xSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            xSim[i,] <- rCJS_vs(1, probSurvive, probCapture, len = length(x))
+          set.seed(1)
+          CrCJS_vs <- compileNimble(rCJS_vs)
+          CxSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            CxSim[i,] <- CrCJS_vs(1, probSurvive, probCapture, len = length(x))
+          expect_identical(xSim, CxSim)
+
+          simNodes <- m$getDependencies(c('probSurvive', 'probCapture'), self = FALSE)
+          mxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            m$simulate(simNodes, includeData = TRUE)
+            mxSim[i,] <- m$x
+          }
+          expect_identical(mxSim, xSim)
+
+          CmxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            cm$simulate(simNodes, includeData = TRUE)
+            CmxSim[i,] <- cm$x
+          }
+          expect_identical(CmxSim, mxSim)
         })
 
 # -----------------------------------------------------------------------------
@@ -316,8 +397,6 @@ test_that("dCJS_vv works",
           expect_equal(cm$x, c(0, 1, 0, 0))
 
       # Test imputing value for all NAs
-# TODO: how do I do this for only a few NAs? The problem is right now all of x
-# is a single node (which might be necessary since they're not independent?)
           xNA <- c(NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
@@ -332,6 +411,36 @@ test_that("dCJS_vv works",
 
       # Did the imputed values come back?
           expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
+      # Test simulation code
+          set.seed(1)
+          nSim <- 10
+          xSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            xSim[i,] <- rCJS_vv(1, probSurvive, probCapture, len = length(x))
+          set.seed(1)
+          CrCJS_vv <- compileNimble(rCJS_vv)
+          CxSim <- array(NA, dim = c(nSim, length(x)))
+          for(i in 1:nSim)
+            CxSim[i,] <- CrCJS_vv(1, probSurvive, probCapture, len = length(x))
+          expect_identical(xSim, CxSim)
+
+          simNodes <- m$getDependencies(c('probSurvive', 'probCapture'), self = FALSE)
+          mxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            m$simulate(simNodes, includeData = TRUE)
+            mxSim[i,] <- m$x
+          }
+          expect_identical(mxSim, xSim)
+
+          CmxSim <- array(NA, dim = c(nSim, length(x)))
+          set.seed(1)
+          for(i in 1:nSim) {
+            cm$simulate(simNodes, includeData = TRUE)
+            CmxSim[i,] <- cm$x
+          }
+          expect_identical(CmxSim, mxSim)
   })
 
 test_that("dCJS errors", {

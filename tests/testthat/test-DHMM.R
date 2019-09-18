@@ -87,12 +87,6 @@ test_that("Testing dDHMM", {
                      len = len, log = TRUE)
   expect_equal(ClProbX1, lProbX1)
 
-  # Check if the random generator rHMM works
-  # These values aren't necessarily true, but this will break if the function
-  # is changed and needs to be re-tested
-  set.seed(1111)
-  oneSim <- rDHMM(n = 1, init, Z, Tt, len = len)
-
     # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
     x[1:5] ~ dDHMM(init[1:3], Z = Z[1:2,1:3],
@@ -126,10 +120,35 @@ test_that("Testing dDHMM", {
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX1)
 
-  # Check simulate
-  set.seed(2468)
-  cm$simulate('x')
-  expect_equal(cm$x, x1)
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    xSim[i,] <- rDHMM(1, init, Z, Tt, len = length(x1))
+  set.seed(1)
+  CrDHMM <- compileNimble(rDHMM)
+  CxSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    CxSim[i,] <- CrDHMM(1, init, Z, Tt, len = length(x1))
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('init', 'Z', 'Tt'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 
 })
 
@@ -249,10 +268,35 @@ test_that("Testing dDHMMo", {
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX1)
 
-  # Check simulate
-  set.seed(2468)
-  cm$simulate('x')
-  expect_equal(cm$x, x1)
+  # Test simulation code
+  set.seed(1)
+  nSim <- 10
+  xSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    xSim[i,] <- rDHMMo(1, init, Z, Tt, len = length(x1))
+  set.seed(1)
+  CrDHMMo <- compileNimble(rDHMMo)
+  CxSim <- array(NA, dim = c(nSim, length(x1)))
+  for(i in 1:nSim)
+    CxSim[i,] <- CrDHMMo(1, init, Z, Tt, len = length(x1))
+  expect_identical(xSim, CxSim)
+
+  simNodes <- m$getDependencies(c('init', 'Z', 'Tt'), self = FALSE)
+  mxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    m$simulate(simNodes, includeData = TRUE)
+    mxSim[i,] <- m$x
+  }
+  expect_identical(mxSim, xSim)
+
+  CmxSim <- array(NA, dim = c(nSim, length(x1)))
+  set.seed(1)
+  for(i in 1:nSim) {
+    cm$simulate(simNodes, includeData = TRUE)
+    CmxSim[i,] <- cm$x
+  }
+  expect_identical(CmxSim, mxSim)
 
 })
 
