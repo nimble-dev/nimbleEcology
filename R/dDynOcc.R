@@ -60,13 +60,18 @@
 #' @examples
 #' \dontrun{
 #' # Set up constants and initial values for defining the model
-#' x <- matrix(c(0,0,1,0,1,
-#'               1,1,1,1,0), nrow = 2)
-#' nrep <- c(5, 5)
-#' psi1 <- 0.7
-#' phi <- c(0.4, 0.8)
-#' gamma <- c(0.2, 0.1)
-#' p <- matrix(rep(0.8, 10), nrow = 2)
+#'   x <- matrix(c(0,0,NA,0,
+#'                 1,1,1,0,
+#'                 0,0,0,0,
+#'                 0,0,1,0,
+#'                 0,0,0,NA), nrow = 4)
+#'   start <- c(1,1,2,1)
+#'   end <- c(5,5,5,4)
+#'   psi1 <- 0.7
+#'   phi <- 0.5
+#'   gamma <- 0.2
+#'   p <- 0.8
+#'
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
@@ -123,7 +128,8 @@ dDynOcc_vvm <- nimbleFunction(
     if (nyears >= 1) {
       for (t in 1:nyears) {
         if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+          numObs <- sum(x[t, start[t]:end[t]])
+          if (is.na(numObs)) numObs <- 0
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
