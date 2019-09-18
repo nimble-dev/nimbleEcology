@@ -115,6 +115,21 @@ test_that("dDynOcc_vvm works", {
   }
   expect_identical(CmxSim, mxSim)
 
+# Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
 })
 
 
@@ -245,6 +260,20 @@ test_that("dDynOcc_vsm works", {
   }
   expect_identical(CmxSim, mxSim)
 
+# Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 test_that("dDynOcc_svm works", {
@@ -374,6 +403,21 @@ test_that("dDynOcc_svm works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -499,6 +543,21 @@ test_that("dDynOcc_ssm works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -668,7 +727,20 @@ test_that("dDynOcc_vvv works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
-
+# Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -796,6 +868,21 @@ test_that("dDynOcc_vsv works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 test_that("dDynOcc_svv works", {
@@ -923,6 +1010,21 @@ test_that("dDynOcc_svv works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -1046,6 +1148,20 @@ test_that("dDynOcc_ssv works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -1216,6 +1332,20 @@ test_that("dDynOcc_vvs works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -1341,6 +1471,20 @@ test_that("dDynOcc_vss works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 test_that("dDynOcc_svs works", {
@@ -1466,6 +1610,20 @@ test_that("dDynOcc_svs works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -1587,6 +1745,20 @@ test_that("dDynOcc_sss works", {
     CmxSim[i,,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+  # Test imputing value for all NAs
+  xNA <- array(NA, dim = dim(x))
+  mNA <- nimbleModel(code = nc, data = list(x = xNA),
+                     constants = list(start = start, end = end),
+                     inits = list(p = p, phi = phi,
+                                  psi1 = psi1, gamma = gamma))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 

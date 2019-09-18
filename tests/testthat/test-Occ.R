@@ -77,6 +77,21 @@ test_that("dOcc_s and rOcc_s work", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+# Test imputing value for all NAs
+  xNA <- rep(NA, length(x))
+  mNA <- nimbleModel(nc, data = list(x = xNA),
+         inits = list(probOcc = probOcc,
+                      probDetect = probDetect))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
 })
 
 
@@ -157,6 +172,20 @@ test_that("dOcc_v works", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- rep(NA, length(x))
+  mNA <- nimbleModel(nc, data = list(x = xNA),
+         inits = list(probOcc = probOcc,
+                      probDetect = probDetect))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 

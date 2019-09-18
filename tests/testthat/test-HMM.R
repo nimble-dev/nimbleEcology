@@ -149,6 +149,20 @@ test_that("dHMM works", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- re(NA, length(x))
+  mNA <- nimbleModel(nc, data = list(x = xNA),
+                     inits = list(init = init, Z = Z,
+                                  Tt = Tt))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -299,6 +313,21 @@ test_that("dHMMo works", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+# # Test imputing value for all NAs
+#   xNA <- rep(NA, length(x))
+#   mNA <- nimbleModel(nc, data = list(x = xNA),
+#                      inits = list(init = init, Z = Z,
+#                                   Tt = Tt))
+#   mNAConf <- configureMCMC(mNA)
+#   mNAConf$addMonitors('x')
+#   mNA_MCMC <- buildMCMC(mNAConf)
+#   cmNA <- compileNimble(mNA, mNA_MCMC)
+#   set.seed(0)
+#   cmNA$mNA_MCMC$run(10)
+# # Did the imputed values come back?
+#   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
 })
 
 test_that("dHMM and dHMMo compatibility", {
