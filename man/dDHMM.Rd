@@ -7,26 +7,26 @@
 \alias{rDHMMo}
 \title{Dynamic Hidden Markov Model distribution for use in NIMBLE models}
 \usage{
-dDHMM(x, init, Z, T, len, log = 0)
+dDHMM(x, init, probObs, probTrans, len, log = 0)
 
-dDHMMo(x, init, Z, T, len, log)
+dDHMMo(x, init, probObs, probTrans, len, log = 0)
 
-rDHMM(n, init, Z, T, len)
+rDHMM(n, init, probObs, probTrans, len)
 
-rDHMMo(n, init, Z, T, len)
+rDHMMo(n, init, probObs, probTrans, len)
 }
 \arguments{
 \item{x}{vector of observation classes, one of which could be defined as "not observed".}
 
 \item{init}{vector of initial state probabilities}
 
-\item{Z}{time-independent matrix of observation probabilities.
-First two dimensions of \code{Z} are of size (number of possible observation classes) x
- (number of possible system states).  In \code{dDHMMo}, the third dimension of \code{Z} is of
+\item{probObs}{time-independent matrix of observation probabilities.
+First two dimensions of \code{probObs} are of size (number of possible observation classes) x
+ (number of possible system states).  In \code{dDHMMo}, the third dimension of \code{probObs} is of
  size (number of observation times).}
 
-\item{T}{time-dependent matrix of system state-transition probabilities.
-Dimension of \code{T} is (number of possible system states) x  (number of possible system states)
+\item{probTrans}{time-dependent matrix of system state-transition probabilities.
+Dimension of \code{probTrans} is (number of possible system states) x  (number of possible system states)
 x (number of observation times).}
 
 \item{len}{length of observations (needed for rDHMM)}
@@ -78,29 +78,29 @@ transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 # Set up constants and initial values for defining the model
 dat <- c(1,2,1,1) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
-Z <- t(array( # A matrix of observation probabilities
+probObs <- t(array( # A matrix of observation probabilities
        c(1, 0.2, 1,
          0, 0.8, 0), c(3, 2)))
 
-Tt <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
             c(3,3,3))
 
 # Define code for a nimbleModel
  nc <- nimbleCode({
-   x[1:4] ~ dDHMM(init[1:3], Z = Z[1:2,1:3],
-                  T = Tt[1:3, 1:3, 1:4], len = 4)
+   x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:2,1:3],
+                  probTrans = probTrans[1:3, 1:3, 1:4], len = 4)
 
    for (i in 1:3) {
      init[i] ~ dunif(0,1)
 
      for (j in 1:3) {
        for (t in 1:4) {
-         Tt[i,j,t] ~ dunif(0,1)
+         probTrans[i,j,t] ~ dunif(0,1)
        }
      }
 
-     Z[1,i] ~ dunif(0,1)
-     Z[2,i] <- 1 - Z[1,i]
+     probObs[1,i] ~ dunif(0,1)
+     probObs[2,i] <- 1 - probObs[1,i]
    }
  })
 
@@ -108,8 +108,8 @@ Tt <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
 DHMM_model <- nimbleModel(nc,
                           data = list(x = dat),
                           inits = list(init = init,
-                                       Z = Z,
-                                       Tt = Tt)))
+                                       probObs = probObs,
+                                       probTrans = probTrans)))
 # Calculate log probability of x from the model
 DHMM_model$calculate()
 # Use the model for a variety of other purposes...

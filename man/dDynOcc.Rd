@@ -91,11 +91,13 @@ rDynOcc_sss(n, psi1, phi, gamma, p, start, end)
 
 \item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
 
+\item{start}{a vector of the indices of the first observation in each time interval.}
+
+\item{end}{a vector of the indices of the final observation in each time interval.}
+
 \item{log}{TRUE (return log probability) or FALSE (return probability)}
 
 \item{n}{a vector of length 2 indicating the dimensions of the data to be randomly generated}
-
-\item{nrep}{a vector of the number of observations per sampling occasion}
 }
 \description{
 \code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.
@@ -119,13 +121,18 @@ all observations from one site jointly.
 \examples{
 \dontrun{
 # Set up constants and initial values for defining the model
-x <- matrix(c(0,0,1,0,1,
-              1,1,1,1,0), nrow = 2)
-nrep <- c(5, 5)
-psi1 <- 0.7
-phi <- c(0.4, 0.8)
-gamma <- c(0.2, 0.1)
-p <- matrix(rep(0.8, 10), nrow = 2)
+  x <- matrix(c(0,0,NA,0,
+                1,1,1,0,
+                0,0,0,0,
+                0,0,1,0,
+                0,0,0,NA), nrow = 4)
+  start <- c(1,1,2,1)
+  end <- c(5,5,5,4)
+  psi1 <- 0.7
+  phi <- 0.5
+  gamma <- 0.2
+  p <- 0.8
+
 
 # Define code for a nimbleModel
  nc <- nimbleCode({

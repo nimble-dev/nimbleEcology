@@ -22,12 +22,13 @@
 #' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
 #'
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
-#' @param nrep a vector of the number of observations per sampling occasion
 #' @param psi1 probability of occupancy in the first sampling period
 #' @param phi persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}
 #' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}
 #' @param p matrix of detection probabilities for each observation. Dimensions should match x
 #' @param log TRUE (return log probability) or FALSE (return probability)
+#' @param start a vector of the indices of the first observation in each time interval.
+#' @param end a vector of the indices of the final observation in each time interval.
 #' @param n a vector of length 2 indicating the dimensions of the data to be randomly generated
 #'
 #' @author Ben Goldstein and Perry de Valpine
