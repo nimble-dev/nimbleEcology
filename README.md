@@ -2,7 +2,7 @@
 
 # Distributions for NIMBLE that are useful for ecological models
 
-This repository has *unfinished, untested, incomplete, draft* code for several distributions that can be used in NIMBLE models for common population ecology statistical models.  These include distributions for:
+This repository provides user-defined distributions that can be used in NIMBLE models for common population ecology statistical models. These include distributions for:
 
 * basic capture-recapture distributions (Cormack-Jolly-Seber),
 * hidden Markov model distributions for multi-state and multi-event capture-recapture models,
@@ -10,8 +10,6 @@ This repository has *unfinished, untested, incomplete, draft* code for several d
 * dynamic occupancy models.
 
 Community contributions or suggestions for other needs are welcome.
-
-The plan for this repository is to finish the code, documentation and testing and then make it available as an R package on CRAN.
 
 Some of these models were used (in slightly different forms) in:
 
