@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dochvam/nimbleEcology.svg?branch=master)](https://travis-ci.org/dochvam/nimbleEcology)
+[![Build Status](https://travis-ci.org/nimble-dev/nimbleEcology.svg?branch=master)](https://travis-ci.org/nimble-dev/nimbleEcology)
 
 # Distributions for NIMBLE that are useful for ecological models
 
