@@ -14,8 +14,8 @@ notifications:
     on_success: change
     on_failure: change
 
-after_success:
-  - R CMD INSTALL . --install-tests
-
 script:
+  - R CMD build .
+  - R CMD check . --as-cran
+  - R CMD INSTALL . --install-tests
   - Rscript ./run_tests.R
