@@ -11,11 +11,10 @@ notifications:
   email:
     recipients:
       - ben.goldstein@berkeley.edu
-    on_success: always
-    on_failure: always
+    on_success: change
+    on_failure: change
 
-install:
-  - R CMD build .
+after_success:
   - R CMD INSTALL . --install-tests
 
 script:
