@@ -16,6 +16,6 @@ notifications:
 
 script:
   - R CMD build .
-  - R CMD check . --as-cran
-  - R CMD INSTALL . --install-tests
+  - R CMD check *tar.gz --as-cran
+  - R CMD INSTALL *tar.gz --install-tests
   - Rscript ./run_tests.R
