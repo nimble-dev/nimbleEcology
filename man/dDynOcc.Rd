@@ -6,32 +6,82 @@
 \alias{dDynOcc_sv}
 \alias{dDynOcc_vs}
 \alias{dDynOcc_vv}
-\alias{rDynOcc_vv}
-\alias{rDynOcc_vs}
-\alias{rDynOcc_sv}
-\alias{rDynOcc_ss}
+\alias{dDynOcc_vvm}
+\alias{dDynOcc_vsm}
+\alias{dDynOcc_svm}
+\alias{dDynOcc_ssm}
+\alias{rDynOcc_vvm}
+\alias{rDynOcc_vsm}
+\alias{rDynOcc_svm}
+\alias{rDynOcc_ssm}
+\alias{dDynOcc_vvv}
+\alias{dDynOcc_vsv}
+\alias{dDynOcc_svv}
+\alias{dDynOcc_ssv}
+\alias{rDynOcc_vvv}
+\alias{rDynOcc_vsv}
+\alias{rDynOcc_svv}
+\alias{rDynOcc_ssv}
+\alias{dDynOcc_vvs}
+\alias{dDynOcc_vss}
+\alias{dDynOcc_svs}
+\alias{dDynOcc_sss}
+\alias{rDynOcc_vvs}
+\alias{rDynOcc_vss}
+\alias{rDynOcc_svs}
+\alias{rDynOcc_sss}
 \title{Dynamic occupancy distribution for use in NIMBLE models}
 \usage{
-dDynOcc_vv(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_vs(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_sv(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-dDynOcc_ss(x, nrep, psi1, phi, gamma, p, log = 0)
+dDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = 0)
 
-rDynOcc_vv(n, nrep, psi1, phi, gamma, p)
+rDynOcc_vvm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_vs(n, nrep, psi1, phi, gamma, p)
+rDynOcc_vsm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_sv(n, nrep, psi1, phi, gamma, p)
+rDynOcc_svm(n, psi1, phi, gamma, p, start, end)
 
-rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
+rDynOcc_ssm(n, psi1, phi, gamma, p, start, end)
+
+dDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = 0)
+
+rDynOcc_vvv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_vsv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_svv(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_ssv(n, psi1, phi, gamma, p, start, end)
+
+dDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = 0)
+
+dDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = 0)
+
+rDynOcc_vvs(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_vss(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_svs(n, psi1, phi, gamma, p, start, end)
+
+rDynOcc_sss(n, psi1, phi, gamma, p, start, end)
 }
 \arguments{
 \item{x}{detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period}
-
-\item{nrep}{a vector of the number of observations per sampling occasion}
 
 \item{psi1}{probability of occupancy in the first sampling period}
 
@@ -40,6 +90,10 @@ rDynOcc_ss(n, nrep, psi1, phi, gamma, p)
 \item{gamma}{colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}}
 
 \item{p}{matrix of detection probabilities for each observation. Dimensions should match x}
+
+\item{start}{a vector of the indices of the first observation in each time interval.}
+
+\item{end}{a vector of the indices of the final observation in each time interval.}
 
 \item{log}{TRUE (return log probability) or FALSE (return probability)}
 
@@ -67,13 +121,18 @@ all observations from one site jointly.
 \examples{
 \dontrun{
 # Set up constants and initial values for defining the model
-x <- matrix(c(0,0,1,0,1,
-              1,1,1,1,0), nrow = 2)
-nrep <- c(5, 5)
-psi1 <- 0.7
-phi <- c(0.4, 0.8)
-gamma <- c(0.2, 0.1)
-p <- matrix(rep(0.8, 10), nrow = 2)
+  x <- matrix(c(0,0,NA,0,
+                1,1,1,0,
+                0,0,0,0,
+                0,0,1,0,
+                0,0,0,NA), nrow = 4)
+  start <- c(1,1,2,1)
+  end <- c(5,5,5,4)
+  psi1 <- 0.7
+  phi <- 0.5
+  gamma <- 0.2
+  p <- 0.8
+
 
 # Define code for a nimbleModel
  nc <- nimbleCode({

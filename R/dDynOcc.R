@@ -22,12 +22,13 @@
 #' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
 #'
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
-#' @param nrep a vector of the number of observations per sampling occasion
 #' @param psi1 probability of occupancy in the first sampling period
 #' @param phi persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}
 #' @param gamma colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}
 #' @param p matrix of detection probabilities for each observation. Dimensions should match x
 #' @param log TRUE (return log probability) or FALSE (return probability)
+#' @param start a vector of the indices of the first observation in each time interval.
+#' @param end a vector of the indices of the final observation in each time interval.
 #' @param n a vector of length 2 indicating the dimensions of the data to be randomly generated
 #'
 #' @author Ben Goldstein and Perry de Valpine
@@ -60,13 +61,18 @@
 #' @examples
 #' \dontrun{
 #' # Set up constants and initial values for defining the model
-#' x <- matrix(c(0,0,1,0,1,
-#'               1,1,1,1,0), nrow = 2)
-#' nrep <- c(5, 5)
-#' psi1 <- 0.7
-#' phi <- c(0.4, 0.8)
-#' gamma <- c(0.2, 0.1)
-#' p <- matrix(rep(0.8, 10), nrow = 2)
+#'   x <- matrix(c(0,0,NA,0,
+#'                 1,1,1,0,
+#'                 0,0,0,0,
+#'                 0,0,1,0,
+#'                 0,0,0,NA), nrow = 4)
+#'   start <- c(1,1,2,1)
+#'   end <- c(5,5,5,4)
+#'   psi1 <- 0.7
+#'   phi <- 0.5
+#'   gamma <- 0.2
+#'   p <- 0.8
+#'
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
@@ -100,18 +106,19 @@
 NULL
 #' @rdname dDynOcc
 #' @export
-dDynOcc_vv <- nimbleFunction(
+dDynOcc_vvm <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
   run = function(x = double(2),
-                 nrep = double(1),
-                 psi1 = double(0),
+                 psi1 = double(),
                  phi = double(1),
                  gamma = double(1),
                  p = double(2),
+                 start = double(1),
+                 end = double(1),
                  log = double(0, default = 0)) {
-    if (length(phi) != dim(x)[1]) stop("Length of phi vector does not match length of data.")
-    if (length(gamma) != dim(x)[1]) stop("Length of gamma vector does not match length of data.")
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -119,34 +126,35 @@ dDynOcc_vv <- nimbleFunction(
     ProbOccNextTime <- psi1
     ll <- 0
     nyears <- dim(x)[1]
-    if(nyears >= 1) {
-      for(t in 1:nyears) {
-        if(nrep[t] > 0) {
-          numObs <- sum(x[t,1:nrep[t]])
-          if(numObs < 0) {
-            print("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
-            stop("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t, start[t]:end[t]])
+          if (is.na(numObs)) numObs <- 0
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
-          ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
-          if(t < nyears)
+          if (t < nyears)
               ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                  (1-ProbOccGivenCount) * gamma[t]
+                  (1 - ProbOccGivenCount) * gamma[t]
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
               ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                  (1-ProbOccNextTime) * gamma[t]
+                  (1 - ProbOccNextTime) * gamma[t]
         }
       }
     }
-    if(log) return(ll)
+    if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
   }
@@ -154,18 +162,19 @@ dDynOcc_vv <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-dDynOcc_vs <- nimbleFunction(
+dDynOcc_vsm <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
   run = function(x = double(2),
-                 nrep = double(1),
-                 psi1 = double(0),
+                 psi1 = double(),
                  phi = double(1),
-                 gamma = double(0),
+                 gamma = double(),
                  p = double(2),
+                 start = double(1),
+                 end = double(1),
                  log = double(0, default = 0)) {
 
-    if (length(phi) != dim(x)[1]) stop("Length of phi vector does not match length of data.")
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -173,34 +182,34 @@ dDynOcc_vs <- nimbleFunction(
     ProbOccNextTime <- psi1
     ll <- 0
     nyears <- dim(x)[1]
-    if(nyears >= 1) {
-      for(t in 1:nyears) {
-        if(nrep[t] > 0) {
-          numObs <- sum(x[t,1:nrep[t]])
-          if(numObs < 0) {
-            print("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
-            stop("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
-          ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
-          if(t < nyears)
+          if (t < nyears)
               ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                  (1-ProbOccGivenCount) * gamma
+                  (1 - ProbOccGivenCount) * gamma
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
               ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                  (1-ProbOccNextTime) * gamma
+                  (1 - ProbOccNextTime) * gamma
         }
       }
     }
-    if(log) return(ll)
+    if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
   }
@@ -208,17 +217,18 @@ dDynOcc_vs <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-dDynOcc_sv <- nimbleFunction(
+dDynOcc_svm <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
   run = function(x = double(2),
-                 nrep = double(1),
-                 psi1 = double(0),
-                 phi = double(0),
+                 psi1 = double(),
+                 phi = double(),
                  gamma = double(1),
                  p = double(2),
+                 start = double(1),
+                 end = double(1),
                  log = double(0, default = 0)) {
-    if (length(gamma) != dim(x)[1]) stop("Length of gamma vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -226,34 +236,34 @@ dDynOcc_sv <- nimbleFunction(
     ProbOccNextTime <- psi1
     ll <- 0
     nyears <- dim(x)[1]
-    if(nyears >= 1) {
-      for(t in 1:nyears) {
-        if(nrep[t] > 0) {
-          numObs <- sum(x[t,1:nrep[t]])
-          if(numObs < 0) {
-            print("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
-            stop("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
-          ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
-          if(t < nyears)
+          if (t < nyears)
               ProbOccNextTime <- ProbOccGivenCount * phi +
-                  (1-ProbOccGivenCount) * gamma[t]
+                  (1 - ProbOccGivenCount) * gamma[t]
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
               ProbOccNextTime <- ProbOccNextTime * phi +
-                  (1-ProbOccNextTime) * gamma[t]
+                  (1 - ProbOccNextTime) * gamma[t]
         }
       }
     }
-    if(log) return(ll)
+    if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
   }
@@ -261,15 +271,16 @@ dDynOcc_sv <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-dDynOcc_ss <- nimbleFunction(
+dDynOcc_ssm <- nimbleFunction(
   ## DynamicOccupancy removes the z's and muZ's from the model and computes
   ## the probability of all reps over all years for one site, species
   run = function(x = double(2),
-                 nrep = double(1),
-                 psi1 = double(0),
-                 phi = double(0),
-                 gamma = double(0),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
                  p = double(2),
+                 start = double(1),
+                 end = double(1),
                  log = double(0, default = 0)) {
     # if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
     # if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
@@ -280,34 +291,417 @@ dDynOcc_ss <- nimbleFunction(
     ProbOccNextTime <- psi1
     ll <- 0
     nyears <- dim(x)[1]
-    if(nyears >= 1) {
-      for(t in 1:nyears) {
-        if(nrep[t] > 0) {
-          numObs <- sum(x[t,1:nrep[t]])
-          if(numObs < 0) {
-            print("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
-            stop("Error in dDynamicOccupancy: numObs < 0 but nrep[t] > 0\n")
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,1:nrep[t]],
-                             size = 1, prob = p[t,1:nrep[t]], log = 1)))
-          ProbUnoccAndCount <- (1-ProbOccNextTime) * (numObs == 0)
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
-          if(t < nyears)
+          if (t < nyears)
               ProbOccNextTime <- ProbOccGivenCount * phi +
-                  (1-ProbOccGivenCount) * gamma
+                  (1 - ProbOccGivenCount) * gamma
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
               ProbOccNextTime <- ProbOccNextTime * phi +
-                  (1-ProbOccNextTime) * gamma
+                  (1 - ProbOccNextTime) * gamma
         }
       }
     }
-    if(log) return(ll)
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vvm <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(1),
+                 p = double(2),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vsm <- nimbleFunction(
+  run = function(n = double(0),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(),
+                 p = double(2),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_svm <- nimbleFunction(
+  run = function(n = double(0),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(1),
+                 p = double(2),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_ssm <- nimbleFunction(
+  run = function(n = double(0),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
+                 p = double(2),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = dim(p)[2])
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1,])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t,])
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+
+registerDistributions(list(
+    dDynOcc_vvm = list(
+        BUGSdist = "dDynOcc_vvm(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vvm(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double(1)',
+                  'gamma = double(1)',
+                  'p = double(2)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+registerDistributions(list(
+    dDynOcc_vsm = list(
+        BUGSdist = "dDynOcc_vsm(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vsm(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double(1)',
+                  'gamma = double()',
+                  'p = double(2)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_svm = list(
+        BUGSdist = "dDynOcc_svm(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_svm(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double()',
+                  'gamma = double(1)',
+                  'p = double(2)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_ssm = list(
+        BUGSdist = "dDynOcc_ssm(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_ssm(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double()',
+                  'gamma = double()',
+                  'p = double(2)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+
+
+
+NULL
+#' @rdname dDynOcc
+#' @export
+dDynOcc_vvv <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(1),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
+                  (1 - ProbOccGivenCount) * gamma[t]
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
+                  (1 - ProbOccNextTime) * gamma[t]
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_vsv <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
+                  (1 - ProbOccGivenCount) * gamma
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
+                  (1 - ProbOccNextTime) * gamma
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_svv <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(1),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi +
+                  (1 - ProbOccGivenCount) * gamma[t]
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime * phi +
+                  (1 - ProbOccNextTime) * gamma[t]
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_ssv <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+    # if (length(gamma) != 1) stop("In dDynOcc_vs gamma must be scalar")
+    # if (length(phi) != 1) stop("In dDynOcc_vs phi must be scalar")
+    if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p[t], log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi +
+                  (1 - ProbOccGivenCount) * gamma
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime * phi +
+                  (1 - ProbOccNextTime) * gamma
+        }
+      }
+    }
+    if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
   }
@@ -316,14 +710,27 @@ dDynOcc_ss <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-rDynOcc_vv <- nimbleFunction(
-  run = function(n = double(1),
-                 nrep = double(1),
-                 psi1 = double(0),
+rDynOcc_vvv <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
                  phi = double(1),
                  gamma = double(1),
-                 p = double(2)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+                 p = double(1),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -331,14 +738,27 @@ rDynOcc_vv <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-rDynOcc_vs <- nimbleFunction(
-  run = function(n = double(1),
-                 nrep = double(1),
-                 psi1 = double(0),
+rDynOcc_vsv <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
                  phi = double(1),
-                 gamma = double(0),
-                 p = double(2)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+                 gamma = double(),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -346,14 +766,27 @@ rDynOcc_vs <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-rDynOcc_sv <- nimbleFunction(
-  run = function(n = double(1),
-                 nrep = double(1),
-                 psi1 = double(0),
-                 phi = double(0),
+rDynOcc_svv <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(),
                  gamma = double(1),
-                 p = double(2)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+                 p = double(1),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -361,14 +794,27 @@ rDynOcc_sv <- nimbleFunction(
 
 #' @rdname dDynOcc
 #' @export
-rDynOcc_ss <- nimbleFunction(
-  run = function(n = double(1),
-                 nrep = double(1),
-                 psi1 = double(0),
-                 phi = double(0),
-                 gamma = double(0),
-                 p = double(2)) {
-    val <- matrix(NA, nrow = n[1], ncol = n[2])
+rDynOcc_ssv <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
+                 p = double(1),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
+
+    for (t in 2:dim(p)[1]) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p[t])
+    }
+
     return(val)
     returnType(double(2))
   }
@@ -376,40 +822,431 @@ rDynOcc_ss <- nimbleFunction(
 
 
 registerDistributions(list(
-    dDynOcc_vv = list(
-        BUGSdist = "dDynOcc_vv(nrep, psi1, phi, gamma, p)",
-        Rdist = "dDynOcc_vv(nrep, psi1, phi, gamma, p)",
+    dDynOcc_vvv = list(
+        BUGSdist = "dDynOcc_vvv(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vvv(psi1, phi, gamma, p, start, end)",
         types = c('value = double(2)',
-                  'nrep = double(1)',
-                  'psi1 = double(0)',
+                  'psi1 = double()',
                   'phi = double(1)',
                   'gamma = double(1)',
-                  'p = double(2)')),
-    dDynOcc_vs = list(
-        BUGSdist = "dDynOcc_vs(nrep, psi1, phi, gamma, p)",
-        Rdist = "dDynOcc_vs(nrep, psi1, phi, gamma, p)",
+                  'p = double(1)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+registerDistributions(list(
+    dDynOcc_vsv = list(
+        BUGSdist = "dDynOcc_vsv(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vsv(psi1, phi, gamma, p, start, end)",
         types = c('value = double(2)',
-                  'nrep = double(1)',
-                  'psi1 = double(0)',
+                  'psi1 = double()',
                   'phi = double(1)',
-                  'gamma = double(0)',
-                  'p = double(2)')),
-    dDynOcc_sv = list(
-        BUGSdist = "dDynOcc_sv(nrep, psi1, phi, gamma, p)",
-        Rdist = "dDynOcc_sv(nrep, psi1, phi, gamma, p)",
+                  'gamma = double()',
+                  'p = double(1)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_svv = list(
+        BUGSdist = "dDynOcc_svv(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_svv(psi1, phi, gamma, p, start, end)",
         types = c('value = double(2)',
-                  'nrep = double(1)',
-                  'psi1 = double(0)',
-                  'phi = double(0)',
+                  'psi1 = double()',
+                  'phi = double()',
                   'gamma = double(1)',
-                  'p = double(2)')),
-    dDynOcc_ss = list(
-        BUGSdist = "dDynOcc_ss(nrep, psi1, phi, gamma, p)",
-        Rdist = "dDynOcc_ss(nrep, psi1, phi, gamma, p)",
+                  'p = double(1)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_ssv = list(
+        BUGSdist = "dDynOcc_ssv(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_ssv(psi1, phi, gamma, p, start, end)",
         types = c('value = double(2)',
-                  'nrep = double(1)',
-                  'psi1 = double(0)',
-                  'phi = double(0)',
-                  'gamma = double(0)',
-                  'p = double(2)'))
-))
+                  'psi1 = double()',
+                  'phi = double()',
+                  'gamma = double()',
+                  'p = double(1)',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+
+
+
+NULL
+#' @rdname dDynOcc
+#' @export
+dDynOcc_vvs <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(1),
+                 p = double(),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p, log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
+                  (1 - ProbOccGivenCount) * gamma[t]
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
+                  (1 - ProbOccNextTime) * gamma[t]
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_vss <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(),
+                 p = double(),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+
+    if (length(phi) != dim(x)[1] - 1) stop("Length of phi vector does not match length of data.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p, log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
+                  (1 - ProbOccGivenCount) * gamma
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
+                  (1 - ProbOccNextTime) * gamma
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_svs <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(1),
+                 p = double(),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+    if (length(gamma) != dim(x)[1] - 1) stop("Length of gamma vector does not match length of data.")
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p, log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi +
+                  (1 - ProbOccGivenCount) * gamma[t]
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime * phi +
+                  (1 - ProbOccNextTime) * gamma[t]
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+dDynOcc_sss <- nimbleFunction(
+  ## DynamicOccupancy removes the z's and muZ's from the model and computes
+  ## the probability of all reps over all years for one site, species
+  run = function(x = double(2),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
+                 p = double(),
+                 start = double(1),
+                 end = double(1),
+                 log = double(0, default = 0)) {
+
+    ## x is a year by rep matix
+    ProbOccNextTime <- psi1
+    ll <- 0
+    nyears <- dim(x)[1]
+    if (nyears >= 1) {
+      for (t in 1:nyears) {
+        if (end[t] - start[t] + 1 > 0) {
+          numObs <- sum(x[t,start[t]:end[t]])
+          if (numObs < 0) {
+            print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+            stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
+          }
+          ProbOccAndCount <- ProbOccNextTime *
+              exp(sum(dbinom(x[t,start[t]:end[t]],
+                             size = 1, prob = p, log = 1)))
+          ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
+          ProbCount <- ProbOccAndCount + ProbUnoccAndCount
+          ProbOccGivenCount <- ProbOccAndCount / ProbCount
+          ll <- ll + log(ProbCount)
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccGivenCount * phi +
+                  (1 - ProbOccGivenCount) * gamma
+        } else {
+          ## If there were no observations in year t,
+          ## simply propagate probability of occupancy forward
+          if (t < nyears)
+              ProbOccNextTime <- ProbOccNextTime * phi +
+                  (1 - ProbOccNextTime) * gamma
+        }
+      }
+    }
+    if (log) return(ll)
+    else return(exp(ll))
+    returnType(double(0))
+  }
+)
+
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vvs <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(1),
+                 p = double(),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_vss <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(1),
+                 gamma = double(),
+                 p = double(),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi[t - 1])
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_svs <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(1),
+                 p = double(),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma[t - 1])
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+#' @rdname dDynOcc
+#' @export
+rDynOcc_sss <- nimbleFunction(
+  run = function(n = double(),
+                 psi1 = double(),
+                 phi = double(),
+                 gamma = double(),
+                 p = double(),
+                 start = double(1),
+                 end = double(1)) {
+    occupied <- rbinom(1, 1, psi1)
+    val <- matrix(-1, nrow = length(end), ncol = max(end))
+    val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p)
+
+    for (t in 2:length(end)) {
+      if (occupied == 1) {
+        occupied <- rbinom(1, 1, phi)
+      } else {
+        occupied <- rbinom(1, 1, gamma)
+      }
+      val[t, start[t]:end[t]] <- occupied * rbinom(end[t] - start[t] + 1, 1, p)
+    }
+
+    return(val)
+    returnType(double(2))
+  }
+)
+
+
+registerDistributions(list(
+    dDynOcc_vvs = list(
+        BUGSdist = "dDynOcc_vvs(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vvs(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double(1)',
+                  'gamma = double(1)',
+                  'p = double()',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+registerDistributions(list(
+    dDynOcc_vss = list(
+        BUGSdist = "dDynOcc_vss(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_vss(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double(1)',
+                  'gamma = double()',
+                  'p = double()',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_svs = list(
+        BUGSdist = "dDynOcc_svs(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_svs(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double()',
+                  'gamma = double(1)',
+                  'p = double()',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+
+registerDistributions(list(
+    dDynOcc_sss = list(
+        BUGSdist = "dDynOcc_sss(psi1, phi, gamma, p, start, end)",
+        Rdist = "dDynOcc_sss(psi1, phi, gamma, p, start, end)",
+        types = c('value = double(2)',
+                  'psi1 = double()',
+                  'phi = double()',
+                  'gamma = double()',
+                  'p = double()',
+                  'start = double(1)',
+                  'end = double(1)'),
+        mixedSizes = TRUE)))
+

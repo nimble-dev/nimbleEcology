@@ -2,10 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-
-library(testthat)
-library(nimble)
-source("nimbleEcology/R/dOcc.R")
 context("Testing dOcc-related functions.")
 
 # Test scalar-scalar version
@@ -81,6 +77,21 @@ test_that("dOcc_s and rOcc_s work", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+# Test imputing value for all NAs
+  xNA <- rep(NA, length(x))
+  mNA <- nimbleModel(nc, data = list(x = xNA),
+         inits = list(probOcc = probOcc,
+                      probDetect = probDetect))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+
 })
 
 
@@ -161,6 +172,20 @@ test_that("dOcc_v works", {
     CmxSim[i,] <- cm$x
   }
   expect_identical(CmxSim, mxSim)
+
+  # Test imputing value for all NAs
+  xNA <- rep(NA, length(x))
+  mNA <- nimbleModel(nc, data = list(x = xNA),
+         inits = list(probOcc = probOcc,
+                      probDetect = probDetect))
+  mNAConf <- configureMCMC(mNA)
+  mNAConf$addMonitors('x')
+  mNA_MCMC <- buildMCMC(mNAConf)
+  cmNA <- compileNimble(mNA, mNA_MCMC)
+  set.seed(0)
+  cmNA$mNA_MCMC$run(10)
+# Did the imputed values come back?
+  expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
 
@@ -168,75 +193,36 @@ test_that("Checking errors", {
 ### Uncompiled errors
 # dOcc_ss error checks
   expect_error(
-    dOcc_ss(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
+    dOcc_s(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
   )
 
 # dOcc_sv error checks
   expect_error(
-    dOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4, 0.4), len = 5)
+    dOcc_s(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4), len = 5)
   )
   expect_error(
-    dOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4))
+    dOcc_v(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4), len = 5)
   )
 
-# dOcc_vs error checks
-  expect_error(
-    dOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4, 0.4), probDetect = 0.1, len = 5)
-  )
-  expect_error(
-    dOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4), probDetect = 0.8)
-  )
-
-# dOcc_vv error checks
-  expect_error(
-    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0.3,0.3), probDetect = c(0.9, 0.9))
-  )
-  expect_error(
-    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1), probDetect = c(0.9, 0.9, 0.1, 0.1))
-  )
-  expect_error(
-    dOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0,0),
-            probDetect = c(0.9, 0.9, 0.1, 0.1), len = 2)
-  )
 
 ### Compiled errors
-  CdOcc_ss <- compileNimble(dOcc_ss)
-  CdOcc_sv <- compileNimble(dOcc_sv)
-  CdOcc_vs <- compileNimble(dOcc_vs)
-  CdOcc_vv <- compileNimble(dOcc_vv)
+  CdOcc_s <- compileNimble(dOcc_s)
+  CdOcc_v <- compileNimble(dOcc_v)
 
   expect_error(
-    CdOcc_ss(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
+    CdOcc_s(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)
+  )
+  expect_error(
+    CdOcc_v(x = c(0,1,0,0), probOcc = 0.4, probDetect = c(0.5,0.5,0.5,0.6), len = 3)
   )
 
-# dOcc_sv error checks
+  # This should probably be set up to error:
+    # expect_error(
+    #   CdOcc_s(x = c(0,1,0,0), probOcc = 0.4, probDetect = c(0.5,0.5), len = 4)
+    # )
   expect_error(
-    CdOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4, 0.4), len = 5)
+    CdOcc_v(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 4)
   )
-  expect_error(
-    CdOcc_sv(x = c(0,1,0,0), probOcc = 0.1, probDetect = c(0.9, 0.9, 0.4))
-  )
-
-# dOcc_vs error checks
-  expect_error(
-    CdOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4, 0.4), probDetect = 0.1, len = 5)
-  )
-  expect_error(
-    CdOcc_sv(x = c(0,1,0,0), probOcc = c(0.9, 0.9, 0.4), probDetect = 0.8)
-  )
-
-# dOcc_vv error checks
-  expect_error(
-    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0.3,0.3), probDetect = c(0.9, 0.9))
-  )
-  expect_error(
-    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1), probDetect = c(0.9, 0.9, 0.1, 0.1))
-  )
-  expect_error(
-    CdOcc_vv(x = c(0,1,0,0), probOcc = c(0,1,0,0),
-            probDetect = c(0.9, 0.9, 0.1, 0.1), len = 2)
-  )
-
 
 })
 

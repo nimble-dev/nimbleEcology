@@ -73,15 +73,15 @@ If the detection probabilities are time-dependent, one would use:
 \dontrun{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
-probSurvive <- 0.6
-probCapture <- 0.4
+probOcc <- 0.6
+probDetect <- 0.4
 
 
 # Define code for a nimbleModel
 nc <- nimbleCode({
-  x[1:4] ~ dCJSss(probSurvive, probCapture, len = 4)
-  probSurvive ~ dunif(0,1)
-  probCapture ~ dunif(0,1)
+  x[1:4] ~ dOcc_s(probOcc, probDetect, len = 4)
+  probOcc ~ dunif(0,1)
+  probDetect ~ dunif(0,1)
 })
 
 # Build the model, providing data and initial values

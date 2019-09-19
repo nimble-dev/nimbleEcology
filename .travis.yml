@@ -1,4 +1,22 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-cache: packages
+r:
+  - 3.5
+
+cache:
+  packages: true
+
+notifications:
+  email:
+    recipients:
+      - ben.goldstein@berkeley.edu
+    on_success: always
+    on_failure: always
+
+install:
+  - R CMD build .
+  - R CMD INSTALL . --install-tests
+
+script:
+  - Rscript ./run_tests.R
