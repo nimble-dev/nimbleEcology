@@ -23,9 +23,10 @@ test_that("dHMM works", {
   # system state (row), what is the corresponding probability of observing each
   # response (col)
   probObs <- t(array(
-         c(1, 0.2, 1,
-           0, 0.8, 0),
-         c(3, 2)))
+         c(1, 0,
+           0, 1,
+           0.8, 0.2),
+         c(2, 3)))
 
   # probTrans is transition probabilities, s x s.
   probTrans <- t(array(
@@ -40,8 +41,8 @@ test_that("dHMM works", {
   pi1 <- init
   pi2 <- init
   for (i in 1:len) {
-    stateprob1 <- pi1 * probObs[x1[i],]
-    stateprob2 <- pi2 * probObs[x2[i],]
+    stateprob1 <- pi1 * probObs[, x1[i]]
+    stateprob2 <- pi2 * probObs[, x2[i]]
 
     sumZ1 <- sum(stateprob1)
     sumZ2 <- sum(stateprob2)
@@ -90,19 +91,8 @@ test_that("dHMM works", {
 
   # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
-    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:2,1:3],
+    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
                   probTrans = probTrans[1:3, 1:3], len = 5)
-
-    for (i in 1:3) {
-      init[i] ~ dunif(0,1)
-
-      for (j in 1:3) {
-        probTrans[i,j] ~ dunif(0,1)
-      }
-
-      probObs[1,i] ~ dunif(0,1)
-      probObs[2,i] <- 1 - probObs[1,i]
-    }
   })
 
   # Create a nimbleModel using the distribution
@@ -181,12 +171,12 @@ test_that("dHMMo works", {
   # corresponding probability of observing each response (col) at time t (3rd
   # dim)
   probObs <- array(
-         c(1, 0, 0.2, 0.8, 1, 0,
-           0.9, 0.1, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           0.95, 0.05, 0.2, 0.8, 0.5, 0.5),
-         c(2, 3, 5))
+         c(1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           0.9, 0, 0.8, 0.1, 1, 0.2,
+           1, 0.1, 0.8, 0, 0.9, 0.2,
+           1, 0, 0.7, 0, 1, 0.3),
+         c(3, 2, 5))
 
   # probTrans is transition probabilities, s x s.
   probTrans <- t(array(
@@ -201,8 +191,8 @@ test_that("dHMMo works", {
   pi1 <- init
   pi2 <- init
   for (i in 1:len) {
-    stateprob1 <- pi1 * probObs[x1[i],,i]
-    stateprob2 <- pi2 * probObs[x2[i],,i]
+    stateprob1 <- pi1 * probObs[,x1[i],i]
+    stateprob2 <- pi2 * probObs[,x2[i],i]
 
     sumZ1 <- sum(stateprob1)
     sumZ2 <- sum(stateprob2)
@@ -252,21 +242,8 @@ test_that("dHMMo works", {
 
   # Create code for a nimbleModel using dHMMo
   nc <- nimbleCode({
-    x[1:5] ~ dHMMo(init[1:3], probObs = probObs[1:2, 1:3, 1:5],
+    x[1:5] ~ dHMMo(init[1:3], probObs = probObs[1:3, 1:2, 1:5],
                   probTrans = probTrans[1:3, 1:3], len = 5)
-
-    for (i in 1:3) {
-      init[i] ~ dunif(0,1)
-
-      for (j in 1:3) {
-        probTrans[i,j] ~ dunif(0,1)
-      }
-
-      for (k in 1:5) {
-        probObs[1,i,k] ~ dunif(0,1)
-        probObs[2,i,k] <- 1 - probObs[1,i,k]
-      }
-    }
   })
   # Build a nimbleModel
   m <- nimbleModel(nc, data = list(x = x1),
@@ -332,26 +309,27 @@ test_that("dHMMo works", {
 
 test_that("dHMM and dHMMo compatibility", {
   # len: length of the data
-  len <- 4
+  len <- 5
   # Two different data samples
-  x1 <- c(1, 1, 1, 2)
-  x2 <- c(1, 1, 1, 1)
+  x1 <- c(1, 1, 1, 2, 1)
+  x2 <- c(1, 1, 1, 1, 1)
   # length(init) == s and sum(init) == 1; initial state probabilities
   init <- c(0.4, 0.2, 0.4)
 
   probObs1 <- t(array(
-         c(1, 0.2, 1,
-           0, 0.8, 0),
-         c(3, 2)))
+         c(1, 0,
+           0, 1,
+           0.8, 0.2),
+         c(2, 3)))
 
 
   probObs2 <- array(
-         c(1, 0, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0),
-         c(2, 3, 4))
-
+         c(1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2),
+         c(3, 2, 5))
 
   # probTrans is time-indexed transition probabilities, s x s x t.
   probTrans <- t(array(
@@ -374,7 +352,7 @@ test_that("dHMM errors where expected", {
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
 
-  probObs <- t(matrix(
+  badprobObs <- t(matrix(
          c(1, 0.2, 1,
            0, 0.8, 0),
          nrow = length(init)))
@@ -390,7 +368,7 @@ test_that("dHMM errors where expected", {
             0, 0.7, 0.3),
           ncol = length(init)))
   # probObs doesn't match T:
-  badprobObs <- t(matrix(
+  probObs <- t(matrix(
           c(0.6, 0.3, 0.1,
             0, 0.7, 0.3),
           ncol = length(init)))
@@ -430,12 +408,12 @@ test_that("dHMMo errors where expected", {
   init <- c(0.4, 0.2, 0.4)
 
   probObs <- array(
-         c(1, 0, 0.2, 0.8, 1, 0,
-           0.9, 0.1, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           1, 0, 0.2, 0.8, 1, 0,
-           0.95, 0.05, 0.2, 0.8, 0.5, 0.5),
-         c(2, 3, 5))
+         c(1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2),
+         c(3, 2, 5))
 
   probTrans <- t(matrix(
           c(0.6, 0.3, 0.1,

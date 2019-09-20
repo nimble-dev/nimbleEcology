@@ -3,9 +3,9 @@
 #' \code{dHMM} and \code{dHMMo} provide hidden Markov model
 #' distributions that can be used directly from R or in \code{nimble}
 #' models.
-#' 
+#'
 #' @name dHMM
-#' 
+#'
 #' @aliases dHMM dHMMo rHMM rHMMo
 #'
 #' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
@@ -51,9 +51,9 @@
 #' the probability that an individual in state $i$ at one time transitions to
 #' state $j$ at the next time.
 #'
-#' \code{initStates} has length S.  \code{initStates[i]} is the
+#' \code{initStates} has length S. \code{initStates[i]} is the
 #' probability of being in state i at the first observation time.
-#' 
+#'
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 #' \code{vignette("Introduction_to_nimbleEcology")}).
@@ -105,7 +105,7 @@
 #' @return
 #' For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or log
 #' probability of observation vector \code{x}.
-#' 
+#'
 #' For \code{rHMM} and \code{rHMMo}: a simulated detection history, \code{x}.
 #'
 #' @seealso For dynamic hidden Markov models with time-dependent transitions,
@@ -123,8 +123,9 @@
 #' dat <- c(1,2,1,1,2) # A vector of observations
 #' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
 #' probObs <- t(array( # A matrix of observation probabilities
-#'        c(1, 0.2, 1,
-#'          0, 0.8, 0), c(3, 2)))
+#'        c(1, 0,
+#'          0, 1
+#'          0.2, 0.8), c(2, 3)))
 #' probTrans <- t(array( # A matrix of transition probabilities
 #'         c(0.6, 0.3, 0.1,
 #'           0, 0.7, 0.3,
@@ -142,8 +143,8 @@
 #'        probTrans[i,j] ~ dunif(0,1)
 #'      }
 #'
-#'      probTrans[1,i] ~ dunif(0,1)
-#'      probTrans[2,i] <- 1 - probTrans[1,i]
+#'      probObs[i, 1] ~ dunif(0,1)
+#'      probObs[i, 2] <- 1 - probObs[1,i]
 #'    }
 #'  })
 #'
@@ -170,16 +171,16 @@ dHMM <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[2] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[1]
+    nStates <- dim(probObs)[2]
     for (t in 1:len) {
       if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- probObs[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
@@ -200,7 +201,7 @@ dHMMo <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[2] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("T must be a square matrix.")
     if (dim(probObs)[3] != len) {
       if (dim(probObs)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
@@ -210,10 +211,10 @@ dHMMo <- nimbleFunction(
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[1]
+    nStates <- dim(probObs)[2]
     for (t in 1:len) {
       if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- probObs[x[t],,t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
@@ -255,7 +256,7 @@ rHMM <- nimbleFunction(
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(probObs[1:j, trueState])) j <- j + 1
+    while (r > sum(probObs[trueState, 1:j])) j <- j + 1
     ans[i] <- j
 
   }
@@ -283,7 +284,6 @@ rHMMo <- nimbleFunction(
   trueInit <- j
 
   trueState <- trueInit
-  ### QUESTION: Is the "init" probability for the state at time t1 or t0? I'm assuming t0
   for (i in 1:len) {
     # Transition to a new true state
     r <- runif(1, 0, 1)
@@ -294,7 +294,7 @@ rHMMo <- nimbleFunction(
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(probObs[1:j, trueState, i])) j <- j + 1
+    while (r > sum(probObs[trueState, 1:j, i])) j <- j + 1
     ans[i] <- j
 
   }
