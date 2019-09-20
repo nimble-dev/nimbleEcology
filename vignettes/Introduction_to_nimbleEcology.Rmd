@@ -181,14 +181,26 @@ samples_new <- runMCMC(CMCMC_new, niter = 10000, nburnin = 500, thin = 10)
 We see that the results of the two versions match closely.
 
 ```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE}
-library(tidyverse)
-S1 <- gather(as.data.frame(samples), key = "Parameter", value = "Value")
-S2 <- gather(as.data.frame(samples_new), key = "Parameter", value = "Value")
-Scombo <- bind_rows(list(familiar = S1, new = S2), .id = 'Version')
-library(ggplot2)
-ggplot(data = Scombo, aes(x = Value)) +
-  geom_density(aes(group = Version, color = Version)) + 
-  facet_grid(cols = vars(Parameter))
+# library(tidyverse)
+# 
+# S1 <- gather(as.data.frame(samples), key = "Parameter", value = "Value")
+# S2 <- gather(as.data.frame(samples_new), key = "Parameter", value = "Value")
+# Scombo <- bind_rows(list(familiar = S1, new = S2), .id = 'Version')
+# library(ggplot2)
+# ggplot(data = Scombo, aes(x = Value)) +
+#   geom_density(aes(group = Version, color = Version)) +
+#   facet_grid(cols = vars(Parameter))
+
+{
+hist(as.data.frame(samples)$psi, border = "red", main = "psi")
+hist(as.data.frame(samples_new)$psi, border = "blue", add = TRUE)
+}
+
+{
+hist(as.data.frame(samples)$p, border = "red", main = "p")
+hist(as.data.frame(samples_new)$p, border = "blue", add = TRUE)
+}
+
 ```
 
 The posterior density plots show that the familiar, conventional version of the model yields the same posterior distribution as the new version, which uses `dOcc_s`.
