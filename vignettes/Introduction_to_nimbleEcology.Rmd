@@ -395,16 +395,30 @@ The sequential calculation is initiated with $A_1$, which is natural to think of
 
 ### Dynamic occupancy models in `nimbleEcology`
 
-Dynamic occupancy models are available in four distributions in `nimbleEcology`. These differ in whether persistence and/or colonization probabilities are time-dependent, with a "s" (time-independent) and "v" (time-dependent) notation similar to the distributions above.  The distributions are:
+Dynamic occupancy models are available in twelve distributions in `nimbleEcology`. These differ in whether persistence and/or colonization probabilities are time-dependent, with a "s" (time-independent) and "v" (time-dependent) notation similar to the distributions above. The distributions are named by `dDynOcc_` followed by three letters. Each letter indicates the typing (or dimension) of the persistence, colonization, and detection probabilities, respectively:
 
-- `dDynOcc_ss`: Both are time-independent.
-- `dDynOcc_sv`: Persistence is time-independent (scalar) and colonization is time-independent (vector).
-- `dDynOcc_vs`: Persistence is time-dependent (vector) and colonization is time-independent (scalar).
-- `dDynOcc_vv`: Both are time-dependent.
+- `dDynOcc_s**` functions take time-independent (scalar) persistence probabilities, while `dDynOcc_v**`functions take time-dependent (vector) persistence probabilities
+- `dDynOcc_*s*` functions take time-independent (scalar) colonization probabilities, while `dDynOcc_*v*`functions take time-dependent (vector) colonization probabilities
+- `dDynOcc_**s` functions take time-independent (scalar) observation probabilities, while `dDynOcc_**v` functions take observation probabilities dependent on time step (vector) and `dDynOcc_**m` functions take observation probabilities dependent on both time step and observation event (matrix)
 
-An example for `dDynOcc_sv` is:
+Expanding these typing possibilities gives $2 \times 2 \times 3 = 12$ total functions:
 
-`y[i, 1:T] ~ dDynOcc_sv(init = psi1[i], probPersist = phi[i], probColonize = gamma[i, 1:T], len = T)`
+- `dDynOcc_sss`
+- `dDynOcc_svs`
+- `dDynOcc_vss`
+- `dDynOcc_vvs`
+- `dDynOcc_ssv`
+- `dDynOcc_svv`
+- `dDynOcc_vsv`
+- `dDynOcc_vvv`
+- `dDynOcc_ssm`
+- `dDynOcc_svm`
+- `dDynOcc_vsm`
+- `dDynOcc_vvm`
+
+An example for `dDynOcc_svs` is:
+
+`y[i, 1:T] ~ dDynOcc_sv(init = psi1[i], probPersist = phi[i], probColonize = gamma[i, 1:T], p = p, len = T)`
 
 Note the following points:
 
@@ -413,3 +427,4 @@ Note the following points:
 - `probPersist` is the probability of persistence, $\phi$ above.
 - `probColonize` is the vector of detection probabilities, $\mathbf{\gamma}$ above.  In the case of `dDynOcc_*s`, `probColonize` would be a scalar.
 - `len` is the length of the detection record.
+- `p` here is a single constant value of observation probability for all samples. If `p` changed with time or observation event, we would need to use a different function (`dDynOcc_**v` or `dDynOcc_**m`).
