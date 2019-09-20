@@ -1,63 +1,112 @@
 # dDynOcc
 #' Dynamic occupancy distribution for use in NIMBLE models
-#'
-#' \code{dDynOcc_**} provides dynamic occupancy model distributions for NIMBLE models.
-#'
-#' Dynamic occupancy models
-#' model occurrence at a series of sites over many replicate timesteps. The likelihood of an observation in site s
-#' at time t depends on the state of the site at time t-1, the transitition probability of persistence \code{probPersist[t]}
-#' or colonization \code{probColonize[t]} and a detection probability code{p[s, t]}.
-#'
-#' The pair of letters following the 'dDynOcc_' indicates whether the probabilities of persistence
-#' and colonization are a constant scalar (s) or time-indexed vector (v). For example, dOcc_sv takes scalar
-#' persistence probability probPersist with a vector of colonization probabilities probColonize.
-#'
-#' Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
-#' a separate scalar datum for each observation,
-#' use of these distributions allows
-#' one to directly sum over the discrete latent state and calculate the probability of
-#' all observations from one site jointly.
+#' \code{dDynOcc_**} and \code{rDynOcc_**} provide dynamic occupancy
+#' model distributions that can be used directly from R or in \code{nimble}
+#' models.
 #'
 #' @name dDynOcc
 #' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
-#'
-#' @param x detection/non-detection matrix of 0s (not detected) and 1s (detected). Each row contains repeat visits during one sampling period
-#' @param init probability of occupancy in the first sampling period
-#' @param probPersist persistence probability--probability an occupied cell remains occupied. 1-extinction probability. Scalar for \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}
-#' @param probColonize colonization probability. Probability that an unoccupied cell becomes occupied. \code{dDynOcc_*s}, vector for \code{dDynOcc*v}
-#' @param p matrix of detection probabilities for each observation. Dimensions should match x
-#' @param log TRUE (return log probability) or FALSE (return probability)
-#' @param start a vector of the indices of the first observation in each time interval.
-#' @param end a vector of the indices of the final observation in each time interval.
-#' @param n a vector of length 2 indicating the dimensions of the data to be randomly generated
-#'
 #' @author Ben Goldstein and Perry de Valpine
 #'
+#' @param x detection/non-detection matrix of 0s (not detected) and 1s
+#'     (detected). Each row contains repeat visits during one sampling period
+#' @param init probability of occupancy in the first sampling period
+#' @param probPersist persistence probability--probability an occupied
+#'     cell remains occupied. 1-extinction probability. Scalar for
+#'     \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}. If vector,
+#'     should have length dim(x)[1] - 1 since no transition occurs
+#'     after the last observation
+#' @param probColonize colonization probability. Probability that
+#'     an unoccupied cell becomes occupied. \code{dDynOcc_*s},
+#'     vector for \code{dDynOcc*v}. If vector, should have length
+#'     dim(x)[1] - 1 since no transition occurs after the last observation
+#' @param p matrix of detection probabilities for each observation.
+#'     Dimensions should match x
+#' @param log TRUE (return log probability) or FALSE (return probability)
+#' @param start a vector of the indices of the first observation in each
+#'     time interval.
+#' @param end a vector of the indices of the final observation in each time
+#'     interval.
+#' @param n number of random draws, each returning a matrix of dimension
+#'     \code{c(min(start), max(end))}. Currently only \code{n = 1} is supported,
+#'     but the argument exists for standardization of "\code{r}" functions.
 #'
-#' These are written in the format of user-defined distributions to extend NIMBLE's
-#' use of the BUGS model language. More information about writing user-defined distributions can be found
-#' in the NIMBLE User Manual at \code{https://r-nimble.org}.
+#' @details
 #'
-#' The first argument to a "d" function is always named \code{x} and is given on the
-#' left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
-#' When using these distributions in a NIMBLE model, the user
-#' should not provide the \code{log} argument. (It is always set to \code{TRUE} when used
-#' in a NIMBLE model.)
+#' These nimbleFunctions provide distributions that can be used directly in R or
+#' in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
+#' and \code{\link[nimble]{nimbleModel}}).
 #'
-#' For example, in a NIMBLE model,
+#' The probability (or likelihood) of observation \code{x[t, o]} depends on
+#' the occupancy status of the site at time t-1, the transitition
+#' probability of persistence \code{probPersist[t]} or colonization
+#' \code{probColonize[t]} and a detection probability \code{p[s, t]}.
 #'
-#' \code{detections[1:S, 1:T] ~ dDynOcc_ss(nrep, init = init_prob, probPersist = persistence_prob,
-#' probColonize = colonization_prob, p = p[1:S, 1:T])}
+#' The first two letters following the 'dDynOcc_' indicate whether the
+#' probabilities of persistence and colonization are a constant scalar (s)
+#' or time-indexed vector (v). For example, \code{dDynOcc_svm} takes scalar
+#' persistence probability \code{probPersist} with a vector of colonization
+#' probabilities \code{probColonize[1:T]}.
 #'
-#' declares that the \code{detections[1:T]} vector follows a dynamic occupancy model distribution
-#' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
+#' The third letter in the suffix indicates whether the detection probability
+#' is a constant (scalar), time-dependent (vector), or both time-dependent and
+#' dependent on observation occasion (matrix). For example, \code{dDynOcc_svm}
+#' takes a matrix of detection probabilities \code{p[1:T, 1:O]}.
+#'
+#' For more explanation, see
+#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+#' \code{vignette("Introduction_to_nimbleEcology")}).
+#'
+#' Compared to writing \code{nimble} models with a discrete latent state for
+#' true occupancy status and a separate scalar datum for each observation, use
+#' of these distributions allows one to directly sum (marginalize) over the
+#' discrete latent state and calculate the probability of all observations from
+#' one site jointly.
+#'
+#' These are \code{nimbleFunction}s written in the format of user-defined
+#' distributions for NIMBLE's extension of the BUGS model language. More
+#' information can be found in the NIMBLE User Manual at
+#' \href{https://r-nimble.org}{https://r-nimble.org}.
+#'
+#' When using these distributions in a \code{nimble} model, the left-hand side
+#' will be used as \code{x}, and the user should not provide the \code{log}
+#' argument.
+#'
+#' For example, in \code{nimble} model code,
+#'
+#' \code{detections[1:T, 1:O] ~ dDynOcc_ssm(init,
+#' probPersist = persistence_prob,
+#' probColonize = colonization_prob, p = p[1:T, 1:O],
+#' start = start[1:T], end = end[1:T])}
+#'
+#' declares that the \code{detections[1:T]} vector follows a dynamic occupancy
+#' model distribution with parameters as indicated, assuming all the parameters
+#' have been declared elsewhere in the model. This
+#' will invoke (something like) the following call to \code{dDynOcc_ssm} when
+#' \code{nimble} uses the model such as for MCMC:
+#'
+#' \code{dDynOcc_ssm(detections[1:T, 1:O], init,
+#' probPersist = persistence_prob,
+#' probColonize = colonization_prob, p = p[1:T, 1:O],
+#' start = start[1:T], end = end[1:T], log = TRUE)}
+#'
+#' If an algorithm using a \code{nimble} model with this declaration
+#' needs to generate a random draw for \code{detections[1:T, 1:O]}, it
+#' will make a similar invocation of \code{rDynOcc_svm}, with \code{n = 1}.
 #'
 #' If the colonization probabilities are time-dependent, one would use:
 #'
-#' \code{detections[1:T] ~ dDynOcc_sv(nrep, init = init_prob, probPersist = persistence_prob,
-#' probColonize = colonization_prob[1:T], p = p[1:S, 1:T])}
+#' \code{detections[1:T] ~ dDynOcc_svm(nrep, init = init_prob,
+#' probPersist = persistence_prob,
+#' probColonize = colonization_prob[1:(T-1)], p = p[1:S, 1:T])}
 #'
-#' @seealso For regular occupancy models, see documentation for dOcc.
+#' @return
+#' For \code{dDynOcc_***}: the probability (or likelihood) or log probability
+#' of observation vector \code{x}.
+#' For \code{rDynOcc_***}: a simulated detection history, \code{x}.
+#'
+#' @seealso For basic occupancy models, see documentation for
+#'   \code{\link{dOcc}}.
 #' @examples
 #' \dontrun{
 #' # Set up constants and initial values for defining the model
