@@ -1,23 +1,28 @@
 #' Hidden Markov Model distribution for use in NIMBLE models
 #'
-#' \code{dHMM} and \code{dHMMo} provide hidden Markov model distributions for NIMBLE models.
+#' \code{dHMM} and \code{dHMMo} provide hidden Markov model
+#' distributions that can be used directly from R or in \code{nimble}
+#' models.
+#' 
 #' @name dHMM
+#' 
 #' @aliases dHMM dHMMo rHMM rHMMo
+#'
 #' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'
-#' @param x vector of observation classes, one of which
-#' could be defined as "not observed".
+#' @param x vector of observed states, each one a positive integer
+#'     (one value of which could can correspond to "not observed", and
+#'     another value of which can correspond to "dead" or
+#'     "removed from system").
 #' @param init vector of initial state probabilities
-#' @param probObs time-independent matrix of observation probabilities.
-#' Dimension of \code{probObs} is (number of possible observation classes)
-#' x (number of possible system states)
-#' @param probTrans time-independent matrix of system state-transition
-#' probabilities.
-#' Dimension of \code{probTrans} is (number of possible system states)
-#' x (number of possible system states)
-#' @param len length of observations (needed for rDHMM)
-#' @param log TRUE or 1 to return log probability. FALSE or 0 to return
-#' probability.
+#' @param probObs time-independent matrix (\code{dHMM} and
+#'     \code{rHMM}) or time-dependent array (\code{dHMMo} and
+#'     \code{rHMMo}) of observation probabilities.
+#' @param probTrans time-independent matrix of state transition
+#'     probabilities.
+#' @param len length of \code{x} (see below).
+#' @param log TRUE or 1 to return log probability. FALSE or 0 to
+#'     return probability.
 #' @param n number of random draws, each returning a vector of length
 #'     \code{len}. Currently only \code{n = 1} is supported, but the
 #'     argument exists for standardization of "\code{r}" functions.
@@ -27,27 +32,37 @@
 #' in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 #' and \code{\link[nimble]{nimbleModel}}).
 #'
-#' The probability (or likelihood) of observation \code{x[t, o]} depends on
-#' the previous true latent state, the probability of transitioning to
-#' a new state \code{probTrans}, and the probability of observation states
-#' given the true latent state \code{probObs}.
+#' The distribution has two forms, \code{dHMM} and
+#' \code{dHMMo}. Define S as the number of latent state categories
+#' (maximum possible value for elements of \code{x}), O as the number
+#' of possible observation state categories (which need to correspond
+#' one-to-one to latent state categories), and T as the number of
+#' observation times (length of \code{x}). In \code{dHMM},
+#' \code{probObs} is a time-independent observation probability matrix
+#' with dimension S x O.  In \code{dHMMo}, \code{probObs} is a
+#' three-dimensional array of time-dependent observation probabilities
+#' with dimension S x O x T.  The first index of \code{probObs}
+#' indexes the true latent state.  The second index of \code{probObs}
+#' indexes the observed state.  For example, in the time-dependent
+#' case, \code{probObs[i, j, t]} is the probability at time $t$ that
+#' an individual in state $i$ is observed in state $j$.
 #'
-#' The distribution has two forms, \code{dHMM} and \code{dHMMo}. \code{dHMM}
-#' takes a time-independent observation probability matrix with dimension
-#' O x S, while \code{dHMMo} expects a three-dimensional array of time-dependent
-#' observation probabilities with dimension O x S x T, where O is the number of
-#' possible observation states, S is the number of true latent states, and T is
-#' the number of time intervals.
+#' \code{probTrans} has dimension S x S.  \code{probTrans}[i, j] is
+#' the probability that an individual in state $i$ at one time transitions to
+#' state $j$ at the next time.
 #'
+#' \code{initStates} has length S.  \code{initStates[i]} is the
+#' probability of being in state i at the first observation time.
+#' 
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 #' \code{vignette("Introduction_to_nimbleEcology")}).
 #'
-#' Compared to writing \code{nimble} models with a discrete latent state and
-#' a separate scalar datum for each observation, use
-#' of these distributions allows one to directly sum (marginalize) over the
-#' discrete latent state and calculate the probability of all observations from
-#' one site jointly.
+#' Compared to writing \code{nimble} models with a discrete latent
+#' state and a separate scalar datum for each observation time, use of
+#' these distributions allows one to directly sum (marginalize) over
+#' the discrete latent state and calculate the probability of all
+#' observations for one individual (or other HMM unit) jointly.
 #'
 #' These are \code{nimbleFunction}s written in the format of user-defined
 #' distributions for NIMBLE's extension of the BUGS model language. More
@@ -60,20 +75,22 @@
 #'
 #' For example, in \code{nimble} model code,
 #'
-#' \code{observedStates[1:T] ~ dHMM(initStates[1:S],
-#' observationProbs[1:O, 1:S],
+#' \code{observedStates[i, 1:T] ~ dHMM(initStates[1:S],
+#' observationProbs[1:S, 1:O],
 #' transitionProbs[1:S, 1:S], T)}
 #'
-#' declares that the \code{observedStates[1:T]} vector follows a hidden Markov
-#' model distribution with parameters as indicated, assuming all the parameters
-#' have been declared elsewhere in the model. In this case, \code{S} is the
-#' number of system states and \code{O} is the number of observation classes,
-#' and \code{T} is the number of observation occasions. This
-#' will invoke (something like) the following call to \code{dHMM} when
+#' declares that the \code{observedStates[i, 1:T]} (observation
+#' history for individual \code{i}, for example) vector follows a
+#' hidden Markov model distribution with parameters as indicated,
+#' assuming all the parameters have been declared elsewhere in the
+#' model. As above, \code{S} is the number of system state categories,
+#' \code{O} is the number of observation state categories, and
+#' \code{T} is the number of observation occasions. This will invoke
+#' (something like) the following call to \code{dHMM} when
 #' \code{nimble} uses the model such as for MCMC:
 #'
-#' \code{rHMM(observedStates[1:T], initStates[1:S],
-#' observationProbs[1:O, 1:S],
+#' \code{dHMM(observedStates[1:T], initStates[1:S],
+#' observationProbs[1:S, 1:O],
 #' transitionProbs[1:S, 1:S], T, log = TRUE)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
@@ -88,11 +105,12 @@
 #' @return
 #' For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or log
 #' probability of observation vector \code{x}.
+#' 
 #' For \code{rHMM} and \code{rHMMo}: a simulated detection history, \code{x}.
 #'
 #' @seealso For dynamic hidden Markov models with time-dependent transitions,
-#' see \link{dDHMM} and \link{dDHMMo}.
-#' For simple capture-recapture, see \link{dCJS}.
+#' see \code{\link{dDHMM}} and \code{\link{dDHMMo}}.
+#' For simple capture-recapture, see \code{\link{dCJS}}.
 #'
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics

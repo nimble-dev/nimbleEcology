@@ -1,6 +1,6 @@
 #' Cormack-Jolly-Seber distribution for use in \code{nimble} models
 #'
-#' \code{dCJS_**} \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture 
+#' \code{dCJS_**} \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
 #' distributions that can be used directly from R or in \code{nimble}
 #' models.
 #'
@@ -25,27 +25,28 @@
 #' in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 #' and \code{\link[nimble]{nimbleModel}}).
 #'
-#' The probability (or likelihood) of observation vector \code{x} depends on
-#' survival probability, \code{probSurvive} or \code{probSurvive[t]}, and capture probability,
-#' \code{probCapture} or \code{probCapture[t]}.
+#' The letters following the 'dCJS_' indicate whether survival and/or
+#' capture probabilities, in that order, are scalar (s, meaning the
+#' probability applies to every \code{x[t]}) or vector (v, meaning the
+#' probability is a vector aligned with \code{x}).  When
+#' \code{probCapture} and/or \code{probSurvive} is a vector, they must
+#' be the same length as \code{x}.
 #'
-#' The letters following the 'dCJS_' indicate whether survival and/or capture probabilities, in that order, are
-#' scalar (s, meaning the probability applies to every
-#' \code{x[t]}) or vector (v, meaning the probability is a vector aligned with \code{x}).  When \code{probCapture} and/or \code{probSurvive} is a vector, they must be the same length as \code{x}.
-#'
-#' It is important to use the time indexing correctly for survival.  \code{probSurvive[t]} is the survival
-#' probabilty from time \code{t-1} to time \code{t}.  Time indexing for detection is more obvious:
-#' \code{probDetect[t]} is the detection probability at time \code{t}.
+#' It is important to use the time indexing correctly for survival.
+#' \code{probSurvive[t]} is the survival probabilty from time
+#' \code{t-1} to time \code{t}.  Time indexing for detection is more
+#' obvious: \code{probDetect[t]} is the detection probability at time
+#' \code{t}.
 #'
 #' When called from R, the \code{len} argument to \code{dCJS_**} is not
 #' necessary. It will default to the length of \code{x}.  When used in
 #' \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 #' (even though it may seem redundant).
 #'
-#' #' For more explanation, see
+#' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 #' \code{vignette("Introduction_to_nimbleEcology")}).
-#' 
+#'
 #' Compared to writing \code{nimble} models with a discrete latent state for
 #' true alive/dead status at each time and a separate scalar datum for each observation, use
 #' of these distributions allows one to directly sum (marginalize) over the
@@ -77,19 +78,19 @@
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{captures[i, 1:T]}, it
 #' will make a similar invocation of \code{rCJS_ss}, with \code{n = 1}.
-#' 
+#'
 #' If both survival and capture probabilities are time-dependent, use
 #'
 #' \code{captures[i,1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}
 #'
 #' and so on for each combination of time-dependent and time-independent parameters.
-#' 
+#'
 #' @return
 #'
 #' For \code{dCJS_**}: the probability (or likelihood) or log probability of observation vector \code{x}.
 #'
 #' For \code{rCJS_**}: a simulated capture history, \code{x}.
-#' 
+#'
 #' @references D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
