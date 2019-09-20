@@ -6,7 +6,7 @@
 \alias{dOcc_v}
 \alias{rOcc_s}
 \alias{rOcc_v}
-\title{Occupancy distribution for use in NIMBLE models}
+\title{Occupancy distribution suitable for use in code{nimble} models}
 \usage{
 dOcc_s(x, probOcc, probDetect, len = 0, log = 0)
 
@@ -17,57 +17,93 @@ rOcc_s(n, probOcc, probDetect, len = 0)
 rOcc_v(n, probOcc, probDetect, len = 0)
 }
 \arguments{
-\item{x}{detection/non-detection vector of 0s (not detected) and 1s (detected).}
+\item{x}{detection/non-detection vector of 0s (not detected) and 1s
+(detected).}
 
-\item{probOcc}{occupancy probability (scalar for \code{dOcc_s*}, vector for \code{dOcc_v*}).}
+\item{probOcc}{occupancy probability.}
 
-\item{probDetect}{detection probability (scalar for \code{dOcc_*s}, vector for \code{dOcc_*v}).}
+\item{probDetect}{detection probability (scalar for \code{dOcc_s},
+vector for \code{dOcc_v}).}
 
-\item{len}{length of detection/non-detection vector (ignored for "d" functions, needed for "r" functions).}
+\item{len}{length of detection/non-detection vector (see below).}
 
-\item{log}{TRUE (return log probability) or FALSE (return probability)}
+\item{log}{TRUE or 1 to return log probability. FALSE or 0 to
+return probability.}
 
-\item{n}{length of random sequence}
+\item{n}{number of random draws, each returning a vector of length
+\code{len}. Currently only \code{n = 1} is supported, but the
+argument exists for standardization of "\code{r}" functions.}
+}
+\value{
+For \code{dOcc_*}: the probability (or likelihood) or log probability of observation vector \code{x}.
+
+For \code{rOcc_*}: a simulated detection history, \code{x}.
 }
 \description{
-\code{dOcc_**} provides occupancy model distributions for NIMBLE models.
+\code{dOcc_*} and \code{rOcc_*} provide occupancy model
+distributions that can be used directly from R or in \code{nimble}
+models.
 }
 \details{
-Likelihood of observation x[t] depends on an occupancy probability \code{probOcc[t]} and
-detection probability \code{probDetect[t]}.
-The pair of letters following the 'dOcc_' indicates whether the occupancy probability
-and detection probability are scalar (s) or vector (v). For example, dOcc_sc takes scalar
-occupancy probability with a vector of detection probabilities.
+These nimbleFunctions provide distributions that can be used directly in R or
+in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
+and \code{\link[nimble]{nimbleModel}}).
 
-Compared to writing NIMBLE models with a discrete latent state for true occupancy status and
-a separate scalar datum for each observation,
-use of these distributions allows
-one to directly sum over the discrete latent state and calculate the probability of
-all observations from one site jointly.
+The probability (or likelihood) of observation vector \code{x} depends on
+occupancy probability, \code{probOcc}, and detection probability,
+\code{probDetect} or \code{probDetect[t]}.
 
-These nimbleFunctions provide distributions that can be used in code (via \link{nimbleCode})
-for \link{nimbleModel}.
+The letter following the 'dOcc_' indicates whether detection probability is
+scalar (s, meaning \code{probDetect} is detection probability for every
+\code{x[t]}) or vector (v, meaning \code{probDetect[t]} is detection
+probability for \code{x[t]}).
 
-These are written in the format of user-defined distributions to extend NIMBLE's
-use of the BUGS model language. More information about writing user-defined distributions can be found
-in the NIMBLE User Manual at \code{https://r-nimble.org}.
+When used directly from R, the \code{len} argument to \code{dOcc_*} is not
+necessary. It will default to the length of \code{x}.  When used in
+\code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
+(even though it may seem redundant).
 
-The first argument to a "d" function is always named \code{x} and is given on the
-left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
-When using these distributions in a NIMBLE model, the user
-should not provide the \code{log} argument. (It is always set to \code{TRUE} when used
-in a NIMBLE model.)
+For more explanation, see
+\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+\code{vignette("Introduction_to_nimbleEcology")}).
 
-For example, in a NIMBLE model,
+Compared to writing \code{nimble} models with a discrete latent state for
+true occupancy status and a separate scalar datum for each observation, use
+of these distributions allows one to directly sum (marginalize) over the
+discrete latent state and calculate the probability of all observations from
+one site jointly.
 
-\code{detections[1:T] ~ dOcc_ss(occupancyProbability, detectionProbability)}
+These are \code{nimbleFunction}s written in the format of user-defined
+distributions for NIMBLE's extension of the BUGS model language. More
+information can be found in the NIMBLE User Manual at
+\href{https://r-nimble.org}{https://r-nimble.org}.
 
-declares that the \code{detections[1:T]} vector follows an occupancy model distribution
-with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
+When using these distributions in a \code{nimble} model, the left-hand side
+will be used as \code{x}, and the user should not provide the \code{log}
+argument.
 
-If the detection probabilities are time-dependent, one would use:
+For example, in \code{nimble} model code,
 
-\code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
+\code{detections[i, 1:T] ~ dOcc_s(occupancyProbability,
+detectionProbability, T)}
+
+declares that \code{detections[i, 1:T]} (detection history at site \code{i},
+for example) follows an occupancy distribution with parameters as indicated,
+assuming all the parameters have been declared elsewhere in the model.  This
+will invoke (something like) the following call to \code{dOcc_s} when \code{nimble} uses the
+model such as for MCMC:
+
+\code{dOcc_s(detections[i, 1:T], occupancyProbability,
+detectionProbability, len = T, log = TRUE)}
+
+If an algorithm using a \code{nimble} model with this declaration
+needs to generate a random draw for \code{detections[i, 1:T]}, it
+will make a similar invocation of \code{rOcc_s}, with \code{n = 1}.
+
+If the detection probabilities are time-dependent, use:
+
+\code{detections[i, 1:T] ~ dOcc_v(occupancyProbability,
+detectionProbability[1:T], len = T)}
 }
 \examples{
 \dontrun{
@@ -95,7 +131,8 @@ Occ_model$calculate()
 }
 }
 \seealso{
-For dynamic occupancy models, see documentation for \link{dDynOcc}.
+For dynamic occupancy models, see documentation for
+  \code{\link{dDynOcc}}.
 }
 \author{
 Ben Goldstein and Perry de Valpine
