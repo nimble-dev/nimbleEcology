@@ -1,6 +1,6 @@
 ---
 title: "Introduction to nimbleEcology"
-author: "Perry de Valpine"
+author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -29,7 +29,7 @@ Welcome to `nimbleEcology`.  This package provides distributions that can be use
 
 # What is nimble?
 
-NIMBLE is a system for writing hierarchical statistical models and algorithms.  It is distributed as an R package [nimble](https://CRAN.R-project.org/package=nimble).  NIMBLE stands for "Numerical Inference for statistical Models using Bayesian and Likelihood Estimation".  NIMBLE includes:
+NIMBLE is a system for writing hierarchical statistical models and algorithms.  It is distributed as R package [nimble](https://CRAN.R-project.org/package=nimble).  NIMBLE stands for "Numerical Inference for statistical Models using Bayesian and Likelihood Estimation".  NIMBLE includes:
 
 1. A dialect of the BUGS model language that is extensible.  NIMBLE uses almost the same model code as WinBUGS, OpenBUGS, and JAGS.  Being "extensible" means that it is possible to write new functions and distributions and use them in your models.
 
