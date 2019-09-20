@@ -6,7 +6,7 @@
 #'
 #' @name dDynOcc
 #' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
-#' @author Ben Goldstein and Perry de Valpine
+#' @author Ben Goldstein, Perry de Valpine and Lauren Ponisio
 #'
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s
 #'     (detected). Each row contains repeat visits during one sampling period

@@ -21,7 +21,7 @@
 #'     \code{len}. Currently only \code{n = 1} is supported, but the
 #'     argument exists for standardization of "\code{r}" functions.
 #'
-#' @author Ben Goldstein and Perry de Valpine
+#' @author Ben Goldstein, Perry de Valpine, and Lauren Ponisio
 #'
 #' @details
 #'
