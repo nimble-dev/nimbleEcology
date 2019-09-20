@@ -22,8 +22,8 @@ rDHMMo(n, init, probObs, probTrans, len)
 \item{init}{vector of initial state probabilities}
 
 \item{probObs}{time-independent matrix of observation probabilities.
-First two dimensions of \code{probObs} are of size (number of possible
-observation classes) x (number of possible system states). \code{dDHMMo}
+First two dimensions of \code{probObs} are of size x (number of possible
+system states) x (number of possible observation classes). \code{dDHMMo}
 expects an additional third dimension of size (number of observation times).}
 
 \item{probTrans}{time-dependent matrix of system state-transition
@@ -58,10 +58,17 @@ observation states given the true latent state \code{probObs}.
 
 The distribution has two forms, \code{dDHMM} and \code{dDHMMo}. \code{dDHMM}
 takes a time-independent observation probability matrix with dimension
-O x S, while \code{dDHMMo} expects a three-dimensional array of time-dependent
-observation probabilities with dimension O x S x T, where O is the number of
+S x O, while \code{dDHMMo} expects a three-dimensional array of time-dependent
+observation probabilities with dimension S x O x T, where O is the number of
 possible occupancy states, S is the number of true latent states, and T is
 the number of time intervals.
+
+\code{probTrans} has dimension S x S x (T - 1). \code{probTrans}[i, j, t] is
+the probability that an individual in state $i$ at time t-1 transitions to
+state $j$ between time t-1 and t.
+
+\code{initStates} has length S. \code{initStates[i]} is the
+probability of being in state i at the first observation time.
 
 For more explanation, see
 \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
@@ -85,7 +92,7 @@ argument.
 For example, in a NIMBLE model,
 
 \code{observedStates[1:T] ~ dDHMM(initStates[1:S],
-observationProbs[1:O, 1:S],
+observationProbs[1:S, 1:O],
 transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 
 declares that the \code{observedStates[1:T]} vector follows a dynamic hidden
@@ -97,7 +104,7 @@ will invoke (something like) the following call to \code{dDHMM} when
 \code{nimble} uses the model such as for MCMC:
 
 \code{rDHMM(observedStates[1:T], initStates[1:S],
-observationProbs[1:O, 1:S],
+observationProbs[1:S, 1:O],
 transitionProbs[1:S, 1:S, 1:(T-1)], T, log = TRUE)}
 
 If an algorithm using a \code{nimble} model with this declaration
@@ -107,7 +114,7 @@ will make a similar invocation of \code{rDHMM}, with \code{n = 1}.
 If the observation probabilities are time-dependent, one would use:
 
 \code{observedStates[1:T] ~
-dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:(T-1)],
+dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
 transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 }
 \examples{
@@ -116,15 +123,16 @@ transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 dat <- c(1,2,1,1) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
 probObs <- t(array( # A matrix of observation probabilities
-       c(1, 0.2, 1,
-         0, 0.8, 0), c(3, 2)))
+       c(1, 0,
+         0, 1,
+         0.8, 0.2), c(2, 3)))
 
 probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
             c(3,3,3))
 
 # Define code for a nimbleModel
  nc <- nimbleCode({
-   x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:2,1:3],
+   x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
                   probTrans = probTrans[1:3, 1:3, 1:4], len = 4)
 
    for (i in 1:3) {
@@ -136,8 +144,8 @@ probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabili
        }
      }
 
-     probObs[1,i] ~ dunif(0,1)
-     probObs[2,i] <- 1 - probObs[1,i]
+     probObs[i, 1] ~ dunif(0,1)
+     probObs[i, 2] <- 1 - probObs[1,i]
    }
  })
 

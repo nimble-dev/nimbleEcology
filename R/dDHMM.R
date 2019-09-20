@@ -12,8 +12,8 @@
 #' "not observed".
 #' @param init vector of initial state probabilities
 #' @param probObs time-independent matrix of observation probabilities.
-#' First two dimensions of \code{probObs} are of size (number of possible
-#' observation classes) x (number of possible system states). \code{dDHMMo}
+#' First two dimensions of \code{probObs} are of size x (number of possible
+#' system states) x (number of possible observation classes). \code{dDHMMo}
 #' expects an additional third dimension of size (number of observation times).
 #' @param probTrans time-dependent matrix of system state-transition
 #' probabilities. Dimension of \code{probTrans} is (number of possible
@@ -35,10 +35,17 @@
 #'
 #' The distribution has two forms, \code{dDHMM} and \code{dDHMMo}. \code{dDHMM}
 #' takes a time-independent observation probability matrix with dimension
-#' O x S, while \code{dDHMMo} expects a three-dimensional array of time-dependent
-#' observation probabilities with dimension O x S x T, where O is the number of
+#' S x O, while \code{dDHMMo} expects a three-dimensional array of time-dependent
+#' observation probabilities with dimension S x O x T, where O is the number of
 #' possible occupancy states, S is the number of true latent states, and T is
 #' the number of time intervals.
+#'
+#' \code{probTrans} has dimension S x S x (T - 1). \code{probTrans}[i, j, t] is
+#' the probability that an individual in state $i$ at time t-1 transitions to
+#' state $j$ between time t-1 and t.
+#'
+#' \code{initStates} has length S. \code{initStates[i]} is the
+#' probability of being in state i at the first observation time.
 #'
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
@@ -62,7 +69,7 @@
 #' For example, in a NIMBLE model,
 #'
 #' \code{observedStates[1:T] ~ dDHMM(initStates[1:S],
-#' observationProbs[1:O, 1:S],
+#' observationProbs[1:S, 1:O],
 #' transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 #'
 #' declares that the \code{observedStates[1:T]} vector follows a dynamic hidden
@@ -74,7 +81,7 @@
 #' \code{nimble} uses the model such as for MCMC:
 #'
 #' \code{rDHMM(observedStates[1:T], initStates[1:S],
-#' observationProbs[1:O, 1:S],
+#' observationProbs[1:S, 1:O],
 #' transitionProbs[1:S, 1:S, 1:(T-1)], T, log = TRUE)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
@@ -84,7 +91,7 @@
 #' If the observation probabilities are time-dependent, one would use:
 #'
 #' \code{observedStates[1:T] ~
-#' dDHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:(T-1)],
+#' dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
 #' transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 #'
 #' @return
@@ -105,15 +112,16 @@
 #' dat <- c(1,2,1,1) # A vector of observations
 #' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
 #' probObs <- t(array( # A matrix of observation probabilities
-#'        c(1, 0.2, 1,
-#'          0, 0.8, 0), c(3, 2)))
+#'        c(1, 0,
+#'          0, 1,
+#'          0.8, 0.2), c(2, 3)))
 #'
 #' probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
 #'             c(3,3,3))
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
-#'    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:2,1:3],
+#'    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
 #'                   probTrans = probTrans[1:3, 1:3, 1:4], len = 4)
 #'
 #'    for (i in 1:3) {
@@ -125,8 +133,8 @@
 #'        }
 #'      }
 #'
-#'      probObs[1,i] ~ dunif(0,1)
-#'      probObs[2,i] <- 1 - probObs[1,i]
+#'      probObs[i, 1] ~ dunif(0,1)
+#'      probObs[i, 2] <- 1 - probObs[1,i]
 #'    }
 #'  })
 #'
@@ -152,7 +160,7 @@ dDHMM <- nimbleFunction(
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
-    if (length(init) != dim(probObs)[2]) stop("Length of init does not match ncol of probObs in dDHMM.")
+    if (length(init) != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (length(init) != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
@@ -160,11 +168,11 @@ dDHMM <- nimbleFunction(
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nObsClasses <- dim(probObs)[1]
+    nObsClasses <- dim(probObs)[2]
     lengthX <- length(x)
     for (t in 1:lengthX) {
       if (x[t] > nObsClasses) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- probObs[x[t], ] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != lengthX) pi <- (probTrans[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
@@ -185,7 +193,7 @@ dDHMMo <- nimbleFunction(
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
                  log = integer(0, default = 0)) {
-    if (length(init) != dim(probObs)[2]) stop("Length of init does not match ncol of probObs in dDHMMo.")
+    if (length(init) != dim(probObs)[1]) stop("Length of init does not match ncol of probObs in dDHMMo.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMMo.")
     if (length(init) != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMMo.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
@@ -194,11 +202,11 @@ dDHMMo <- nimbleFunction(
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nObsClasses <- dim(probObs)[1]
+    nObsClasses <- dim(probObs)[2]
     lengthX <- length(x)
     for (t in 1:lengthX) {
       if (x[t] > nObsClasses) stop("Invalid value of x[t] in dDHMM.")
-      Zpi <- probObs[x[t], , t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      Zpi <- probObs[, x[t], t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != lengthX)   pi <- (probTrans[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
@@ -232,7 +240,7 @@ rDHMM <- nimbleFunction(
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(probObs[1:j, trueState])) j <- j + 1
+    while (r > sum(probObs[trueState, 1:j])) j <- j + 1
     ans[i] <- j
 
     # Transition to a new true state
@@ -289,7 +297,7 @@ rDHMMo <- nimbleFunction(
     # Detect based on the true state
     r <- runif(1, 0, 1)
     j <- 1
-    while (r > sum(probObs[1:j, trueState, i])) j <- j + 1
+    while (r > sum(probObs[trueState, 1:j, i])) j <- j + 1
     ans[i] <- j
 
     # Transition to a new true state
