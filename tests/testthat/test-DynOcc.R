@@ -9,15 +9,15 @@ test_that("dDynOcc_vvm works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- c(0.4, 0.2, 0.1)
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- c(0.4, 0.2, 0.1)
   p <- matrix(rep(0.8, 20), nrow = 4)
 
-  probX <- dDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -36,14 +36,14 @@ test_that("dDynOcc_vvm works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                (1 - ProbOccGivenCount) * gamma[t]
+            ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                (1 - ProbOccGivenCount) * probColonize[t]
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                (1 - ProbOccNextTime) * gamma[t]
+            ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                (1 - ProbOccNextTime) * probColonize[t]
       }
     }
   }
@@ -54,24 +54,24 @@ test_that("dDynOcc_vvm works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vvm <- compileNimble(dDynOcc_vvm)
-  CprobX <- CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vvm(psi1, phi[1:3],
-                              gamma[1:3], p[1:4,1:5],
+    x[1:4, 1:5] ~ dDynOcc_vvm(init, probPersist[1:3],
+                              probColonize[1:3], p[1:4,1:5],
                               start[1:4], end[1:4])
 
   })
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -90,15 +90,15 @@ test_that("dDynOcc_vvm works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vvm(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vvm(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vvm <- compileNimble(rDynOcc_vvm)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vvm(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vvm(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -119,8 +119,8 @@ test_that("dDynOcc_vvm works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -141,15 +141,15 @@ test_that("dDynOcc_vsm works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- 0.5
   p <- matrix(rep(0.8, 20), nrow = 4)
 
-  probX <- dDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -169,14 +169,14 @@ test_that("dDynOcc_vsm works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if (t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                  (1 - ProbOccGivenCount) * gamma
+              ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                  (1 - ProbOccGivenCount) * probColonize
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                  (1 - ProbOccNextTime) * gamma
+              ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                  (1 - ProbOccNextTime) * probColonize
         }
       }
     }
@@ -188,23 +188,23 @@ test_that("dDynOcc_vsm works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vsm <- compileNimble(dDynOcc_vsm)
-  CprobX <- CdDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vsm(psi1, phi[1:3], gamma, p[1:4,1:5],
+    x[1:4, 1:5] ~ dDynOcc_vsm(init, probPersist[1:3], probColonize, p[1:4,1:5],
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
     for (i in 1:3) {
-      phi[i] ~ dunif(0,1)
+      probPersist[i] ~ dunif(0,1)
     }
-    gamma ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     for (i in 1:4) {
       for (j in 1:5) {
@@ -215,8 +215,8 @@ test_that("dDynOcc_vsm works", {
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -235,15 +235,15 @@ test_that("dDynOcc_vsm works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vsm(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vsm(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vsm <- compileNimble(rDynOcc_vsm)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vsm(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vsm(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -264,8 +264,8 @@ test_that("dDynOcc_vsm works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -284,15 +284,15 @@ test_that("dDynOcc_svm works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- c(0.4, 0.4, 0.1)
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- c(0.4, 0.4, 0.1)
   p <- matrix(rep(0.8, 20), nrow = 4)
 
-  probX <- dDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
     if(nyears >= 1) {
@@ -311,14 +311,14 @@ test_that("dDynOcc_svm works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if(t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi +
-                  (1-ProbOccGivenCount) * gamma[t]
+              ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                  (1-ProbOccGivenCount) * probColonize[t]
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime * phi +
-                  (1-ProbOccNextTime) * gamma[t]
+              ProbOccNextTime <- ProbOccNextTime * probPersist +
+                  (1-ProbOccNextTime) * probColonize[t]
         }
       }
     }
@@ -329,24 +329,24 @@ test_that("dDynOcc_svm works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_svm <- compileNimble(dDynOcc_svm)
-  CprobX <- CdDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
 
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_svm(psi1, phi, gamma[1:3], p[1:4,1:5],
+    x[1:4, 1:5] ~ dDynOcc_svm(init, probPersist, probColonize[1:3], p[1:4,1:5],
                              start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
     for (i in 1:3) {
-      gamma[i] ~ dunif(0,1)
+      probColonize[i] ~ dunif(0,1)
     }
 
 
@@ -359,8 +359,8 @@ test_that("dDynOcc_svm works", {
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -379,15 +379,15 @@ test_that("dDynOcc_svm works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_svm(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_svm(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_svm <- compileNimble(rDynOcc_svm)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_svm(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_svm(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -408,8 +408,8 @@ test_that("dDynOcc_svm works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -429,15 +429,15 @@ test_that("dDynOcc_ssm works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- 0.2
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- 0.2
   p <- matrix(rep(0.8, 20), nrow = 4)
 
-  probX <- dDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -456,14 +456,14 @@ test_that("dDynOcc_ssm works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi +
-                (1 - ProbOccGivenCount) * gamma
+            ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                (1 - ProbOccGivenCount) * probColonize
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime * phi +
-                (1 - ProbOccNextTime) * gamma
+            ProbOccNextTime <- ProbOccNextTime * probPersist +
+                (1 - ProbOccNextTime) * probColonize
       }
     }
   }
@@ -474,21 +474,21 @@ test_that("dDynOcc_ssm works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_ssm <- compileNimble(dDynOcc_ssm)
-  CprobX <- CdDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_ssm(psi1, phi, gamma, p[1:4, 1:5],
+    x[1:4, 1:5] ~ dDynOcc_ssm(init, probPersist, probColonize, p[1:4, 1:5],
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
-    gamma ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     for (i in 1:2) {
       for (j in 1:5) {
@@ -499,8 +499,8 @@ test_that("dDynOcc_ssm works", {
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -519,15 +519,15 @@ test_that("dDynOcc_ssm works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_ssm(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_ssm(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_ssm <- compileNimble(rDynOcc_ssm)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_ssm(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_ssm(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -548,8 +548,8 @@ test_that("dDynOcc_ssm works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -574,33 +574,33 @@ test_that("Case errors in compiled dDynOcc_**m work", {
                 0,0,1,0,
                 0,0,0,NA), nrow = 4)
   nrep <- c(5, 5)
-  psi1 <- 0.7
-  phi <- 0.8
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- 0.8
+  probColonize <- 0.5
   p <- matrix(rep(0.8, 20), nrow = 4)
 
-  expect_error(CdDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  phi <- c(0.8, 0.5, 0.2)
-  expect_error(CdDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- c(0.8, 0.5, 0.2)
+  expect_error(CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  gamma <- c(0.2, 0.5, 0.5)
+  probColonize <- c(0.2, 0.5, 0.5)
 
-  phi <- 0.3
-  expect_error(CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- 0.3
+  expect_error(CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
   p <- p[1:2, 1:4]
 
-  expect_error(CdDynOcc_svm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  phi <- c(0.3, 0.5, 0.3)
-  expect_error(CdDynOcc_vvm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  gamma <- 0.5
-  expect_error(CdDynOcc_vsm(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  phi <- 0.3
-  expect_error(CdDynOcc_ssm(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probPersist <- c(0.3, 0.5, 0.3)
+  expect_error(CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probColonize <- 0.5
+  expect_error(CdDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probPersist <- 0.3
+  expect_error(CdDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
 })
 
@@ -615,15 +615,15 @@ test_that("dDynOcc_vvv works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- c(0.4, 0.2, 0.1)
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- c(0.4, 0.2, 0.1)
   p <- rep(0.8, 4)
 
-  probX <- dDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -642,14 +642,14 @@ test_that("dDynOcc_vvv works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                (1 - ProbOccGivenCount) * gamma[t]
+            ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                (1 - ProbOccGivenCount) * probColonize[t]
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                (1 - ProbOccNextTime) * gamma[t]
+            ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                (1 - ProbOccNextTime) * probColonize[t]
       }
     }
   }
@@ -660,23 +660,23 @@ test_that("dDynOcc_vvv works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vvv <- compileNimble(dDynOcc_vvv)
-  CprobX <- CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vvv(psi1 = psi1, phi = phi[1:3],
-                              gamma = gamma[1:3], p = p[1:4],
+    x[1:4, 1:5] ~ dDynOcc_vvv(init = init, probPersist = probPersist[1:3],
+                              probColonize = probColonize[1:3], p = p[1:4],
                               start = start[1:4], end = end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
     for (i in 1:3) {
-      phi[i] ~ dunif(0,1)
-      gamma[i] ~ dunif(0,1)
+      probPersist[i] ~ dunif(0,1)
+      probColonize[i] ~ dunif(0,1)
     }
 
     for (i in 1:4) {
@@ -686,8 +686,8 @@ test_that("dDynOcc_vvv works", {
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -703,15 +703,15 @@ test_that("dDynOcc_vvv works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vvv(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vvv(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vvv <- compileNimble(rDynOcc_vvv)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vvv(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vvv(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -731,8 +731,8 @@ test_that("dDynOcc_vvv works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -752,15 +752,15 @@ test_that("dDynOcc_vsv works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- 0.5
   p <- rep(0.8, 4)
 
-  probX <- dDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -780,14 +780,14 @@ test_that("dDynOcc_vsv works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if (t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                  (1 - ProbOccGivenCount) * gamma
+              ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                  (1 - ProbOccGivenCount) * probColonize
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                  (1 - ProbOccNextTime) * gamma
+              ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                  (1 - ProbOccNextTime) * probColonize
         }
       }
     }
@@ -799,23 +799,23 @@ test_that("dDynOcc_vsv works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vsv <- compileNimble(dDynOcc_vsv)
-  CprobX <- CdDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vsv(psi1, phi[1:3], gamma, p[1:4],
+    x[1:4, 1:5] ~ dDynOcc_vsv(init, probPersist[1:3], probColonize, p[1:4],
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
     for (i in 1:3) {
-      phi[i] ~ dunif(0,1)
+      probPersist[i] ~ dunif(0,1)
     }
-    gamma ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     for (i in 1:4) {
       p[i] ~ dunif(0,1)
@@ -824,8 +824,8 @@ test_that("dDynOcc_vsv works", {
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -844,15 +844,15 @@ test_that("dDynOcc_vsv works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vsv(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vsv(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vsv <- compileNimble(rDynOcc_vsv)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vsv(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vsv(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -873,8 +873,8 @@ test_that("dDynOcc_vsv works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -893,15 +893,15 @@ test_that("dDynOcc_svv works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- c(0.4, 0.4, 0.1)
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- c(0.4, 0.4, 0.1)
   p <- rep(0.8, 4)
 
-  probX <- dDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
     if(nyears >= 1) {
@@ -920,14 +920,14 @@ test_that("dDynOcc_svv works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if(t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi +
-                  (1-ProbOccGivenCount) * gamma[t]
+              ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                  (1-ProbOccGivenCount) * probColonize[t]
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime * phi +
-                  (1-ProbOccNextTime) * gamma[t]
+              ProbOccNextTime <- ProbOccNextTime * probPersist +
+                  (1-ProbOccNextTime) * probColonize[t]
         }
       }
     }
@@ -938,24 +938,24 @@ test_that("dDynOcc_svv works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_svv <- compileNimble(dDynOcc_svv)
-  CprobX <- CdDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
 
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_svv(psi1, phi, gamma[1:3], p[1:4],
+    x[1:4, 1:5] ~ dDynOcc_svv(init, probPersist, probColonize[1:3], p[1:4],
                              start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
     for (i in 1:3) {
-      gamma[i] ~ dunif(0,1)
+      probColonize[i] ~ dunif(0,1)
     }
 
 
@@ -966,8 +966,8 @@ test_that("dDynOcc_svv works", {
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -986,15 +986,15 @@ test_that("dDynOcc_svv works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_svv(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_svv(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_svv <- compileNimble(rDynOcc_svv)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_svv(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_svv(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1015,8 +1015,8 @@ test_that("dDynOcc_svv works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1036,15 +1036,15 @@ test_that("dDynOcc_ssv works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- 0.2
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- 0.2
   p <- rep(0.8, 4)
 
-  probX <- dDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -1063,14 +1063,14 @@ test_that("dDynOcc_ssv works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi +
-                (1 - ProbOccGivenCount) * gamma
+            ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                (1 - ProbOccGivenCount) * probColonize
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime * phi +
-                (1 - ProbOccNextTime) * gamma
+            ProbOccNextTime <- ProbOccNextTime * probPersist +
+                (1 - ProbOccNextTime) * probColonize
       }
     }
   }
@@ -1081,21 +1081,21 @@ test_that("dDynOcc_ssv works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_ssv <- compileNimble(dDynOcc_ssv)
-  CprobX <- CdDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_ssv(psi1, phi, gamma, p[1:4],
+    x[1:4, 1:5] ~ dDynOcc_ssv(init, probPersist, probColonize, p[1:4],
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
-    gamma ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     for (i in 1:4) {
       p[i] ~ dunif(0,1)
@@ -1104,8 +1104,8 @@ test_that("dDynOcc_ssv works", {
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -1124,15 +1124,15 @@ test_that("dDynOcc_ssv works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_ssv(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_ssv(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_ssv <- compileNimble(rDynOcc_ssv)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_ssv(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_ssv(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1152,8 +1152,8 @@ test_that("dDynOcc_ssv works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1178,33 +1178,33 @@ test_that("Case errors in compiled dDynOcc_**v work", {
                 0,0,1,0,
                 0,0,0,NA), nrow = 4)
   nrep <- c(5, 5)
-  psi1 <- 0.7
-  phi <- 0.8
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- 0.8
+  probColonize <- 0.5
   p <- rep(0.8, 4)
 
-  expect_error(CdDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  phi <- c(0.8, 0.5, 0.2)
-  expect_error(CdDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- c(0.8, 0.5, 0.2)
+  expect_error(CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  gamma <- c(0.2, 0.5, 0.5)
+  probColonize <- c(0.2, 0.5, 0.5)
 
-  phi <- 0.3
-  expect_error(CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- 0.3
+  expect_error(CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
   p <- p[1:2]
 
-  expect_error(CdDynOcc_svv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  phi <- c(0.3, 0.5, 0.3)
-  expect_error(CdDynOcc_vvv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  gamma <- 0.5
-  expect_error(CdDynOcc_vsv(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  phi <- 0.3
-  expect_error(CdDynOcc_ssv(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probPersist <- c(0.3, 0.5, 0.3)
+  expect_error(CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probColonize <- 0.5
+  expect_error(CdDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  probPersist <- 0.3
+  expect_error(CdDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
 })
 
@@ -1219,15 +1219,15 @@ test_that("dDynOcc_vvs works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- c(0.4, 0.2, 0.1)
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- c(0.4, 0.2, 0.1)
   p <- 0.6
 
-  probX <- dDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -1246,14 +1246,14 @@ test_that("dDynOcc_vvs works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                (1 - ProbOccGivenCount) * gamma[t]
+            ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                (1 - ProbOccGivenCount) * probColonize[t]
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                (1 - ProbOccNextTime) * gamma[t]
+            ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                (1 - ProbOccNextTime) * probColonize[t]
       }
     }
   }
@@ -1264,23 +1264,23 @@ test_that("dDynOcc_vvs works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vvs <- compileNimble(dDynOcc_vvs)
-  CprobX <- CdDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vvs(psi1 = psi1, phi = phi[1:3],
-                              gamma = gamma[1:3], p = p,
+    x[1:4, 1:5] ~ dDynOcc_vvs(init = init, probPersist = probPersist[1:3],
+                              probColonize = probColonize[1:3], p = p,
                               start = start[1:4], end = end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
     for (i in 1:3) {
-      phi[i] ~ dunif(0,1)
-      gamma[i] ~ dunif(0,1)
+      probPersist[i] ~ dunif(0,1)
+      probColonize[i] ~ dunif(0,1)
     }
 
     p ~ dunif(0,1)
@@ -1288,8 +1288,8 @@ test_that("dDynOcc_vvs works", {
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -1308,15 +1308,15 @@ test_that("dDynOcc_vvs works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vvs(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vvs(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vvs <- compileNimble(rDynOcc_vvs)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vvs(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vvs(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1336,8 +1336,8 @@ test_that("dDynOcc_vvs works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1357,15 +1357,15 @@ test_that("dDynOcc_vss works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- c(0.4, 0.4, 0.1)
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- c(0.4, 0.4, 0.1)
+  probColonize <- 0.5
   p <- 0.6
 
-  probX <- dDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -1385,14 +1385,14 @@ test_that("dDynOcc_vss works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if (t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi[t] +
-                  (1 - ProbOccGivenCount) * gamma
+              ProbOccNextTime <- ProbOccGivenCount * probPersist[t] +
+                  (1 - ProbOccGivenCount) * probColonize
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime *  phi[t] +
-                  (1 - ProbOccNextTime) * gamma
+              ProbOccNextTime <- ProbOccNextTime *  probPersist[t] +
+                  (1 - ProbOccNextTime) * probColonize
         }
       }
     }
@@ -1404,31 +1404,31 @@ test_that("dDynOcc_vss works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_vss <- compileNimble(dDynOcc_vss)
-  CprobX <- CdDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_vss(psi1, phi[1:3], gamma, p,
+    x[1:4, 1:5] ~ dDynOcc_vss(init, probPersist[1:3], probColonize, p,
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
     for (i in 1:3) {
-      phi[i] ~ dunif(0,1)
+      probPersist[i] ~ dunif(0,1)
     }
-    gamma ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     p ~ dunif(0,1)
   })
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -1447,15 +1447,15 @@ test_that("dDynOcc_vss works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_vss(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_vss(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_vss <- compileNimble(rDynOcc_vss)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_vss(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_vss(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1475,8 +1475,8 @@ test_that("dDynOcc_vss works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1495,15 +1495,15 @@ test_that("dDynOcc_svs works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- c(0.4, 0.4, 0.1)
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- c(0.4, 0.4, 0.1)
   p <- 0.6
 
-  probX <- dDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
     if(nyears >= 1) {
@@ -1522,14 +1522,14 @@ test_that("dDynOcc_svs works", {
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
           ll <- ll + log(ProbCount)
           if(t < nyears)
-              ProbOccNextTime <- ProbOccGivenCount * phi +
-                  (1-ProbOccGivenCount) * gamma[t]
+              ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                  (1-ProbOccGivenCount) * probColonize[t]
         } else {
           ## If there were no observations in year t,
           ## simply propagate probability of occupancy forward
           if (t < nyears)
-              ProbOccNextTime <- ProbOccNextTime * phi +
-                  (1-ProbOccNextTime) * gamma[t]
+              ProbOccNextTime <- ProbOccNextTime * probPersist +
+                  (1-ProbOccNextTime) * probColonize[t]
         }
       }
     }
@@ -1540,24 +1540,24 @@ test_that("dDynOcc_svs works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_svs <- compileNimble(dDynOcc_svs)
-  CprobX <- CdDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
 
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_svs(psi1, phi, gamma[1:3], p,
+    x[1:4, 1:5] ~ dDynOcc_svs(init, probPersist, probColonize[1:3], p,
                              start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
     for (i in 1:3) {
-      gamma[i] ~ dunif(0,1)
+      probColonize[i] ~ dunif(0,1)
     }
 
     p ~ dunif(0,1)
@@ -1565,8 +1565,8 @@ test_that("dDynOcc_svs works", {
 
   m <- nimbleModel(nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
 
   m$calculate()
@@ -1586,15 +1586,15 @@ test_that("dDynOcc_svs works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_svs(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_svs(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_svs <- compileNimble(rDynOcc_svs)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_svs(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_svs(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1614,8 +1614,8 @@ test_that("dDynOcc_svs works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1635,15 +1635,15 @@ test_that("dDynOcc_sss works", {
                 0,0,0,NA), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
-  psi1 <- 0.7
-  phi <- 0.5
-  gamma <- 0.2
+  init <- 0.7
+  probPersist <- 0.5
+  probColonize <- 0.2
   p <- 0.8
 
-  probX <- dDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = FALSE)
-  lProbX <- dDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  probX <- dDynOcc_sss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
+  lProbX <- dDynOcc_sss(x, init, probPersist, probColonize, p, start, end, log = TRUE)
 
-  ProbOccNextTime <- psi1
+  ProbOccNextTime <- init
   ll <- 0
   nyears <- dim(x)[1]
   if (nyears >= 1) {
@@ -1662,14 +1662,14 @@ test_that("dDynOcc_sss works", {
         ProbOccGivenCount <- ProbOccAndCount / ProbCount
         ll <- ll + log(ProbCount)
         if (t < nyears)
-            ProbOccNextTime <- ProbOccGivenCount * phi +
-                (1 - ProbOccGivenCount) * gamma
+            ProbOccNextTime <- ProbOccGivenCount * probPersist +
+                (1 - ProbOccGivenCount) * probColonize
       } else {
         ## If there were no observations in year t,
         ## simply propagate probability of occupancy forward
         if (t < nyears)
-            ProbOccNextTime <- ProbOccNextTime * phi +
-                (1 - ProbOccNextTime) * gamma
+            ProbOccNextTime <- ProbOccNextTime * probPersist +
+                (1 - ProbOccNextTime) * probColonize
       }
     }
   }
@@ -1680,29 +1680,29 @@ test_that("dDynOcc_sss works", {
   expect_equal(lCorrectProbX, lProbX)
 
   CdDynOcc_sss <- compileNimble(dDynOcc_sss)
-  CprobX <- CdDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = FALSE)
+  CprobX <- CdDynOcc_sss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
-  ClProbX <- CdDynOcc_sss(x, psi1, phi, gamma, p, start, end, log = TRUE)
+  ClProbX <- CdDynOcc_sss(x, init, probPersist, probColonize, p, start, end, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
   nc <- nimbleCode({
 
-    x[1:4, 1:5] ~ dDynOcc_sss(psi1, phi, gamma, p,
+    x[1:4, 1:5] ~ dDynOcc_sss(init, probPersist, probColonize, p,
                               start[1:4], end[1:4])
 
-    psi1 ~ dunif(0,1)
+    init ~ dunif(0,1)
 
-    phi ~ dunif(0,1)
-    gamma ~ dunif(0,1)
+    probPersist ~ dunif(0,1)
+    probColonize ~ dunif(0,1)
 
     p ~ dunif(0,1)
   })
 
   m <- nimbleModel(code = nc, data = list(x = x),
                    constants = list(start = start, end = end),
-                   inits = list(p = p, phi = phi,
-                                psi1 = psi1, gamma = gamma))
+                   inits = list(p = p, probPersist = probPersist,
+                                init = init, probColonize = probColonize))
 
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -1721,15 +1721,15 @@ test_that("dDynOcc_sss works", {
   nSim <- 10
   xSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    xSim[i,,] <- rDynOcc_sss(1, psi1, phi, gamma, p, start, end)
+    xSim[i,,] <- rDynOcc_sss(1, init, probPersist, probColonize, p, start, end)
   set.seed(1)
   CrDynOcc_sss <- compileNimble(rDynOcc_sss)
   CxSim <- array(NA, dim = c(nSim, dim(x)))
   for(i in 1:nSim)
-    CxSim[i,,] <- CrDynOcc_sss(1, psi1, phi, gamma, p, start, end)
+    CxSim[i,,] <- CrDynOcc_sss(1, init, probPersist, probColonize, p, start, end)
   expect_identical(xSim, CxSim)
 
-  simNodes <- m$getDependencies(c('phi', 'gamma', 'psi1', 'p'), self = FALSE)
+  simNodes <- m$getDependencies(c('probPersist', 'probColonize', 'init', 'p'), self = FALSE)
   mxSim <- array(NA, dim = c(nSim, dim(x)))
   set.seed(1)
   for(i in 1:nSim) {
@@ -1749,8 +1749,8 @@ test_that("dDynOcc_sss works", {
 #   xNA <- array(NA, dim = dim(x))
 #   mNA <- nimbleModel(code = nc, data = list(x = xNA),
 #                      constants = list(start = start, end = end),
-#                      inits = list(p = p, phi = phi,
-#                                   psi1 = psi1, gamma = gamma))
+#                      inits = list(p = p, probPersist = probPersist,
+#                                   init = init, probColonize = probColonize))
 #   mNAConf <- configureMCMC(mNA)
 #   mNAConf$addMonitors('x')
 #   mNA_MCMC <- buildMCMC(mNAConf)
@@ -1775,24 +1775,24 @@ test_that("Case errors in compiled dDynOcc_** work", {
                 0,0,1,0,
                 0,0,0,NA), nrow = 4)
   nrep <- c(5, 5)
-  psi1 <- 0.7
-  phi <- 0.8
-  gamma <- 0.5
+  init <- 0.7
+  probPersist <- 0.8
+  probColonize <- 0.5
   p <- 0.8
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
 
-  expect_error(CdDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vss(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  phi <- c(0.8, 0.5, 0.2)
-  expect_error(CdDynOcc_svs(x, psi1, phi, gamma, p, start, end, log = FALSE))
-  expect_error(CdDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- c(0.8, 0.5, 0.2)
+  expect_error(CdDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = FALSE))
+  expect_error(CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
-  gamma <- c(0.2, 0.5, 0.5)
+  probColonize <- c(0.2, 0.5, 0.5)
 
-  phi <- 0.3
-  expect_error(CdDynOcc_vvs(x, psi1, phi, gamma, p, start, end, log = FALSE))
+  probPersist <- 0.3
+  expect_error(CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
 })
