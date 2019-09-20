@@ -7,7 +7,7 @@ Maintainer: Ben Goldstein <ben.goldstein@berkeley.edu>
 Date: 2019-09-20
 Description: Common ecological distributions for NIMBLE models in the form of nimbleFunctions. 
   Includes Cormack-Jolly-Seber, occupancy, dynamic occupancy, hidden Markov, and dynamic hidden Markov models.
-License: BSD_3_clause + file LICENSE | GPL (>= 2)
+License: GPL-3
 Copyright: Copyright (c) 2019, Perry de Valpine, Ben Goldstein, Daniel Turek, Lauren Ponisio
 Depends: R (>= 3.4.0), nimble
 Encoding: UTF-8

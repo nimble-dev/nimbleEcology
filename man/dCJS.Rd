@@ -43,6 +43,11 @@ rCJS_vv(n, probSurvive, probCapture, len = 0)
 \code{len}. Currently only \code{n = 1} is supported, but the
 argument exists for standardization of "\code{r}" functions.}
 }
+\value{
+For \code{dCJS_**}: the probability (or likelihood) or log probability of observation vector \code{x}.
+
+For \code{rCJS_**}: a simulated capture history, \code{x}.
+}
 \description{
 \code{dCJS_**} \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture 
 distributions that can be used directly from R or in \code{nimble}
@@ -57,7 +62,7 @@ The probability (or likelihood) of observation vector \code{x} depends on
 survival probability, \code{probSurvive} or \code{probSurvive[t]}, and capture probability,
 \code{probCapture} or \code{probCapture[t]}.
 
-The letters following the 'dCJS_' indicates whether survival and/or capture probabilities, in that order, are
+The letters following the 'dCJS_' indicate whether survival and/or capture probabilities, in that order, are
 scalar (s, meaning the probability applies to every
 \code{x[t]}) or vector (v, meaning the probability is a vector aligned with \code{x}).  When \code{probCapture} and/or \code{probSurvive} is a vector, they must be the same length as \code{x}.
 
@@ -65,7 +70,7 @@ It is important to use the time indexing correctly for survival.  \code{probSurv
 probabilty from time \code{t-1} to time \code{t}.  Time indexing for detection is more obvious:
 \code{probDetect[t]} is the detection probability at time \code{t}.
 
-#' When used directly from R, the \code{len} argument to \code{dCJS_**} is not
+When called from R, the \code{len} argument to \code{dCJS_**} is not
 necessary. It will default to the length of \code{x}.  When used in
 \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 (even though it may seem redundant).
@@ -108,7 +113,7 @@ will make a similar invocation of \code{rCJS_ss}, with \code{n = 1}.
 
 If both survival and capture probabilities are time-dependent, use
 
-\code{captures[i,1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}.
+\code{captures[i,1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}
 
 and so on for each combination of time-dependent and time-independent parameters.
 }
@@ -143,7 +148,7 @@ Carlo sampling for hierarchical hidden Markov models. Environmental and Ecologic
 23:549–564. DOI 10.1007/s10651-016-0353-z
 }
 \seealso{
-For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
+For multi-state or multi-event capture-recapture models, see \code{\link{dHMM}} or \code{\link{dDHMM}}.
 }
 \author{
 Ben Goldstein, Perry de Valpine, and Daniel Turek

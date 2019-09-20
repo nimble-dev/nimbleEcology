@@ -4,7 +4,7 @@ author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{nimbleEcology}
+  %\VignetteIndexEntry{Introduction_to_nimbleEcology}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

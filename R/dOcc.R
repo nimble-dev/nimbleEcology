@@ -36,7 +36,7 @@
 #' The letter following the 'dOcc_' indicates whether detection probability is
 #' scalar (s, meaning \code{probDetect} is detection probability for every
 #' \code{x[t]}) or vector (v, meaning \code{probDetect[t]} is detection
-#' probability for \code{x[t]}).
+#' probabilityfor \code{x[t]}).
 #'
 #' When used directly from R, the \code{len} argument to \code{dOcc_*} is not
 #' necessary. It will default to the length of \code{x}.  When used in
@@ -70,8 +70,8 @@
 #' declares that \code{detections[i, 1:T]} (detection history at site \code{i},
 #' for example) follows an occupancy distribution with parameters as indicated,
 #' assuming all the parameters have been declared elsewhere in the model.  This
-#' will invoke (something like) the following call to \code{dOcc_s} when \code{nimble} uses the
-#' model such as for MCMC:
+#' will invoke (something like) the following call to \code{dOcc_s} when
+#' \code{nimble} uses the model such as for MCMC:
 #'
 #' \code{dOcc_s(detections[i, 1:T], occupancyProbability,
 #' detectionProbability, len = T, log = TRUE)}
@@ -79,7 +79,7 @@
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{detections[i, 1:T]}, it
 #' will make a similar invocation of \code{rOcc_s}, with \code{n = 1}.
-#' 
+#'
 #' If the detection probabilities are time-dependent, use:
 #'
 #' \code{detections[i, 1:T] ~ dOcc_v(occupancyProbability,
