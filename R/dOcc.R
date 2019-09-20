@@ -42,14 +42,14 @@
 #'
 #' For example, in a NIMBLE model,
 #'
-#' \code{detections[1:T] ~ dOcc_ss(occupancyProbability, detectionProbability)}
+#' \code{detections[1:T] ~ dOcc_s(occupancyProbability, detectionProbability, len = T)}
 #'
 #' declares that the \code{detections[1:T]} vector follows an occupancy model distribution
 #' with parameters as indicated, assuming all the parameters have been declared elsewhere in the model.
 #'
 #' If the detection probabilities are time-dependent, one would use:
 #'
-#' \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T])}
+#' \code{detections[1:T] ~ dOcc_sv(occupancyProbability, detectionProbability[1:T], len = T)}
 #'
 #' @seealso For dynamic occupancy models, see documentation for \link{dDynOcc}.
 NULL
