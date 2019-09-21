@@ -225,33 +225,24 @@ rDHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(3),
                  len = double()) {
-  returnType(double(1))
-  ans <- numeric(len)
-
-  trueInit <- 0
-
-  r <- runif(1, 0, 1)
-  j <- 1
-  while (r > sum(init[1:j])) j <- j + 1
-  trueInit <- j
-
-  trueState <- trueInit
-  for (i in 1:len) {
-    # Detect based on the true state
-    r <- runif(1, 0, 1)
-    j <- 1
-    while (r > sum(probObs[trueState, 1:j])) j <- j + 1
-    ans[i] <- j
-
-    # Transition to a new true state
-    if (i != len) {
-      r <- runif(1, 0, 1)
-      j <- 1
-      while (r > sum(probTrans[trueState, 1:j, i])) j <- j + 1
-      trueState <- j
+    nStates <- length(init)
+    if (nStates != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
+    if (nStates != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
+    if (nStates != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMM.")
+    if (len - 1 != dim(probTrans)[3]) stop("len - 1 does not match dim(probTrans)[3] in dDHMM.")
+    
+    returnType(double(1))
+    ans <- numeric(len)
+    
+    trueState <- rcat(1, init)
+    for (i in 1:len) {
+      # Detect based on the true state
+      ans[i] <- rcat(1, probObs[trueState,])
+      # Transition to a new true state
+      if (i != len) {
+        trueState <- rcat(1, probTrans[trueState, , i])
     }
   }
-
   return(ans)
 })
 # rDHMM <- nimbleFunction(
