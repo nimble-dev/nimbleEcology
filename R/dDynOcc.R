@@ -13,23 +13,26 @@
 #' @param init probability of occupancy in the first sampling period
 #' @param probPersist persistence probability--probability an occupied
 #'     cell remains occupied. 1-extinction probability. Scalar for
-#'     \code{dDynOcc_s*}, vector for \code{dDynOcc_v*}. If vector,
+#'     \code{dDynOcc_s**}, vector for \code{dDynOcc_v**}. If vector,
 #'     should have length dim(x)[1] - 1 since no transition occurs
 #'     after the last observation
 #' @param probColonize colonization probability. Probability that
-#'     an unoccupied cell becomes occupied. \code{dDynOcc_*s},
-#'     vector for \code{dDynOcc*v}. If vector, should have length
+#'     an unoccupied cell becomes occupied. Scalar for \code{dDynOcc_*s*},
+#'     vector for \code{dDynOcc_*v*}. If vector, should have length
 #'     dim(x)[1] - 1 since no transition occurs after the last observation
-#' @param p matrix of detection probabilities for each observation.
-#'     Dimensions should match x
+#' @param p Detection probabilities. Scalar for \code{dDynOcc_**s},
+#'     vector for \code{dDynOcc_**v}, matrix for \code{dDynOcc_**m}.
+#'     If a matrix, dimensions should match x
 #' @param log TRUE (return log probability) or FALSE (return probability)
-#' @param start a vector of the indices of the first observation in each
-#'     time interval.
-#' @param end a vector of the indices of the final observation in each time
-#'     interval.
+#' @param start indicates the column number of the first observation in each
+#'     row of x. A vector of length dim(x)[1]. This allows for different time
+#'     periods to have different numbers of sampling occasions
+#' @param end indicates the column number of the last observation in each
+#'     row of x. A vector of length dim(x)[1]. This allows for different time
+#'     periods to have different numbers of sampling occasions
 #' @param n number of random draws, each returning a matrix of dimension
 #'     \code{c(min(start), max(end))}. Currently only \code{n = 1} is supported,
-#'     but the argument exists for standardization of "\code{r}" functions.
+#'     but the argument exists for standardization of "\code{r}" functions
 #'
 #' @details
 #'
@@ -39,8 +42,9 @@
 #'
 #' The probability (or likelihood) of observation \code{x[t, o]} depends on
 #' the occupancy status of the site at time t-1, the transitition
-#' probability of persistence \code{probPersist[t]} or colonization
-#' \code{probColonize[t]} and a detection probability \code{p[s, t]}.
+#' probability of persistence (\code{probPersist} or \code{probPersist[t]}),
+#' colonization (\code{probColonize} or \code{probColonize[t]}), and a
+#' detection probability (\code{p}, \code{p[t]}, or \code{p[t, o]}).
 #'
 #' The first two letters following the 'dDynOcc_' indicate whether the
 #' probabilities of persistence and colonization are a constant scalar (s)
@@ -52,6 +56,14 @@
 #' is a constant (scalar), time-dependent (vector), or both time-dependent and
 #' dependent on observation occasion (matrix). For example, \code{dDynOcc_svm}
 #' takes a matrix of detection probabilities \code{p[1:T, 1:O]}.
+#'
+#' The arguments \code{start} and \code{end} allow different time periods to
+#' contain different numbers of sampling events. Suppose you have observations
+#' for samples in three seasons; in the first two seasons, there are four
+#' observations, but in the third, there are only three. The \code{start}
+#' and \code{end} could be provided as \code{start = c(1,1,1)} and
+#' \code{end = c(4,4,3)}. In this case, the value of \code{x[4,4]} would
+#' be ignored.
 #'
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or

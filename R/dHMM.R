@@ -35,8 +35,7 @@
 #' The distribution has two forms, \code{dHMM} and
 #' \code{dHMMo}. Define S as the number of latent state categories
 #' (maximum possible value for elements of \code{x}), O as the number
-#' of possible observation state categories (which need to correspond
-#' one-to-one to latent state categories), and T as the number of
+#' of possible observation state categories, and T as the number of
 #' observation times (length of \code{x}). In \code{dHMM},
 #' \code{probObs} is a time-independent observation probability matrix
 #' with dimension S x O.  In \code{dHMMo}, \code{probObs} is a
