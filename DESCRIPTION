@@ -7,6 +7,7 @@ Authors@R: c(person("Benjamin R.", "Goldstein", role = c("aut", "cre"),
               person("Daniel", "Turek", role = "aut"),
               person("Lauren", "Ponisio", role = "aut"),
               person("Perry", "de Valpine", role = "aut"))
+Maintainer: Benjamin R. Goldstein <ben.goldstein@berkeley.edu>
 Date: 2019-09-20
 Description: Common ecological distributions for NIMBLE models in the form of nimbleFunctions. 
   Includes Cormack-Jolly-Seber, occupancy, dynamic occupancy, hidden Markov, and dynamic hidden Markov models.
