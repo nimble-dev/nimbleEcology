@@ -4,6 +4,11 @@ language: R
 r:
   - 3.5
 
+os:
+  - windows
+  - linux
+  - osx
+
 cache:
   packages: true
 
