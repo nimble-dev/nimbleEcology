@@ -1,6 +1,6 @@
 #' Cormack-Jolly-Seber distribution for use in \code{nimble} models
 #'
-#' \code{dCJS_**} \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
+#' \code{dCJS_**} and \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
 #' distributions that can be used directly from R or in \code{nimble}
 #' models.
 #'
@@ -8,10 +8,14 @@
 #'
 #' @name dCJS
 #'
-#' @param x capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed to have occurred prior to \code{x[1]}.
-#' @param probSurvive survival probability, either a scalar (for dCJS_s*) or a vector (for dCJS_v*).
-#' @param probCapture capture probability, either a scalar (for dCJS_*s) or a vector (for dCJS_*v).
-#' @param len length of capture history (see below).
+#' @param x capture-history vector of 0s (not captured) and 1s (captured).
+#' Do not include the initial capture, which is assumed to have occurred
+#' prior to \code{x[1]}.
+#' @param probSurvive survival probability, either a time-independent scalar
+#' (for dCJS_s*) or a time-dependent vector (for dCJS_v*).
+#' @param probCapture capture probability, either a time-independent scalar
+#' (for dCJS_*s) or a time-dependent vector (for dCJS_*v).
+#' @param len length of capture history. Should equal \code{length(x)}
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #' @param n number of random draws, each returning a vector of length
 #'     \code{len}. Currently only \code{n = 1} is supported, but the

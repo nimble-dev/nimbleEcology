@@ -8,7 +8,7 @@
 #' @author Perry de Valpine, Daniel Turek, and Ben Goldstein
 #' @export
 #'
-#' @param x vector of observation classes, one of which could be defined as
+#' @param x vector of observed states, one of which could be defined as
 #' "not observed".
 #' @param init vector of initial state probabilities
 #' @param probObs time-independent matrix of observation probabilities.
@@ -230,10 +230,10 @@ rDHMM <- nimbleFunction(
     if (nStates != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (nStates != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    
+
     returnType(double(1))
     ans <- numeric(len)
-    
+
     trueState <- rcat(1, init)
     for (i in 1:len) {
       # Detect based on the true state
