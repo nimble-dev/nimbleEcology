@@ -1,16 +1,20 @@
 # This file registers all distributions when the package is loaded.
 .onAttach <- function(libname, pkgname) {
 
+  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions: ",
+                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM")
+
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
 # 2. Establish default len = 0 via reparameterization mechanism.
+  suppressMessages({
   registerDistributions(list(
     dCJS_ss = list(
       BUGSdist = "dCJS_ss(probSurvive, probCapture, len)",
       Rdist = "dCJS_ss(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
       types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double()', 'len = double()'),
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
@@ -19,7 +23,7 @@
       Rdist = "dCJS_sv(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
       types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double(1)', 'len = double()'),
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
@@ -28,7 +32,7 @@
       Rdist = "dCJS_vs(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
       types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double()', 'len = double()'),
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
@@ -37,7 +41,7 @@
       Rdist = "dCJS_vv(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
       types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double()'),
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
   )
 
     registerDistributions(list(
@@ -46,7 +50,8 @@
         Rdist = "dOcc_s(probOcc, probDetect, len)",
         discrete = TRUE,
         types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)', 'len = integer(0)'),
-        pqAvail = FALSE)))
+        pqAvail = FALSE)), verbose = F
+      )
 
     registerDistributions(list(
       dOcc_v = list(
@@ -54,7 +59,8 @@
         Rdist = c("dOcc_v(probOcc, probDetect, len)"),
         discrete = TRUE,
         types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)', 'len = integer(0)'),
-        pqAvail = FALSE)))
+        pqAvail = FALSE)), verbose = F
+      )
 
 
   registerDistributions(list(
@@ -68,7 +74,8 @@
                     'p = double(2)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
   registerDistributions(list(
       dDynOcc_vsm = list(
           BUGSdist = "dDynOcc_vsm(init, probPersist, probColonize, p, start, end)",
@@ -80,7 +87,8 @@
                     'p = double(2)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_svm = list(
@@ -93,7 +101,8 @@
                     'p = double(2)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_ssm = list(
@@ -106,7 +115,8 @@
                     'p = double(2)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
 
   registerDistributions(list(
@@ -120,7 +130,8 @@
                     'p = double(1)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
   registerDistributions(list(
       dDynOcc_vsv = list(
           BUGSdist = "dDynOcc_vsv(init, probPersist, probColonize, p, start, end)",
@@ -132,7 +143,8 @@
                     'p = double(1)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_svv = list(
@@ -145,7 +157,8 @@
                     'p = double(1)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_ssv = list(
@@ -158,7 +171,8 @@
                     'p = double(1)',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
 
   registerDistributions(list(
@@ -172,7 +186,8 @@
                     'p = double()',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
   registerDistributions(list(
       dDynOcc_vss = list(
           BUGSdist = "dDynOcc_vss(init, probPersist, probColonize, p, start, end)",
@@ -184,7 +199,8 @@
                     'p = double()',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_svs = list(
@@ -197,7 +213,8 @@
                     'p = double()',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
 
   registerDistributions(list(
       dDynOcc_sss = list(
@@ -210,7 +227,8 @@
                     'p = double()',
                     'start = double(1)',
                     'end = double(1)'),
-          mixedSizes = TRUE)))
+          mixedSizes = TRUE)), verbose = F
+      )
   registerDistributions(list(
     dHMM = list(
       BUGSdist = "dHMM(init, probObs, probTrans, len)",
@@ -222,7 +240,7 @@
                 'probTrans = double(2)',
                 'len = double(0)'),
       mixedSizes = TRUE,
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
@@ -236,7 +254,7 @@
                 'probTrans = double(2)',
                 'len = double(0)'),
       mixedSizes = TRUE,
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
   registerDistributions(list(
     dDHMM = list(
@@ -249,7 +267,7 @@
                 'probTrans = double(3)',
                 'len = double()'),
       mixedSizes = TRUE,
-      pqAvail = FALSE))
+      pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
@@ -263,6 +281,6 @@
                 'probTrans = double(3)',
                 'len = double()'),
       mixedSizes = TRUE,
-      pqAvail = FALSE))
-    )
+      pqAvail = FALSE)), verbose = F
+    )})
 }
