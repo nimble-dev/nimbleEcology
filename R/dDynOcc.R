@@ -5,11 +5,15 @@
 #' models.
 #'
 #' @name dDynOcc
-#' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
+#' @aliases dDynOcc_sss dDynOcc_svs dDynOcc_vss dDynOcc_vvs
+#' dDynOcc_ssv dDynOcc_svv dDynOcc_vsv dDynOcc_vvv
+#' dDynOcc_ssm dDynOcc_svm dDynOcc_vsm dDynOcc_vvm
 #' @author Ben Goldstein, Perry de Valpine and Lauren Ponisio
 #'
 #' @param x detection/non-detection matrix of 0s (not detected) and 1s
-#'     (detected). Each row contains repeat visits during one sampling period
+#'     (detected). Rows represent primary sampling occasions (e.g. different
+#'     seasons). Columns are secondary sampling locations (e.g. replicate
+#'     visits within a season) that may be different for each row
 #' @param init probability of occupancy in the first sampling period
 #' @param probPersist persistence probability--probability an occupied
 #'     cell remains occupied. 1-extinction probability. Scalar for
@@ -138,7 +142,8 @@
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'
-#'    x[1:2, 1:5] ~ dDynOcc_vv(nrep[1:2], init, probPersist[1:2], probColonize[1:2], p[1:2,1:5])
+#'    x[1:2, 1:5] ~ dDynOcc_vvm(nrep[1:2], init,
+#'    probPersist[1:2], probColonize[1:2], p[1:2,1:5])
 #'
 #'    init ~ dunif(0,1)
 #'

@@ -2,30 +2,26 @@
 % Please edit documentation in R/dDynOcc.R
 \name{dDynOcc}
 \alias{dDynOcc}
-\alias{dDynOcc_ss}
-\alias{dDynOcc_sv}
-\alias{dDynOcc_vs}
-\alias{dDynOcc_vv}
-\alias{dDynOcc_vvm}
-\alias{dDynOcc_vsm}
-\alias{dDynOcc_svm}
+\alias{dDynOcc_sss}
+\alias{dDynOcc_svs}
+\alias{dDynOcc_vss}
+\alias{dDynOcc_vvs}
+\alias{dDynOcc_ssv}
+\alias{dDynOcc_svv}
+\alias{dDynOcc_vsv}
+\alias{dDynOcc_vvv}
 \alias{dDynOcc_ssm}
+\alias{dDynOcc_svm}
+\alias{dDynOcc_vsm}
+\alias{dDynOcc_vvm}
 \alias{rDynOcc_vvm}
 \alias{rDynOcc_vsm}
 \alias{rDynOcc_svm}
 \alias{rDynOcc_ssm}
-\alias{dDynOcc_vvv}
-\alias{dDynOcc_vsv}
-\alias{dDynOcc_svv}
-\alias{dDynOcc_ssv}
 \alias{rDynOcc_vvv}
 \alias{rDynOcc_vsv}
 \alias{rDynOcc_svv}
 \alias{rDynOcc_ssv}
-\alias{dDynOcc_vvs}
-\alias{dDynOcc_vss}
-\alias{dDynOcc_svs}
-\alias{dDynOcc_sss}
 \alias{rDynOcc_vvs}
 \alias{rDynOcc_vss}
 \alias{rDynOcc_svs}
@@ -85,7 +81,9 @@ rDynOcc_sss(n, init, probPersist, probColonize, p, start, end)
 }
 \arguments{
 \item{x}{detection/non-detection matrix of 0s (not detected) and 1s
-(detected). Each row contains repeat visits during one sampling period}
+(detected). Rows represent primary sampling occasions (e.g. different
+seasons). Columns are secondary sampling locations (e.g. replicate
+visits within a season) that may be different for each row}
 
 \item{init}{probability of occupancy in the first sampling period}
 
@@ -225,7 +223,8 @@ probColonize = colonization_prob[1:(T-1)], p = p[1:S, 1:T])}
 # Define code for a nimbleModel
  nc <- nimbleCode({
 
-   x[1:2, 1:5] ~ dDynOcc_vv(nrep[1:2], init, probPersist[1:2], probColonize[1:2], p[1:2,1:5])
+   x[1:2, 1:5] ~ dDynOcc_vvm(nrep[1:2], init,
+   probPersist[1:2], probColonize[1:2], p[1:2,1:5])
 
    init ~ dunif(0,1)
 

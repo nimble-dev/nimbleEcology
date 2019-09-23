@@ -20,16 +20,16 @@
 #'     First two dimensions of \code{probObs} are of size x (number of possible
 #'     system states) x (number of possible observation classes). \code{dDHMMo}
 #'     and \code{rHMMo} expects an additional third dimension of size (number of
-#'     observation times).
-#' @param probTrans time-dependent matrix of system state-transition
+#'     observation times)
+#' @param probTrans time-dependent array of system state transition
 #' probabilities. Dimension of \code{probTrans} is (number of possible
 #' system states) x  (number of possible system states)
-#' x (number of observation times).
+#' x (number of observation times)
 #' @param len length of observations (needed for rDHMM)
-#' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability
 #' @param n number of random draws, each returning a vector of length
 #'     \code{len}. Currently only \code{n = 1} is supported, but the
-#'     argument exists for standardization of "\code{r}" functions.
+#'     argument exists for standardization of "\code{r}" functions
 #'
 #' @details
 #' These nimbleFunctions provide distributions that can be used directly in R or

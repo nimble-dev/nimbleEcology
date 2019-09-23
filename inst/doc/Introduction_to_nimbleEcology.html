@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Perry de Valpine and Ben Goldstein" />
+
+<meta name="date" content="2019-09-23" />
+
+<title>Introduction to nimbleEcology</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to nimbleEcology</h1>
+<h4 class="author">Perry de Valpine and Ben Goldstein</h4>
+<h4 class="date">2019-09-23</h4>
+
+
+
+<p>Welcome to <code>nimbleEcology</code>. This package provides distributions that can be used in NIMBLE models for common ecological model components. These include:</p>
+<ul>
+<li>Cormack-Jolly-Seber (CJS) capture-recapture models.</li>
+<li>Dynamic hidden Markov models (DHMMs), which are used in multi-state and multi-event capture-recapture models.</li>
+<li>Occupancy models.</li>
+<li>Dynamic occupancy models.</li>
+</ul>
+<p>We expect to add N-mixture models in the future.</p>
+<div id="what-is-nimble" class="section level1">
+<h1>What is nimble?</h1>
+<p>NIMBLE is a system for writing hierarchical statistical models and algorithms. It is distributed as R package <a href="https://CRAN.R-project.org/package=nimble">nimble</a>. NIMBLE stands for “Numerical Inference for statistical Models using Bayesian and Likelihood Estimation”. NIMBLE includes:</p>
+<ol style="list-style-type: decimal">
+<li><p>A dialect of the BUGS model language that is extensible. NIMBLE uses almost the same model code as WinBUGS, OpenBUGS, and JAGS. Being “extensible” means that it is possible to write new functions and distributions and use them in your models.</p></li>
+<li><p>An algorithm library including Markov chain Monte Carlo (MCMC) and other methods.</p></li>
+<li><p>A compiler that generates C++ for each model and algorithm, compiles the C++, and lets you use it from R. You don’t need to know anything about C++ to use nimble.</p></li>
+</ol>
+<p>More information about NIMBLE can be found at <a href="https://r-nimble.org">https://r-nimble.org</a>.</p>
+<p>The paper that describes NIMBLE is <a href="https://www.tandfonline.com/doi/full/10.1080/10618600.2016.1172487">here</a>.</p>
+<div id="getting-help" class="section level3">
+<h3>Getting help</h3>
+<p>The best way to seek user support is the nimble-users list. Information on how to join can be found at <a href="https://r-nimble.org">https://r-nimble.org</a>.</p>
+</div>
+</div>
+<div id="the-concept-of-using-new-distributions-for-ecological-model-components." class="section level1">
+<h1>The concept of using new distributions for ecological model components.</h1>
+<p>The distributions provided in <code>nimbleEcology</code> let you simplify model code and the algorithms that use it, such as MCMC. For the ecological models in <code>nimbleEcology</code>, the simplification comes from removing some discrete latent states from the model and instead doing the corresponding probability (or likelihood) calculations in a specialized distribution.</p>
+<p>For each of the ecological model components provided by <code>nimbleEcology</code>, here are the discrete latent states that are replaced by use of a specialized distribution:</p>
+<ul>
+<li>CJS (basic capture-recapture): Latent alive-or-dead states.</li>
+<li>HMMs: Latent individual state, such as location or breeding status, as well as alive-or-dead.</li>
+<li>Occupancy: Latent occupancy status of a site.</li>
+<li>Dynamic occupancy: latent occupancy status of a site at a time. <!-- - N-mixture: Latent number of individuals available to be sampled. --></li>
+</ul>
+<p>Before going further, let’s illustrate how <code>nimbleEcology</code> can be used for a basic occupancy model.</p>
+<div id="illustration-a-simple-occupancy-model" class="section level2">
+<h2>Illustration: A simple occupancy model</h2>
+<p>Occupancy models are used for data from repeated visits to a set of sites, where the detection (1) or non-detection (0) of a species of interest is recorded on each visit. Define <code>y[i, j]</code> as the observation from site <code>i</code> on visit <code>j</code>. <code>y[i, j]</code> is 1 if the species was seen and 0 if not.</p>
+<p>Typical code for for an occupancy model would be as follows. Naturally, this is written for <code>nimble</code>, but the same code should work for JAGS or BUGS (WinBUGS or OpenBUGS) when used as needed for those packages.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(nimble)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="co">#&gt; nimble version 0.8.0 is loaded.</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co">#&gt; For more information on NIMBLE and a User Manual,</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co">#&gt; please visit http://R-nimble.org.</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co">#&gt; Attaching package: 'nimble'</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co">#&gt; The following object is masked from 'package:stats':</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="co">#&gt;     simulate</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="kw">library</span>(nimbleEcology)</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="co">#&gt; Loading nimbleEcology. </span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co">#&gt; Registering the following user-defined functions: </span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="co">#&gt; dOcc, dDynOcc, dCJS, dHMM, dDHMM</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">occupancy_code &lt;-<span class="st"> </span><span class="kw">nimbleCode</span>({</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">  psi <span class="op">~</span><span class="st"> </span><span class="kw">dunif</span>(<span class="dv">0</span>,<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">  p <span class="op">~</span><span class="st"> </span><span class="kw">dunif</span> (<span class="dv">0</span>,<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nSites) {</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    z[i] <span class="op">~</span><span class="st"> </span><span class="kw">dbern</span>(psi)</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="cf">for</span>(j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nVisits) {</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">      y[i, j] <span class="op">~</span><span class="st"> </span><span class="kw">dbern</span>(z[i] <span class="op">*</span><span class="st"> </span>p)</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    }</a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">  }</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">})</a></code></pre></div>
+<p>In this code:</p>
+<ul>
+<li><code>psi</code> is occupancy probability;</li>
+<li><code>p</code> is detection probability;</li>
+<li><code>z[i]</code> is the latent state of whether a site is really occupied (<code>z[i]</code> = 1) or not (<code>z[i]</code> = 0);</li>
+<li><code>nSites</code> is the number of sites; and</li>
+<li><code>nVisits</code> is the number of sampling visits to each site.</li>
+</ul>
+<p>The new version of this model using <code>nimbleEcology</code>’s specialized occupancy distribution will only work in <code>nimble</code> (not JAGS or BUGS). It is:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">occupancy_code_new &lt;-<span class="st"> </span><span class="kw">nimbleCode</span>({</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">  psi <span class="op">~</span><span class="st"> </span><span class="kw">dunif</span>(<span class="dv">0</span>,<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  p <span class="op">~</span><span class="st"> </span><span class="kw">dunif</span> (<span class="dv">0</span>,<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">  <span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nSites) {</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    y[i, <span class="dv">1</span><span class="op">:</span>nVisits] <span class="op">~</span><span class="st"> </span><span class="kw">dOcc_s</span>(<span class="dt">probOcc =</span> psi, <span class="dt">probDetect =</span> p, <span class="dt">len =</span> nVisits)</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">  }</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">})</a></code></pre></div>
+<p>In the new code, the vector of data from all visits to site <code>i</code>, namely <code>y[i, 1:nVisits]</code>, has its likelihood contribution calculated in one step, <code>dOcc_s</code>. This occupancy distribution calculates the total probability of the data by summing over the cases that the site is occupied or unoccupied. That means that <code>z[i]</code> is not needed in the model, and MCMC will not need to sample over <code>z[i]</code>. Details of all calculations, and discussion of the pros and cons of changing models in this way, are given later this vignette.</p>
+<p>The <code>_s</code> part of <code>dOcc_s</code> means that <code>p</code> is a scalar, i.e. it does not vary with visit. If it should vary with visit, a condition sometimes described as being time-dependent, it would need to be provided as a vector, and the distribution function should be <code>dOcc_v</code>.</p>
+</div>
+<div id="mcmc-with-both-versions-of-the-example-occupancy-model." class="section level2">
+<h2>MCMC with both versions of the example occupancy model.</h2>
+<p>We can run an MCMC for this model in the following steps:</p>
+<ol style="list-style-type: decimal">
+<li>Build the model.</li>
+<li>Configure the MCMC.</li>
+<li>Build the MCMC.</li>
+<li>Compile the model and MCMC.</li>
+<li>Run the MCMC.</li>
+<li>Extract the samples.</li>
+</ol>
+<p>The function <code>nimbleMCMC</code> does all of these steps for you. The function <code>runMCMC</code> does steps 5-6 for you, with convenient management of options such as discarding burn-in samples. The full set of steps allows great control over how you use a model and configure and use an MCMC. We will go through the steps 1-4 and then use <code>runMCMC</code> for steps 5-6.</p>
+<p>In this example, we also need simulated data. We can use the same model to create simulated data, rather than writing separate R code for that purpose.</p>
+<div id="build-the-model" class="section level4">
+<h4>Build the model</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1">occupancy_model &lt;-<span class="st"> </span><span class="kw">nimbleModel</span>(occupancy_code, </a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">                               <span class="dt">constants =</span> <span class="kw">list</span>(<span class="dt">nSites =</span> <span class="dv">50</span>, <span class="dt">nVisits =</span> <span class="dv">5</span>))</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co">#&gt; defining model...</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="co">#&gt; building model...</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="co">#&gt; running calculate on model (any error reports that follow may simply reflect missing values in model variables) ... </span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="co">#&gt; checking model sizes and dimensions... This model is not fully initialized. This is not an error. To see which variables are not initialized, use model$initializeInfo(). For more information on model initialization, see help(modelInitialization).</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="co">#&gt; model building finished.</span></a></code></pre></div>
+</div>
+<div id="simulate-data" class="section level4">
+<h4>Simulate data</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">occupancy_model<span class="op">$</span>psi &lt;-<span class="st"> </span><span class="fl">0.7</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">occupancy_model<span class="op">$</span>p &lt;-<span class="st"> </span><span class="fl">0.15</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">simNodes &lt;-<span class="st"> </span>occupancy_model<span class="op">$</span><span class="kw">getDependencies</span>(<span class="kw">c</span>(<span class="st">&quot;psi&quot;</span>, <span class="st">&quot;p&quot;</span>), <span class="dt">self =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">occupancy_model<span class="op">$</span><span class="kw">simulate</span>(simNodes)</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">occupancy_model<span class="op">$</span>z</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co">#&gt;  [1] 0 0 1 1 1 1 1 1 1 0 1 1 1 0 1 1 1 1 1 0 1 1 1 0 0 1 0 1 1 1 1 1 1 1 1</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co">#&gt; [36] 1 1 1 1 1 1 0 1 1 0 1 0 1 1 1</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="kw">head</span>(occupancy_model<span class="op">$</span>y, <span class="dv">10</span>) <span class="co">## first 10 rows</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co">#&gt;       [,1] [,2] [,3] [,4] [,5]</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="co">#&gt;  [1,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co">#&gt;  [2,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="co">#&gt;  [3,]    0    0    1    1    0</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"><span class="co">#&gt;  [4,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="co">#&gt;  [5,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"><span class="co">#&gt;  [6,]    0    0    0    1    0</span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"><span class="co">#&gt;  [7,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"><span class="co">#&gt;  [8,]    1    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18"><span class="co">#&gt;  [9,]    0    1    0    0    0</span></a>
+<a class="sourceLine" id="cb5-19" data-line-number="19"><span class="co">#&gt; [10,]    0    0    0    0    0</span></a>
+<a class="sourceLine" id="cb5-20" data-line-number="20">occupancy_model<span class="op">$</span><span class="kw">setData</span>(<span class="st">'y'</span>) <span class="co">## set &quot;y&quot; as data</span></a></code></pre></div>
+</div>
+<div id="configure-and-build-the-mcmc" class="section level4">
+<h4>Configure and build the MCMC</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">MCMCconf &lt;-<span class="st"> </span><span class="kw">configureMCMC</span>(occupancy_model)</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">MCMC &lt;-<span class="st"> </span><span class="kw">buildMCMC</span>(occupancy_model)</a></code></pre></div>
+</div>
+<div id="compile-the-model-and-mcmc" class="section level4">
+<h4>Compile the model and MCMC</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co">## These can be done in one step, but many people</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co">## find it convenient to do it in two steps.</span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3">Coccupancy_model &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(occupancy_model)</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="co">#&gt; compiling... this may take a minute. Use 'showCompilerOutput = TRUE' to see C++ compilation details.</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="co">#&gt; compilation finished.</span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">CMCMC &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(MCMC, <span class="dt">project =</span> occupancy_model)</a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="co">#&gt; compiling... this may take a minute. Use 'showCompilerOutput = TRUE' to see C++ compilation details.</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="co">#&gt; compilation finished.</span></a></code></pre></div>
+</div>
+<div id="run-the-mcmc-and-extract-the-samples" class="section level4">
+<h4>Run the MCMC and extract the samples</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">samples &lt;-<span class="st"> </span><span class="kw">runMCMC</span>(CMCMC, <span class="dt">niter =</span> <span class="dv">10000</span>, <span class="dt">nburnin =</span> <span class="dv">500</span>, <span class="dt">thin =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">#&gt; runMCMC's handling of nburnin changed in nimble version 0.6-11. Previously, nburnin samples were discarded *post-thinning*.  Now nburnin samples are discarded *pre-thinning*.  The number of samples returned will be floor((niter-nburnin)/thin).</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co">#&gt; running chain 1...</span></a></code></pre></div>
+</div>
+<div id="do-it-all-for-the-new-version-of-the-model" class="section level3">
+<h3>Do it all for the new version of the model</h3>
+<p>Next we show all of the same steps, except for simulating data, using the new version of the model.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">occupancy_model_new &lt;-<span class="st"> </span><span class="kw">nimbleModel</span>(occupancy_code_new, </a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">                                   <span class="dt">constants =</span> <span class="kw">list</span>(<span class="dt">nSites =</span> <span class="dv">50</span>, <span class="dt">nVisits =</span> <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">                                   <span class="dt">data =</span> <span class="kw">list</span>(<span class="dt">y =</span> occupancy_model<span class="op">$</span>y),</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">                                   <span class="dt">inits =</span> <span class="kw">list</span>(<span class="dt">psi =</span> <span class="fl">0.7</span>, <span class="dt">p =</span> <span class="fl">0.15</span>))</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="co">#&gt; defining model...</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="co">#&gt; building model...</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="co">#&gt; setting data and initial values...</span></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"><span class="co">#&gt; running calculate on model (any error reports that follow may simply reflect missing values in model variables) ... </span></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co">#&gt; checking model sizes and dimensions...</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10"><span class="co">#&gt; model building finished.</span></a>
+<a class="sourceLine" id="cb9-11" data-line-number="11">MCMC_new &lt;-<span class="st"> </span><span class="kw">buildMCMC</span>(occupancy_model_new) <span class="co">## This will use default call to configureMCMC.</span></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12">Coccupancy_model_new &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(occupancy_model_new)</a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"><span class="co">#&gt; compiling... this may take a minute. Use 'showCompilerOutput = TRUE' to see C++ compilation details.</span></a>
+<a class="sourceLine" id="cb9-14" data-line-number="14"><span class="co">#&gt; compilation finished.</span></a>
+<a class="sourceLine" id="cb9-15" data-line-number="15">CMCMC_new &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(MCMC_new, <span class="dt">project =</span> occupancy_model_new)</a>
+<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="co">#&gt; compiling... this may take a minute. Use 'showCompilerOutput = TRUE' to see C++ compilation details.</span></a>
+<a class="sourceLine" id="cb9-17" data-line-number="17"><span class="co">#&gt; compilation finished.</span></a>
+<a class="sourceLine" id="cb9-18" data-line-number="18">samples_new &lt;-<span class="st"> </span><span class="kw">runMCMC</span>(CMCMC_new, <span class="dt">niter =</span> <span class="dv">10000</span>, <span class="dt">nburnin =</span> <span class="dv">500</span>, <span class="dt">thin =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb9-19" data-line-number="19"><span class="co">#&gt; runMCMC's handling of nburnin changed in nimble version 0.6-11. Previously, nburnin samples were discarded *post-thinning*.  Now nburnin samples are discarded *pre-thinning*.  The number of samples returned will be floor((niter-nburnin)/thin).</span></a>
+<a class="sourceLine" id="cb9-20" data-line-number="20"><span class="co">#&gt; running chain 1...</span></a></code></pre></div>
+<p>We see that the results of the two versions match closely.</p>
+<pre><code>#&gt; Registered S3 methods overwritten by 'ggplot2':
+#&gt;   method         from 
+#&gt;   [.quosures     rlang
+#&gt;   c.quosures     rlang
+#&gt;   print.quosures rlang
+#&gt; ── Attaching packages ─────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+#&gt; ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
+#&gt; ✔ tibble  2.1.2     ✔ dplyr   0.8.1
+#&gt; ✔ tidyr   0.8.3     ✔ stringr 1.4.0
+#&gt; ✔ readr   1.3.1     ✔ forcats 0.4.0
+#&gt; ── Conflicts ────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+#&gt; ✖ dplyr::filter() masks stats::filter()
+#&gt; ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<p><img src="data:image/png;base64,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fe97Ng/MB2b073//2+y6666pe3/605/sORIL0vlll11m+vTpY44//niDxBU0xf7pT39qmdc999xjy5599tlmq622MhdffLG5//777T1ClL/88supwJ9ffPGFnTpecsklNr3Q/2LFgOxWjKTUA/AVSV5Un0Z/UuiHpO0XHwLoxWAO9913n2VATKFREN91112pzr7zzjuWcbz99tt2WuUSKEuaY0B77LGHSzKcE4gTJnXwwQebQw891PzgBz8wTLW9xNQWhfcf//hH721zxBFHmOeeey51D92iN+ow+qm33norlV7ok1hNwfCIWOqRgCpE/wGpBFTo17B9ts80DEX04sWLzeOPP24XEmAAjphSoetheoWuzf0R8XeHHXZw2ZoxF5gTDAKJCEmI1Tb0QK+88koqPyfUDfXv398e3T/0iejlHPkXCOhDkDTl8uf7mLEEtGrVqg0KCpjvgfnbs5bQAn5ZMwmoiQGpBORHS68zQWDPPfe0ksojjzxiJkyYYMOFs2DgaJtttrELId/+9ret/of7MAemakOHDnXZmh2ZtiExwXj447tDEmIqhwLbEZIMK6PYG+27777utpV+vvGNb6Sui/0kYwkIwJj3YoPg5bDFPsBU/5JbMco9EpA7r9P48CmY9CQ7BJCCmHahu+HcSzCMbbfd1qBv+eSTT+wq2KWXXmp+/etfR/6Yn3rqqQamxncGA2K6xbTMS6xinXXWWVa/xDfJFPDvf/+7YeXr2GOP9WYt6vOMGdA///lPCxrKtAEDBphf/epXFtSiHp23c6m9YF8PuSLJjFQC8gKl59kggH7mgw8+sLobv1SDNPTkk0/aqRR6mN69e1tGhdKY8yCijmuuucYqklluR6lMWRTLfmKa9s1vftMceeSR1szj8ssvNzfeeKM54YQT/FmL9rpE5oPRFmy+rsNpARUbiBdffNGCA8fGLgHAioXQ/nvtgMo+nW5Grlhrftq3tzlzu2H2pah5+ikzavOB5opBA83hvXqk7IAWLVrUajugpUuXBkIQZffCvB1bmzBbn3R2QOgg+LWMsgPCVgidgp/S2QHRt2XLlrXaDujLL7/0N2mvo/DYUDsgJIa2tAMKHFCam+BfX1/fTN+TpogBu+7du9sl+ai82BOxfI9g0N7oa3Egw56jVYfDIlaeccYZlvtfcMEFVhmGEZT3o8+wyvxks8vwREb9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" /><!-- --></p>
+<p>The posterior density plots show that the familiar, conventional version of the model yields the same posterior distribution as the new version, which uses <code>dOcc_s</code>.</p>
+</div>
+</div>
+<div id="use-the-new-version-for-something-different-maximum-likelihood-or-maximum-a-posteriori-estimation." class="section level2">
+<h2>Use the new version for something different: maximum likelihood or maximum a posteriori estimation.</h2>
+<p>It is useful that the new way to write the model does not have discrete latent states. Since this example also does not have other latent states or random effects, we can use it simply as a likelihood or posterior density calculator. More about how to do so can be found in the nimble User Manual. Here we illustrate making a compiled <code>nimbleFunction</code> for likelihood calculations for parameters <code>psi</code> and <code>p</code> and maximizing the likelihood using R’s <code>optim</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">CalcLogLik &lt;-<span class="st"> </span><span class="kw">nimbleFunction</span>(</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2">  <span class="dt">setup =</span> <span class="cf">function</span>(model, nodes)</a>
+<a class="sourceLine" id="cb11-3" data-line-number="3">    calcNodes &lt;-<span class="st"> </span>model<span class="op">$</span><span class="kw">getDependencies</span>(nodes, <span class="dt">self =</span> <span class="ot">FALSE</span>),</a>
+<a class="sourceLine" id="cb11-4" data-line-number="4">  <span class="dt">run =</span> <span class="cf">function</span>(<span class="dt">v =</span> <span class="kw">double</span>(<span class="dv">1</span>)) {</a>
+<a class="sourceLine" id="cb11-5" data-line-number="5">    <span class="kw">values</span>(model, nodes) &lt;&lt;-<span class="st"> </span>v</a>
+<a class="sourceLine" id="cb11-6" data-line-number="6">    <span class="kw">return</span>(model<span class="op">$</span><span class="kw">calculate</span>(calcNodes))</a>
+<a class="sourceLine" id="cb11-7" data-line-number="7">    <span class="kw">returnType</span>(<span class="kw">double</span>(<span class="dv">0</span>))</a>
+<a class="sourceLine" id="cb11-8" data-line-number="8">  }</a>
+<a class="sourceLine" id="cb11-9" data-line-number="9">)</a>
+<a class="sourceLine" id="cb11-10" data-line-number="10">OccLogLik &lt;-<span class="st"> </span><span class="kw">CalcLogLik</span>(occupancy_model_new, <span class="kw">c</span>(<span class="st">&quot;psi&quot;</span>, <span class="st">&quot;p&quot;</span>))</a>
+<a class="sourceLine" id="cb11-11" data-line-number="11">COccLogLik &lt;-<span class="st"> </span><span class="kw">compileNimble</span>(OccLogLik, <span class="dt">project =</span> occupancy_model_new)</a>
+<a class="sourceLine" id="cb11-12" data-line-number="12"><span class="co">#&gt; compiling... this may take a minute. Use 'showCompilerOutput = TRUE' to see C++ compilation details.</span></a>
+<a class="sourceLine" id="cb11-13" data-line-number="13"><span class="co">#&gt; compilation finished.</span></a>
+<a class="sourceLine" id="cb11-14" data-line-number="14"><span class="kw">optim</span>(<span class="kw">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>), COccLogLik<span class="op">$</span>run, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">fnscale =</span> <span class="dv">-1</span>))<span class="op">$</span>par</a>
+<a class="sourceLine" id="cb11-15" data-line-number="15"><span class="co">#&gt; [1] 0.7256951 0.1377345</span></a></code></pre></div>
+</div>
+</div>
+<div id="distributions-provided-in-nimbleecology" class="section level1">
+<h1>Distributions provided in <code>nimbleEcology</code></h1>
+<p>In this section, we introduce each of the <code>nimbleEcology</code> distributions in more detail. We will summarize the calculations using mathematical notation and then describe how to use the distributions in a <code>nimble</code> model.</p>
+<div id="a-note-on-static-typing" class="section level3">
+<h3>A note on static typing</h3>
+<p>Some distribution names are followed by a suffix indicating the type of some parameters, for example the <code>_s</code> in <code>dOcc_s</code>. NIMBLE uses a static typing system, meaning that a function must know in advance if a certain argument will be a scalar, vector, or matrix. There may be notation such as <code>sv</code> or <code>svm</code> if there are two or three parameters that can be time-independent (<code>s</code>) or time-dependent (<code>v</code> or <code>m</code>) in one or more dimensions. In general, <code>s</code> corresponds to a scalar argument, <code>v</code> to a vector argument, and <code>m</code> to a matrix argument. The order of these type indicators will correspond to the order of the relevant parameters, but always check the documentation when using a new distribution with the R function <code>?</code> (e.g., both <code>?dOcc</code> and <code>?dOcc_s</code> work).</p>
+<p>The static typing requirement may be relaxed somewhat in the future.</p>
+</div>
+<div id="capture-recapture-dcjs" class="section level2">
+<h2>Capture-recapture (dCJS)</h2>
+<p>Cormack-Jolly-Seber models give the probability of a capture history for each of many individuals, conditional on first capture, based on parameters for survival and detection probability. <code>nimbleEcology</code> provides a distribution for individual capture histories, with variants for time-independent and time-dependent survival and/or detection probability. Of course, the survival and detection parameters for the CJS probability may themselves depend on other parameters and/or random effects. The rest of this summary will focus on one individual’s capture history.</p>
+<p>Define <span class="math inline">\(\phi_t\)</span> as survival from time <span class="math inline">\(t-1\)</span> to <span class="math inline">\(t\)</span> and <span class="math inline">\(\mathbf{\phi} = (\phi_1, \ldots, \phi_T)\)</span>, where <span class="math inline">\(T\)</span> is the length of the series. We use “time” and “sampling occasion” as synonyms in this context, so <span class="math inline">\(T\)</span> is the number of sampling occasions. (Be careful with indexing. Sometimes you might see <span class="math inline">\(\phi_t\)</span> defined as survival from time <span class="math inline">\(t\)</span> to <span class="math inline">\(t+1\)</span>.) Define <span class="math inline">\(p_t\)</span> as detection probability at time <span class="math inline">\(t\)</span> and <span class="math inline">\(\mathbf{p} = (p_1, \ldots, p_T)\)</span>. Define the capture history as <span class="math inline">\(\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)\)</span>, where each <span class="math inline">\(y_t\)</span> is 0 or 1. The notation <span class="math inline">\(y_{i:j}\)</span> means the sequence of observations from time <span class="math inline">\(i\)</span> to time <span class="math inline">\(j\)</span>. The first observation, <span class="math inline">\(y_0 = 1\)</span>, <strong>is not included</strong> in <span class="math inline">\(\mathbf{y}\)</span> because it is known to be 1 since this model conditions on first capture.</p>
+<p>There are multiple ways to write the CJS probability. We will do so in a state-space format because that leads to the more general DHMM case next. The probability of observations given parameters, <span class="math inline">\(P(\mathbf{y} | \mathbf{\phi}, \mathbf{p})\)</span>, is factored as: <span class="math display">\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
+\]</span></p>
+<p>Each factor <span class="math inline">\(P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})\)</span> is calculated as: <span class="math display">\[
+P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = I(y_t = 1) (A_t p_t) + I(y_t = 0) (A_t (1-p_t) + (1-A_t))
+\]</span> The indicator function <span class="math inline">\(I(y_t = 1)\)</span> is 1 if it <span class="math inline">\(y_t\)</span> is 1, 0 otherwise, and vice versa for <span class="math inline">\(I(y_t = 0)\)</span>. Here <span class="math inline">\(A_t\)</span> is the probability that the individual is alive at time <span class="math inline">\(t\)</span> given <span class="math inline">\(y_{1:t-1}\)</span>, the data up to the previous time. This is calculated as: <span class="math display">\[
+A_t = G_{t-1} \phi_t
+\]</span> where <span class="math inline">\(G_{t}\)</span> is the probability that the individual is alive at time <span class="math inline">\(t\)</span> given <span class="math inline">\(y_{1:t}\)</span>, the data up to the current time. This is calculated as: <span class="math display">\[
+G_{t} = I(y_t = 1) 1 + I(y_t = 0) \frac{A_t (1-p_t)}{A_t (1-p_t) + (1-A_t)}
+\]</span> The sequential calculation is initialized with <span class="math inline">\(G_0 = 1\)</span>. For time step <span class="math inline">\(t\)</span>, we calculate <span class="math inline">\(A_t\)</span>, then <span class="math inline">\(P(y_t | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})\)</span>, then <span class="math inline">\(G_t\)</span>, leaving us ready for time step <span class="math inline">\(t+1\)</span>. This is a trivial hidden Markov model where the latent state, alive or dead, is not written explicitly.</p>
+<p>In the cases with time-independent survival or capture probability, we simply drop the time indexing for the corresponding parameter.</p>
+<div id="cjs-distributions-in-nimbleecology" class="section level3">
+<h3>CJS distributions in <code>nimbleEcology</code></h3>
+<p>CJS models are available in four distributions in <code>nimbleEcology</code>. These differ only in whether survival probability and/or capture probability are time-dependent or time-independent, yielding four combinations:</p>
+<ul>
+<li><code>dCJS_ss</code>: Both are time-independent (scalar).</li>
+<li><code>dCJS_sv</code>: Survival is time-independent (scalar). Capture probability is time-dependent (vector).</li>
+<li><code>dCJS_vs</code>: Survival is time-dependent (vector). Capture probability is time-independent (scalar).</li>
+<li><code>dCJS_vv</code>: Both are time-dependent (vector).</li>
+</ul>
+<p>The usage for each is similar. An example for <code>dCJS_vs</code> is:</p>
+<p><code>y[i, 1:T] ~ dCJS_sv(probSurvive = phi, probCapture = p[i, 1:T], len = T)</code></p>
+<p>Note the following points:</p>
+<ul>
+<li><code>y[i, 1:T]</code> is a vector of capture history. It is written as if <code>i</code> indexes individual, but it could be any vector in any variable in the model.<br />
+</li>
+<li>Arguments to <code>dCJS_sv</code> are named. As in R, this is optional but helpful. Without names, the order matters.</li>
+<li><code>probSurvive</code> is provided as a scalar value, assuming there is a variable called <code>phi</code>.</li>
+<li>In variants where <code>probSurvive</code> is a vector (<code>dOcc_vs</code> and <code>dOcc_vv</code>), the <span class="math inline">\(t^{\mbox{th}}\)</span> element of <code>probSurvive</code> is <span class="math inline">\(phi_t\)</span> above, namely the probability of survival from occasion <span class="math inline">\(t-1\)</span> to <span class="math inline">\(t\)</span>.</li>
+<li><code>probCapture</code> is provided as a vector value, assuming there is a matrix variable called <code>p</code>. The value of <code>probCapture</code> could be any vector from any variable in the model.</li>
+<li><code>probCapture[t]</code> (i.e., the <span class="math inline">\(t^{\mbox{th}}\)</span> element of <code>probCapture</code>, which is <code>p[i, t]</code> in this example) is <span class="math inline">\(p_t\)</span> above, namely the probability of capture, if alive, at time <span class="math inline">\(t\)</span>.</li>
+<li>The length parameter <code>len</code> is in some cases redundant (the information could be determined by the length of other inputs), but nevertheless it is required.</li>
+</ul>
+</div>
+</div>
+<div id="hidden-markov-models-hmms-and-dynamic-hidden-markov-models-dhmms" class="section level2">
+<h2>Hidden Markov models (HMMs) and Dynamic hidden Markov models (DHMMs)</h2>
+<p>Hidden Markov models give the probability of detection history that can handle:</p>
+<ul>
+<li>Detections in different states, such as locations or breeding states,</li>
+<li>Incorrect state information, such as if breeding state might not be observed correctly,</li>
+<li>Probabilities of transitions between states.</li>
+</ul>
+<p>In a HMM, “dead” is simply another state, and “unobserved” is a possible observation. Thus, HMMs are generalizations of the CJS model. In capture-recapture, HMMs encompass multi-state and multi-event models.</p>
+<p>We again use the factorization <span class="math display">\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{p}) = \prod_{t = 1}^T P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})
+\]</span> In the case of a HMM, <span class="math inline">\(y_t\)</span> is the recorded state at time <span class="math inline">\(t\)</span>, taking an integer value, with the possibility that one possible value corresponds to “unobserved”. Define <span class="math inline">\(S\)</span> as the number of possible states and <span class="math inline">\(K\)</span> as the number of possible observed states. Observed states need not correspond to real states. For example, often there is an observed state for “unobserved”. Another example is that two real states might never be distinguishable in observations, so they may correpond to only one observed state.</p>
+<p>Define <span class="math inline">\(A_{i, t}\)</span> as the probability that the individual is in state <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span>, given <span class="math inline">\(y_{1:t-1}\)</span>, the data up to the previous time. Define <span class="math inline">\(p_{i,j,t}\)</span> as the probability that, at time <span class="math inline">\(t\)</span>, an individual in state <span class="math inline">\(i\)</span> is observed in state <span class="math inline">\(j\)</span>. Then <span class="math inline">\(P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})\)</span> is calculated as: <span class="math display">\[
+P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p}) = \sum_{i=1}^S A_{i, t} p_{i, y_t, t}
+\]</span> where <span class="math inline">\(j = y_t\)</span> is the observed state of the individual.</p>
+<p>Define <span class="math inline">\(G_{i, t}\)</span> as the probability that the individual is in state <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span> given <span class="math inline">\(y_{1:t}\)</span>, the data up to the current time. Define <span class="math inline">\(\psi_{i, j, t}\)</span> as the probability that, from time <span class="math inline">\(t\)</span> to <span class="math inline">\(t+1\)</span>, an individual in state <span class="math inline">\(i\)</span> transitions to state <span class="math inline">\(j\)</span>. <em>Note that the time-step is different here (<span class="math inline">\(t\)</span> to <span class="math inline">\(t+1\)</span>) than for the CJS model above (which uses <span class="math inline">\(t-1\)</span> to <span class="math inline">\(t\)</span>).</em> Then the calculation of <span class="math inline">\(A_{j,t}\)</span> for each possible state <span class="math inline">\(j\)</span> is given by: <span class="math display">\[
+A_{j, t} = \sum_{i=1}^S G_{i, t-1} \psi_{i, j, t-1}, \mbox{ for } j=1,\ldots,S
+\]</span></p>
+<p>Finally, calculation of <span class="math inline">\(G_{i, t}\)</span> for each possible state <span class="math inline">\(i\)</span> is done by conditioning on <span class="math inline">\(y_t\)</span> as follows: <span class="math display">\[
+G_{i, t} = \frac{A_{i, t} p_{i, y_t, t}}{P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})}, \mbox{ for } j=1,\ldots,S
+\]</span></p>
+<p>The calculation of the total probability of a detection history with uncertain state information starts by initializing <span class="math inline">\(A_{i, 1}\)</span> to some choice of initial (or prior) probability of being in each state before any observations are made. Then, starting with <span class="math inline">\(t = 1\)</span>, we calculate <span class="math inline">\(P(y_{t} | y_{1:t-1}, \mathbf{\phi}, \mathbf{p})\)</span>. If <span class="math inline">\(t &lt; T\)</span>, we prepare for time step <span class="math inline">\(t+1\)</span> by calculating <span class="math inline">\(G_{i, t}\)</span> for each <span class="math inline">\(i\)</span> followed by <span class="math inline">\(A_{i, t+1}\)</span> for each <span class="math inline">\(i\)</span>.</p>
+<p>If the transition probabilities, <span class="math inline">\(\psi_{i, j, t}\)</span>, actually depend on <span class="math inline">\(t\)</span>, we refer to the model as “Dynamic”, namely a DHMM instead of an HMM. It may also be the case that observation probabilities <span class="math inline">\(p_{i, j, t}\)</span> depend on <span class="math inline">\(t\)</span> or not.</p>
+</div>
+<div id="hmm-and-dhmm-distributions-in-nimbleecology" class="section level2">
+<h2>HMM and DHMM distributions in <code>nimbleEcology</code></h2>
+<p>HMMs and DHMMs are available in four distributions in <code>nimbleEcology</code>. These differ only in whether transition and/or observation probabilities are time-dependent or time-independent, yielding four combinations:</p>
+<ul>
+<li><code>dHMM</code>: Both are time-independent.</li>
+<li><code>dDHMM</code>: State transitions are time-dependent (dynamic). Observation probabilities are time-independent.</li>
+<li><code>dHMMo</code>: Observation probabilities are time-dependent. State transitions are time-independent (not dynamic).</li>
+<li><code>dDHMMo</code>: Both are time-dependent.</li>
+</ul>
+<p>In this notation, the leading <code>D</code> is for “dynamic” (time-dependent state transitions), while the trailing “o” is for “observations” being time-dependent.</p>
+<p>The usage for each is similar. An example for <code>dDHMM</code> is:</p>
+<p><code>y[i, 1:T] ~ dDHMM(init = initial_probs[i, 1:T], obsProb = p[1:nStates, 1:nCat], transProb = Trans[i, 1:nStates, 1:nStates, 1:(T-1)], len = T)</code></p>
+<p>Note the following points:</p>
+<ul>
+<li>As above, this is written as if <code>i</code> indexes individuals in the model, but this is arbitrary as an example.</li>
+<li><code>nStates</code> is <span class="math inline">\(S\)</span> above.</li>
+<li><code>nCat</code> is <span class="math inline">\(K\)</span> above.</li>
+<li><code>init[i]</code> is the initial probability of being in state <code>i</code>, namely <span class="math inline">\(A_{i, 1}\)</span> above.</li>
+<li><code>obsProb[i, j]</code> (i.e., <code>p[i, j]</code> in this example) is probability of observing an individual who is truly in state <code>i</code> as being in observation state <code>j</code>. This is <span class="math inline">\(p_{i, j}\)</span> above if indexing by <span class="math inline">\(t\)</span> is not needed. If observation probabilities are time-dependent (in <code>dHMMo</code> and <code>dDHMMo</code>), then <code>obsProb[i, j, t]</code> is <span class="math inline">\(p_{i, j, t}\)</span> above.</li>
+<li><code>transProb[i, j, t]</code> (i.e., <code>Trans[i, j, t]</code> in this example) is the probability that an individual changes from state <code>i</code> to state <code>j</code> during time step <code>t</code> to <code>t+1</code>. This is <span class="math inline">\(\psi_{i,j,t}\)</span> above.<br />
+</li>
+<li><code>len</code> is the length of the observation record, <code>T</code> in this example.</li>
+<li><code>len</code> must match the length of the data, <code>y[i, 1:T]</code> in this example.</li>
+<li>The dimensions of <code>obsProb</code> must be <span class="math inline">\(K \times S\)</span> in the time-independent case (<code>dHMM</code> or <code>dDHMM</code>) or <span class="math inline">\(K \times S \times T\)</span> in the time-dependent case (<code>dHMMo</code> or <code>dDHMMo</code>).</li>
+<li>The dimensions of <code>transProb</code> must be <span class="math inline">\(S \times S\)</span> in the time-independent case (<code>dHMM</code> or <code>dHMMo</code>) or <span class="math inline">\(S \times S \times (T-1)\)</span> in the time-dependent case (<code>dDHMM</code> or <code>dDHMMo</code>). The last dimension is one less than <span class="math inline">\(T\)</span> because no transition to time <span class="math inline">\(T+1\)</span> is needed.</li>
+</ul>
+</div>
+<div id="occupancy" class="section level2">
+<h2>Occupancy</h2>
+<p>An occupancy model gives the probability of a series of detection/non-detection records for a species during multiple visits to each of multiple site. The occupancy distributions in <code>nimbleEcology</code> give the probability of the detection history for one site, so this summary focuses on data from one site.</p>
+<p>Define <span class="math inline">\(y_t\)</span> to be the observation at time <span class="math inline">\(t\)</span>, with <span class="math inline">\(y_t = 1\)</span> for a detection and <span class="math inline">\(y_t = 0\)</span> for a non-detection. Again, we use “time” as a synonym for “sampling occasion”. Again, define the vector of observations as <span class="math inline">\(\mathbf{y} = (y_1, \ldots, y_T)\)</span>, where <span class="math inline">\(T\)</span> is the number of sampling occasions.</p>
+<p>Define <span class="math inline">\(\psi\)</span> as the probability that a site is occupied. Define <span class="math inline">\(p_t\)</span> as the probability of a detection on sampling occasion <span class="math inline">\(t\)</span> if the site is occupied, and <span class="math inline">\(\mathbf{p} = (p_1, \ldots, p_T)\)</span>. Then the probability of the data given the parameters is: <span class="math display">\[
+P(\mathbf{y} | \psi, \mathbf{p}) = \psi \prod_{t = 1}^T p_t^{y_t} (1-p_t)^{1-y_t} + (1-\psi) I\left(\sum_{t=1}^T y_t= 0 \right) 
+\]</span> The indicator function usage in the last term, <span class="math inline">\(I(\cdot)\)</span>, is 1 if the given summation is 0, i.e. if no detections were made. Otherwise it is 0.</p>
+<div id="occupancy-models-in-nimbleecology" class="section level3">
+<h3>Occupancy models in <code>nimbleEcology</code></h3>
+<p>Occupancy models are available in two distributions in <code>nimbleEcology</code>. These differ only in whether detection probability depends on time or not:</p>
+<ul>
+<li><code>dOcc_s</code>: Detection probability is time-independent (scalar).</li>
+<li><code>dOcc_v</code>: Detection probability is time-dependent (vector).</li>
+</ul>
+<p>An example for <code>dOcc_v</code> is:</p>
+<p><code>y[i, 1:T] ~ dOcc_v(probOcc = psi, probDetect = p[i, 1:T], len = T)</code></p>
+<p>Note the following points:</p>
+<ul>
+<li>This is written as if <code>i</code> indexes site, but the variables could be arranged in other ways.</li>
+<li><code>y[i, 1:T]</code> is the detection record.</li>
+<li><code>probOcc</code> is the probability of occupancy, <span class="math inline">\(\psi\)</span> above.</li>
+<li><code>probDetect</code> is the vector of detection probabilities, <span class="math inline">\(\mathbf{p}\)</span> above. In the case of <code>dOcc_s</code>, <code>probDetect</code> would be a scalar.</li>
+<li><code>len</code> is the length of the detection record.</li>
+</ul>
+</div>
+</div>
+<div id="dynamic-occupancy" class="section level2">
+<h2>Dynamic occupancy</h2>
+<p>Dynamic occupancy models give the probability of detection records from multiple seasons (primary periods) in each of which there were multiple sampling occasions (secondary periods) at each of multiple sites. The dynamic occupancy distribution in <code>nimbleEcology</code> provides probability calculations for data from one site at a time.</p>
+<p>We will use “year” for primary periods and “time” or “sampling occasion” as above for secondary periods. Define <span class="math inline">\(y_{r, t}\)</span> as the observation (1 or 0) on sampling occasion <span class="math inline">\(t\)</span> of year <span class="math inline">\(r\)</span>. Define <span class="math inline">\(\mathbf{y}_r\)</span> as the detection history in year <span class="math inline">\(r\)</span>, i.e. <span class="math inline">\(\mathbf{y}_r = (y_{r, 1}, \ldots, y_{r, T})\)</span> . Define <span class="math inline">\(\phi_t\)</span> as the probability of being occupied at time <span class="math inline">\(t+1\)</span> given the site was occupied at time <span class="math inline">\(t\)</span>, called “persistence”. Define <span class="math inline">\(\gamma_t\)</span> as the probability of being occupied at time <span class="math inline">\(t+1\)</span> given the site was unoccupied at time <span class="math inline">\(t\)</span>, called “colonization”. Define <span class="math inline">\(p_{r, t}\)</span> as the detection probability on sampling occasion <span class="math inline">\(t\)</span> of year <span class="math inline">\(r\)</span> given the site is occupied.</p>
+<p>The probability of all the data given parameters is: <span class="math display">\[
+P(\mathbf{y} | \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p}) =  \prod_{r = 1}^R P(\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})
+\]</span> Each factor <span class="math inline">\(P(\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})\)</span> is calculated as: <span class="math display">\[
+P(\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p}) = A_{r} \prod_{t = 1}^T p_{r,t}^{y_{r,t}} (1-p_{r,t})^{1-y_{r,t}} + (1-A_{r}) I\left(\sum_{t=1}^T y_{r,t} = 0 \right)
+\]</span> Here <span class="math inline">\(A_r\)</span> is the probability that the site is occupied in year <span class="math inline">\(r\)</span> given observations up to the previous year <span class="math inline">\(\mathbf{y}_{1:r-1}\)</span>. Otherwise, this equation is just like the occupancy model above, except there are indices for year <span class="math inline">\(r\)</span> in many places. <span class="math inline">\(A_r\)</span> is calculated as: <span class="math display">\[
+A_r = G_{r-1} \phi_{r-1} + (1-G_{r-1}) \gamma_{r-1} 
+\]</span> Here <span class="math inline">\(G_r\)</span> is the probability that the site is occupied given the data up to time <span class="math inline">\(r\)</span>, <span class="math inline">\(\mathbf{y}_{1:r}\)</span>. This is calculated as <span class="math display">\[
+G_r = \frac{A_{r} \prod_{t = 1}^T p_{r,t}^{y_{r,t}} (1-p_{r,t})^{1-y_{r,t}}}{\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})}
+\]</span></p>
+<p>The sequential calculation is initiated with <span class="math inline">\(A_1\)</span>, which is natural to think of as “<span class="math inline">\(\psi_1\)</span>”, probability of occupancy in the first year. Then for year <span class="math inline">\(r\)</span>, starting with <span class="math inline">\(r = 1\)</span>, we calculate <span class="math inline">\(P(\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})\)</span>. If <span class="math inline">\(r &lt; R\)</span>, we calculate <span class="math inline">\(G_r\)</span> and then <span class="math inline">\(A_{r+1}\)</span>, leaving us ready to increment <span class="math inline">\(r\)</span> and iterate.</p>
+<div id="dynamic-occupancy-models-in-nimbleecology" class="section level3">
+<h3>Dynamic occupancy models in <code>nimbleEcology</code></h3>
+<p>Dynamic occupancy models are available in twelve distributions in <code>nimbleEcology</code>. These differ in whether persistence and/or colonization probabilities are time-dependent, with a “s” (time-independent) and “v” (time-dependent) notation similar to the distributions above. The distributions are named by <code>dDynOcc_</code> followed by three letters. Each letter indicates the typing (or dimension) of the persistence, colonization, and detection probabilities, respectively:</p>
+<ul>
+<li><code>dDynOcc_s**</code> functions take time-independent (scalar) persistence probabilities, while <code>dDynOcc_v**</code>functions take time-dependent (vector) persistence probabilities</li>
+<li><code>dDynOcc_*s*</code> functions take time-independent (scalar) colonization probabilities, while <code>dDynOcc_*v*</code>functions take time-dependent (vector) colonization probabilities</li>
+<li><code>dDynOcc_**s</code> functions take time-independent (scalar) observation probabilities, while <code>dDynOcc_**v</code> functions take observation probabilities dependent on time step (vector) and <code>dDynOcc_**m</code> functions take observation probabilities dependent on both time step and observation event (matrix)</li>
+</ul>
+<p>Expanding these typing possibilities gives <span class="math inline">\(2 \times 2 \times 3 = 12\)</span> total functions:</p>
+<ul>
+<li><code>dDynOcc_sss</code></li>
+<li><code>dDynOcc_svs</code></li>
+<li><code>dDynOcc_vss</code></li>
+<li><code>dDynOcc_vvs</code></li>
+<li><code>dDynOcc_ssv</code></li>
+<li><code>dDynOcc_svv</code></li>
+<li><code>dDynOcc_vsv</code></li>
+<li><code>dDynOcc_vvv</code></li>
+<li><code>dDynOcc_ssm</code></li>
+<li><code>dDynOcc_svm</code></li>
+<li><code>dDynOcc_vsm</code></li>
+<li><code>dDynOcc_vvm</code></li>
+</ul>
+<p>An example for <code>dDynOcc_svs</code> is:</p>
+<p><code>y[i, 1:T] ~ dDynOcc_sv(init = psi1[i], probPersist = phi[i], probColonize = gamma[i, 1:T], p = p, len = T)</code></p>
+<p>Note the following points:</p>
+<ul>
+<li>As in the examples above, this is written as if <code>i</code> indexes the individual site, but the variables could be arranged in other ways.</li>
+<li><code>y[i, 1:T]</code> is the detection record.</li>
+<li><code>probPersist</code> is the probability of persistence, <span class="math inline">\(\phi\)</span> above.</li>
+<li><code>probColonize</code> is the vector of detection probabilities, <span class="math inline">\(\mathbf{\gamma}\)</span> above. In the case of <code>dDynOcc_*s</code>, <code>probColonize</code> would be a scalar.</li>
+<li><code>len</code> is the length of the detection record.</li>
+<li><code>p</code> here is a single constant value of observation probability for all samples. If <code>p</code> changed with time or observation event, we would need to use a different function (<code>dDynOcc_**v</code> or <code>dDynOcc_**m</code>).</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
