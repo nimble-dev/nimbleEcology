@@ -20,7 +20,7 @@ rOcc_v(n, probOcc, probDetect, len = 0)
 \item{x}{detection/non-detection vector of 0s (not detected) and 1s
 (detected).}
 
-\item{probOcc}{occupancy probability.}
+\item{probOcc}{occupancy probability (scalar).}
 
 \item{probDetect}{detection probability (scalar for \code{dOcc_s},
 vector for \code{dOcc_v}).}
@@ -135,5 +135,5 @@ For dynamic occupancy models, see documentation for
   \code{\link{dDynOcc}}.
 }
 \author{
-Ben Goldstein and Perry de Valpine
+Ben Goldstein, Perry de Valpine, and Lauren Ponisio
 }

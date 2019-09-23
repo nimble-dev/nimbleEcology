@@ -29,13 +29,17 @@ rCJS_vs(n, probSurvive, probCapture, len = 0)
 rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
-\item{x}{capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed to have occurred prior to \code{x[1]}.}
+\item{x}{capture-history vector of 0s (not captured) and 1s (captured).
+Do not include the initial capture, which is assumed to have occurred
+prior to \code{x[1]}.}
 
-\item{probSurvive}{survival probability, either a scalar (for dCJS_s*) or a vector (for dCJS_v*).}
+\item{probSurvive}{survival probability, either a time-independent scalar
+(for dCJS_s*) or a time-dependent vector (for dCJS_v*).}
 
-\item{probCapture}{capture probability, either a scalar (for dCJS_*s) or a vector (for dCJS_*v).}
+\item{probCapture}{capture probability, either a time-independent scalar
+(for dCJS_*s) or a time-dependent vector (for dCJS_*v).}
 
-\item{len}{length of capture history (see below).}
+\item{len}{length of capture history. Should equal \code{length(x)}}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 
@@ -49,7 +53,7 @@ For \code{dCJS_**}: the probability (or likelihood) or log probability of observ
 For \code{rCJS_**}: a simulated capture history, \code{x}.
 }
 \description{
-\code{dCJS_**} \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
+\code{dCJS_**} and \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
 distributions that can be used directly from R or in \code{nimble}
 models.
 }

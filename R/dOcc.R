@@ -11,7 +11,7 @@
 #'
 #' @param x detection/non-detection vector of 0s (not detected) and 1s
 #'     (detected).
-#' @param probOcc occupancy probability.
+#' @param probOcc occupancy probability (scalar).
 #' @param probDetect detection probability (scalar for \code{dOcc_s},
 #'     vector for \code{dOcc_v}).
 #' @param len length of detection/non-detection vector (see below).
@@ -189,19 +189,3 @@ rOcc_v <- nimbleFunction(
     return(rbinom(k, prob = probDetect, size = 1))
   }
 )
-
-registerDistributions(list(
-  dOcc_s = list(
-    BUGSdist = "dOcc_s(probOcc, probDetect, len)",
-    Rdist = "dOcc_s(probOcc, probDetect, len)",
-    discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(0)', 'len = integer(0)'),
-    pqAvail = FALSE)))
-
-registerDistributions(list(
-  dOcc_v = list(
-    BUGSdist = "dOcc_v(probOcc, probDetect, len)",
-    Rdist = c("dOcc_v(probOcc, probDetect, len)"),
-    discrete = TRUE,
-    types = c('value = double(1)', 'probOcc = double(0)', 'probDetect = double(1)', 'len = integer(0)'),
-    pqAvail = FALSE)))

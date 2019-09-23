@@ -43,15 +43,15 @@
 #' with dimension S x O x T.  The first index of \code{probObs}
 #' indexes the true latent state.  The second index of \code{probObs}
 #' indexes the observed state.  For example, in the time-dependent
-#' case, \code{probObs[i, j, t]} is the probability at time $t$ that
-#' an individual in state $i$ is observed in state $j$.
+#' case, \code{probObs[i, j, t]} is the probability at time \code{t} that
+#' an individual in state \code{i} is observed in state \code{j}.
 #'
-#' \code{probTrans} has dimension S x S.  \code{probTrans}[i, j] is
-#' the probability that an individual in state $i$ at one time transitions to
-#' state $j$ at the next time.
+#' \code{probTrans} has dimension S x S. \code{probTrans}[i, j] is the
+#' tune-independent probability that an individual in state \code{i} at
+#' time \code{t} transitions to state \code{j} time \code{t+1}.
 #'
 #' \code{initStates} has length S. \code{initStates[i]} is the
-#' probability of being in state i at the first observation time.
+#' probability of being in state \code{i} at the first observation time.
 #'
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
@@ -163,8 +163,8 @@ NULL
 #' @export
 #' @rdname dHMM
 dHMM <- nimbleFunction(
-  run = function(x = double(1),    ## Observed capture (state) history
-                 init = double(1),##
+  run = function(x = double(1), ## Observed capture (state) history
+                 init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
@@ -302,31 +302,4 @@ rHMMo <- nimbleFunction(
 })
 
 
-registerDistributions(list(
-  dHMM = list(
-    BUGSdist = "dHMM(init, probObs, probTrans, len)",
-    Rdist = "dHMM(init, probObs, probTrans, len = 0)",
-    discrete = TRUE,
-    types = c('value = double(1)',
-              'init = double(1)',
-              'probObs = double(2)',
-              'probTrans = double(2)',
-              'len = double(0)'),
-    mixedSizes = TRUE,
-    pqAvail = FALSE))
-  )
-
-registerDistributions(list(
-  dHMMo = list(
-    BUGSdist = "dHMMo(init, probObs, probTrans, len)",
-    Rdist = "dHMMo(init, probObs, probTrans, len = 0)",
-    discrete = TRUE,
-    types = c('value = double(1)',
-              'init = double(1)',
-              'probObs = double(3)',
-              'probTrans = double(2)',
-              'len = double(0)'),
-    mixedSizes = TRUE,
-    pqAvail = FALSE))
-  )
 

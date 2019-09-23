@@ -58,8 +58,7 @@ and \code{\link[nimble]{nimbleModel}}).
 The distribution has two forms, \code{dHMM} and
 \code{dHMMo}. Define S as the number of latent state categories
 (maximum possible value for elements of \code{x}), O as the number
-of possible observation state categories (which need to correspond
-one-to-one to latent state categories), and T as the number of
+of possible observation state categories, and T as the number of
 observation times (length of \code{x}). In \code{dHMM},
 \code{probObs} is a time-independent observation probability matrix
 with dimension S x O.  In \code{dHMMo}, \code{probObs} is a
@@ -67,15 +66,15 @@ three-dimensional array of time-dependent observation probabilities
 with dimension S x O x T.  The first index of \code{probObs}
 indexes the true latent state.  The second index of \code{probObs}
 indexes the observed state.  For example, in the time-dependent
-case, \code{probObs[i, j, t]} is the probability at time $t$ that
-an individual in state $i$ is observed in state $j$.
+case, \code{probObs[i, j, t]} is the probability at time \code{t} that
+an individual in state \code{i} is observed in state \code{j}.
 
-\code{probTrans} has dimension S x S.  \code{probTrans}[i, j] is
-the probability that an individual in state $i$ at one time transitions to
-state $j$ at the next time.
+\code{probTrans} has dimension S x S. \code{probTrans}[i, j] is the
+tune-independent probability that an individual in state \code{i} at
+time \code{t} transitions to state \code{j} time \code{t+1}.
 
 \code{initStates} has length S. \code{initStates[i]} is the
-probability of being in state i at the first observation time.
+probability of being in state \code{i} at the first observation time.
 
 For more explanation, see
 \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
