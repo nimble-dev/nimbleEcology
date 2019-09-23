@@ -8,20 +8,28 @@
 #' @author Perry de Valpine, Daniel Turek, and Ben Goldstein
 #' @export
 #'
-#' @param x vector of observed states, one of which could be defined as
-#' "not observed".
-#' @param init vector of initial state probabilities
-#' @param probObs time-independent matrix of observation probabilities.
-#' First two dimensions of \code{probObs} are of size x (number of possible
-#' system states) x (number of possible observation classes). \code{dDHMMo}
-#' expects an additional third dimension of size (number of observation times).
+#' @param x vector of observations, each one a positive integer
+#'     corresponding to an observation state
+#'     (one value of which could can correspond to "not observed", and
+#'     another value of which can correspond to "dead" or
+#'     "removed from system").
+#' @param init vector of initial state probabilities. Must sum to 1
+#' @param probObs time-independent matrix (\code{dDHMM} and
+#'     \code{rHMM}) or time-dependent 3D array (\code{dDHMMo} and
+#'     \code{rHMMo}) of observation probabilities.
+#'     First two dimensions of \code{probObs} are of size x (number of possible
+#'     system states) x (number of possible observation classes). \code{dDHMMo}
+#'     and \code{rHMMo} expects an additional third dimension of size (number of
+#'     observation times).
 #' @param probTrans time-dependent matrix of system state-transition
 #' probabilities. Dimension of \code{probTrans} is (number of possible
 #' system states) x  (number of possible system states)
 #' x (number of observation times).
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
-#' @param n length of random sequence
+#' @param n number of random draws, each returning a vector of length
+#'     \code{len}. Currently only \code{n = 1} is supported, but the
+#'     argument exists for standardization of "\code{r}" functions.
 #'
 #' @details
 #' These nimbleFunctions provide distributions that can be used directly in R or

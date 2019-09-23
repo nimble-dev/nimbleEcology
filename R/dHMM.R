@@ -10,14 +10,19 @@
 #'
 #' @author Ben Goldstein, Perry de Valpine, and Daniel Turek
 #'
-#' @param x vector of observed states, each one a positive integer
+#' @param x vector of observations, each one a positive integer
+#'     corresponding to an observation state
 #'     (one value of which could can correspond to "not observed", and
 #'     another value of which can correspond to "dead" or
 #'     "removed from system").
-#' @param init vector of initial state probabilities
+#' @param init vector of initial state probabilities. Must sum to 1
 #' @param probObs time-independent matrix (\code{dHMM} and
 #'     \code{rHMM}) or time-dependent array (\code{dHMMo} and
 #'     \code{rHMMo}) of observation probabilities.
+#'     First two dimensions of \code{probObs} are of size x (number of possible
+#'     system states) x (number of possible observation classes). \code{dHMMo} and
+#'     \code{rHMMo}
+#'     expects an additional third dimension of size (number of observation times).
 #' @param probTrans time-independent matrix of state transition
 #'     probabilities.
 #' @param len length of \code{x} (see below).

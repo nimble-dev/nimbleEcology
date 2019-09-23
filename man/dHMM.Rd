@@ -16,16 +16,21 @@ rHMM(n, init, probObs, probTrans, len = 0)
 rHMMo(n, init, probObs, probTrans, len = 0)
 }
 \arguments{
-\item{x}{vector of observed states, each one a positive integer
+\item{x}{vector of observations, each one a positive integer
+corresponding to an observation state
 (one value of which could can correspond to "not observed", and
 another value of which can correspond to "dead" or
 "removed from system").}
 
-\item{init}{vector of initial state probabilities}
+\item{init}{vector of initial state probabilities. Must sum to 1}
 
 \item{probObs}{time-independent matrix (\code{dHMM} and
 \code{rHMM}) or time-dependent array (\code{dHMMo} and
-\code{rHMMo}) of observation probabilities.}
+\code{rHMMo}) of observation probabilities.
+First two dimensions of \code{probObs} are of size x (number of possible
+system states) x (number of possible observation classes). \code{dHMMo} and
+\code{rHMMo}
+expects an additional third dimension of size (number of observation times).}
 
 \item{probTrans}{time-independent matrix of state transition
 probabilities.}

@@ -16,15 +16,21 @@ rDHMM(n, init, probObs, probTrans, len)
 rDHMMo(n, init, probObs, probTrans, len)
 }
 \arguments{
-\item{x}{vector of observed states, one of which could be defined as
-"not observed".}
+\item{x}{vector of observations, each one a positive integer
+corresponding to an observation state
+(one value of which could can correspond to "not observed", and
+another value of which can correspond to "dead" or
+"removed from system").}
 
-\item{init}{vector of initial state probabilities}
+\item{init}{vector of initial state probabilities. Must sum to 1}
 
-\item{probObs}{time-independent matrix of observation probabilities.
+\item{probObs}{time-independent matrix (\code{dDHMM} and
+\code{rHMM}) or time-dependent 3D array (\code{dDHMMo} and
+\code{rHMMo}) of observation probabilities.
 First two dimensions of \code{probObs} are of size x (number of possible
 system states) x (number of possible observation classes). \code{dDHMMo}
-expects an additional third dimension of size (number of observation times).}
+and \code{rHMMo} expects an additional third dimension of size (number of
+observation times).}
 
 \item{probTrans}{time-dependent matrix of system state-transition
 probabilities. Dimension of \code{probTrans} is (number of possible
@@ -35,7 +41,9 @@ x (number of observation times).}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 
-\item{n}{length of random sequence}
+\item{n}{number of random draws, each returning a vector of length
+\code{len}. Currently only \code{n = 1} is supported, but the
+argument exists for standardization of "\code{r}" functions.}
 }
 \value{
 For \code{dDHMM} and \code{dDHMMo}: the probability (or likelihood) or log
