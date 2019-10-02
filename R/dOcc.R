@@ -94,7 +94,7 @@
 #' @seealso For dynamic occupancy models, see documentation for
 #'   \code{\link{dDynOcc}}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' dat <- c(1,1,0,0) # A vector of observations
 #' probOcc <- 0.6

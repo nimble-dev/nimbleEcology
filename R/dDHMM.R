@@ -115,7 +115,7 @@
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' dat <- c(1,2,1,1) # A vector of observations
 #' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities

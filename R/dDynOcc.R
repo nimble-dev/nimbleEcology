@@ -124,7 +124,7 @@
 #' @seealso For basic occupancy models, see documentation for
 #'   \code{\link{dOcc}}.
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Set up constants and initial values for defining the model
 #'   x <- matrix(c(0,0,NA,0,
 #'                 1,1,1,0,

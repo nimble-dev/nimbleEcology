@@ -121,7 +121,7 @@
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' len <- 5 # length of dataset
 #' dat <- c(1,2,1,1,2) # A vector of observations
