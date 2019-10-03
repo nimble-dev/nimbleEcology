@@ -123,7 +123,7 @@ If both survival and capture probabilities are time-dependent, use
 and so on for each combination of time-dependent and time-independent parameters.
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
 probSurvive <- 0.6

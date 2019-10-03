@@ -126,7 +126,7 @@ dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
 transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,2,1,1) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities

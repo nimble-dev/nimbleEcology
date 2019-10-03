@@ -130,7 +130,7 @@ If the observation probabilities are time-dependent, one would use:
 transitionProbs[1:S, 1:S], T)}
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
 len <- 5 # length of dataset
 dat <- c(1,2,1,1,2) # A vector of observations

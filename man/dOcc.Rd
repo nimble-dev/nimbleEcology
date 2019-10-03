@@ -106,7 +106,7 @@ If the detection probabilities are time-dependent, use:
 detectionProbability[1:T], len = T)}
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
 probOcc <- 0.6

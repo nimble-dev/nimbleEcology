@@ -205,7 +205,7 @@ probPersist = persistence_prob,
 probColonize = colonization_prob[1:(T-1)], p = p[1:S, 1:T])}
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
   x <- matrix(c(0,0,NA,0,
                 1,1,1,0,
