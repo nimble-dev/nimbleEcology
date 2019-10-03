@@ -137,7 +137,7 @@ dat <- c(1,2,1,1,2) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
 probObs <- t(array( # A matrix of observation probabilities
        c(1, 0,
-         0, 1
+         0, 1,
          0.2, 0.8), c(2, 3)))
 probTrans <- t(array( # A matrix of transition probabilities
         c(0.6, 0.3, 0.1,
