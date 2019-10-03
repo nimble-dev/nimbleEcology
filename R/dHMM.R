@@ -157,7 +157,7 @@
 #'                          data = list(x = dat),
 #'                          inits = list(init = init,
 #'                                       probObs = probObs,
-#'                                       probTrans = probTrans)))
+#'                                       probTrans = probTrans))
 #' # Calculate log probability of data from the model
 #' HMM_model$calculate()
 #' # Use the model for a variety of other purposes...

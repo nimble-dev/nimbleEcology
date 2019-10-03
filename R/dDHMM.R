@@ -151,7 +151,7 @@
 #'                           data = list(x = dat),
 #'                           inits = list(init = init,
 #'                                        probObs = probObs,
-#'                                        probTrans = probTrans)))
+#'                                        probTrans = probTrans))
 #' # Calculate log probability of x from the model
 #' DHMM_model$calculate()
 #' # Use the model for a variety of other purposes...
