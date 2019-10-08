@@ -12,10 +12,10 @@ context("Testing dCJS-related functions.")
 test_that("dCJS_ss works",
           {
       # Uncompiled calculation
-          x <- c(0, 1, 0, 0)
+          x <- c(1, 0, 1, 0, 0)
           probSurvive <- 0.6
           probCapture <- 0.4
-          probX <- dCJS_ss(x, probSurvive, probCapture)
+          probX <- dCJS_ss(x, probSurvive, probCapture, len = 5)
       # Manually calculate the correct answer
           correctProbX <- probSurvive * (1 - probCapture) *
             probSurvive * (probCapture) *
@@ -26,26 +26,21 @@ test_that("dCJS_ss works",
           expect_equal(probX, correctProbX)
 
       # Uncompiled log probability
-          lProbX <- dCJS_ss(x, probSurvive, probCapture, log = TRUE)
+          lProbX <- dCJS_ss(x, probSurvive, probCapture, log = TRUE, len = 5)
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
 
       # Compilation and compiled calculations
           CdCJS_ss <- compileNimble(dCJS_ss)
-          CprobX <- CdCJS_ss(x, probSurvive, probCapture)
+          CprobX <- CdCJS_ss(x, probSurvive, probCapture, len = 5)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdCJS_ss(x, probSurvive, probCapture, log = TRUE)
+          ClProbX <- CdCJS_ss(x, probSurvive, probCapture, log = TRUE, len = 5)
           expect_equal(ClProbX, lProbX)
-
-      # random function works
-          set.seed(2468)
-          oneSim <- rCJS_ss(1, probSurvive, probCapture, len = 4)
-          expect_equal(oneSim, c(0, 1, 0, 0))
 
       # Use in Nimble model
           nc <- nimbleCode({
-            x[1:4] ~ dCJS_ss(probSurvive, probCapture, len = 4)
+            x[1:5] ~ dCJS_ss(probSurvive, probCapture, len = 5)
             probSurvive ~ dunif(0,1)
             probCapture ~ dunif(0,1)
           })
@@ -63,7 +58,7 @@ test_that("dCJS_ss works",
           expect_equal(CMlProbX, lProbX)
 
       # Test imputing value for all NAs
-          xNA <- c(NA, NA, NA, NA)
+          xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
                               probCapture = probCapture))
@@ -76,7 +71,7 @@ test_that("dCJS_ss works",
           cmNA$mNA_MCMC$run(10)
 
       # Did the imputed values come back?
-          expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
+          expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[2]"])))
 
       # Test simulation code
           set.seed(1)
@@ -116,15 +111,15 @@ test_that("dCJS_ss works",
 test_that("dCJS_sv works",
           {
       # Uncompiled calculation
-          x <- c(0, 1, 0, 0)
+          x <- c(1, 0, 1, 0, 0)
           probSurvive <- 0.6
-          probCapture <- c(0.25, 0.6, 0.4, 0.8)
+          probCapture <- c(1, 0.25, 0.6, 0.4, 0.8)
           probX <- dCJS_sv(x, probSurvive, probCapture)
       # Manually calculate the correct answer
-          correctProbX <- probSurvive * (1 - probCapture[1]) *
-            probSurvive * (probCapture[2]) *
-            (probSurvive^2 * (1 - probCapture[3]) * (1 - probCapture[4]) +
-               probSurvive * (1 - probCapture[3]) * (1 - probSurvive) +
+          correctProbX <- probSurvive * (1 - probCapture[2]) *
+            probSurvive * (probCapture[3]) *
+            (probSurvive^2 * (1 - probCapture[4]) * (1 - probCapture[5]) +
+               probSurvive * (1 - probCapture[4]) * (1 - probSurvive) +
                (1 - probSurvive))
 
           expect_equal(probX, correctProbX)
@@ -142,16 +137,12 @@ test_that("dCJS_sv works",
           ClProbX <- CdCJS_sv(x, probSurvive, probCapture, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
-      # random function works
-          set.seed(2)
-          oneSim <- rCJS_sv(1, probSurvive, probCapture, len = 4)
-          expect_equal(oneSim, c(0, 1, 0, 0))
 
       # Use in Nimble model
           nc <- nimbleCode({
-            x[1:4] ~ dCJS_sv(probSurvive, probCapture[1:4], len = 4)
+            x[1:5] ~ dCJS_sv(probSurvive, probCapture[1:5], len = 5)
             probSurvive ~ dunif(0,1)
-            for (i in 1:4) {
+            for (i in 1:5) {
               probCapture[i] ~ dunif(0,1)
             }
           })
@@ -168,13 +159,8 @@ test_that("dCJS_sv works",
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
 
-      # Simulate some data to test random generation
-          set.seed(2468)
-          cm$simulate('x')
-          expect_equal(cm$x, c(0, 1, 0, 0))
-
       # Test imputing value for all NAs
-          xNA <- c(NA, NA, NA, NA)
+          xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
                               probCapture = probCapture))
@@ -205,7 +191,7 @@ test_that("dCJS_sv works",
           simNodes <- m$getDependencies(c('probSurvive', 'probCapture'), self = FALSE)
           mxSim <- array(NA, dim = c(nSim, length(x)))
           set.seed(1)
-          for(i in 1:nSim) {
+          for (i in 1:nSim) {
             m$simulate(simNodes, includeData = TRUE)
             mxSim[i,] <- m$x
           }
@@ -213,7 +199,7 @@ test_that("dCJS_sv works",
 
           CmxSim <- array(NA, dim = c(nSim, length(x)))
           set.seed(1)
-          for(i in 1:nSim) {
+          for (i in 1:nSim) {
             cm$simulate(simNodes, includeData = TRUE)
             CmxSim[i,] <- cm$x
           }
@@ -227,7 +213,7 @@ test_that("dCJS_sv works",
 test_that("dCJS_vs works",
           {
       # Uncompiled calculation
-          x <- c(0, 1, 0, 0)
+          x <- c(1, 0, 1, 0, 0)
           probSurvive <- c(0.8, 0.45, 0.4, 0.7)
           probCapture <- 0.6
           probX <- dCJS_vs(x, probSurvive, probCapture)
@@ -253,14 +239,9 @@ test_that("dCJS_vs works",
           ClProbX <- CdCJS_vs(x, probSurvive, probCapture, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
-      # random function works
-          set.seed(2)
-          oneSim <- rCJS_vs(1, probSurvive, probCapture, len = 4)
-          expect_equal(oneSim, c(0, 1, 0, 0))
-
       # Use in Nimble model
           nc <- nimbleCode({
-            x[1:4] ~ dCJS_vs(probSurvive[1:4], probCapture, len = 4)
+            x[1:5] ~ dCJS_vs(probSurvive[1:4], probCapture, len = 5)
             probCapture ~ dunif(0,1)
             for (i in 1:4) {
               probSurvive[i] ~ dunif(0,1)
@@ -279,13 +260,8 @@ test_that("dCJS_vs works",
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
 
-      # Simulate some data to test random generation
-          set.seed(2468)
-          cm$simulate('x')
-          expect_equal(cm$x, c(0, 1, 0, 0))
-
       # Test imputing value for all NAs
-          xNA <- c(NA, NA, NA, NA)
+          xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
                               probCapture = probCapture))
@@ -337,18 +313,18 @@ test_that("dCJS_vs works",
 test_that("dCJS_vv works",
       {
       ## Uncompiled calculation
-          x <- c(0,1,0,0)
+          x <- c(1, 0,1,0,0)
           probSurvive <- c(0.6, 0.5, 0.4, 0.55)
-          probCapture <- c(0.45, 0.5, 0.55, 0.6)
-          len <- 4
+          probCapture <- c(1, 0.45, 0.5, 0.55, 0.6)
+          len <- 5
           probX <- dCJS_vv(x, probSurvive, probCapture, len)
 
           correctProbX <-
-            probSurvive[1] * (1 - probCapture[1]) *
-            probSurvive[2] * (probCapture[2]) *
-            ((probSurvive[3] * (1 - probCapture[3]) *
-              probSurvive[4] * (1 - probCapture[4])) +
-             (probSurvive[3] * (1 - probCapture[3]) *
+            probSurvive[1] * (1 - probCapture[2]) *
+            probSurvive[2] * (probCapture[3]) *
+            ((probSurvive[3] * (1 - probCapture[4]) *
+              probSurvive[4] * (1 - probCapture[5])) +
+             (probSurvive[3] * (1 - probCapture[4]) *
               (1 - probSurvive[4])) +
              (1 - probSurvive[3]))
 
@@ -364,17 +340,12 @@ test_that("dCJS_vv works",
           CprobX <- CdCJS_vv(x, probSurvive, probCapture)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdCJS_vv(x, probSurvive, probCapture, len = 4, log = TRUE)
+          ClProbX <- CdCJS_vv(x, probSurvive, probCapture, len = 5, log = TRUE)
           expect_equal(ClProbX, lProbX)
-
-          ## r function works
-          set.seed(2468)
-          oneSim <- rCJS_vv(1, probSurvive, probCapture, len = 4)
-          expect_equal(oneSim, c(1, 0, 0, 0))
 
           ## Use in model
           nc <- nimbleCode({
-            x[1:4] ~ dCJS_vv(probSurvive[1:4], probCapture[1:4], len = 4)
+            x[1:5] ~ dCJS_vv(probSurvive[1:4], probCapture[1:5], len = 5)
             for (i in 1:4) {
               probSurvive[i] ~ dunif(0,1)
               probCapture[i] ~ dunif(0,1)
@@ -392,12 +363,8 @@ test_that("dCJS_vv works",
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
 
-          set.seed(2468)
-          cm$simulate('x')
-          expect_equal(cm$x, c(0, 1, 0, 0))
-
       # Test imputing value for all NAs
-          xNA <- c(NA, NA, NA, NA)
+          xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(probSurvive = probSurvive,
                               probCapture = probCapture))
@@ -448,34 +415,34 @@ test_that("dCJS errors", {
 ### Uncompiled errors
 # dCJS_ss error checks
   expect_error(
-    dCJS_ss(x = c(0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
+    dCJS_ss(x = c(1,0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
   )
 
 # dCJS_sv error checks
   expect_error(
-    dCJS_sv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 5)
+    dCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 2)
   )
   expect_error(
-    dCJS_sv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
+    dCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
   )
 
 # dCJS_vs error checks
   expect_error(
-    dCJS_sv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 5)
+    dCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 6)
   )
   expect_error(
-    dCJS_sv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4), probSurvive = 0.8)
+    dCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4), probSurvive = 0.8)
   )
 
 # dCJS_vv error checks
   expect_error(
-    dCJS_vv(x = c(0,1,0,0), probCapture = c(0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
+    dCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
   )
   expect_error(
-    dCJS_vv(x = c(0,1,0,0), probCapture = c(0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
+    dCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
   )
   expect_error(
-    dCJS_vv(x = c(0,1,0,0), probCapture = c(0,1,0,0),
+    dCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0,0),
             probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
   )
 
@@ -486,34 +453,34 @@ test_that("dCJS errors", {
   CdCJS_vv <- compileNimble(dCJS_vv)
 
   expect_error(
-    CdCJS_ss(x = c(0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
+    CdCJS_ss(x = c(1,0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
   )
 
 # dCJS_sv error checks
   expect_error(
-    CdCJS_sv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 5)
+    CdCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4), len = 3)
   )
   expect_error(
-    CdCJS_sv(x = c(0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
+    CdCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
   )
 
 # dCJS_vs error checks
   expect_error(
-    CdCJS_sv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 5)
+    CdCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4, 0.4), probSurvive = 0.1, len = 3)
   )
   expect_error(
-    CdCJS_sv(x = c(0,1,0,0), probCapture = c(0.9, 0.9, 0.4), probSurvive = 0.8)
+    CdCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4), probSurvive = 0.8)
   )
 
 # dCJS_vv error checks
   expect_error(
-    CdCJS_vv(x = c(0,1,0,0), probCapture = c(0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
+    CdCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0.3,0.3), probSurvive = c(0.9, 0.9))
   )
   expect_error(
-    CdCJS_vv(x = c(0,1,0,0), probCapture = c(0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
+    CdCJS_vv(x = c(1,0,1,0,0), probCapture = c(0,1), probSurvive = c(0.9, 0.9, 0.1, 0.1))
   )
   expect_error(
-    CdCJS_vv(x = c(0,1,0,0), probCapture = c(0,1,0,0),
+    CdCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0,0),
             probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
   )
 })
