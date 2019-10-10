@@ -54,7 +54,14 @@
 #' probabilities of persistence and colonization are a constant scalar (s)
 #' or time-indexed vector (v). For example, \code{dDynOcc_svm} takes scalar
 #' persistence probability \code{probPersist} with a vector of colonization
-#' probabilities \code{probColonize[1:T]}.
+#' probabilities \code{probColonize[1:(T-1)]}.
+#'
+#' When vectors, \code{probColonize} and \code{probPersist} may be of any
+#' length greater than \code{length(x) - 1}. Only the first \code{length(x) - 1}
+#' indices are used, each corresponding to the transition from time t to t+1
+#' (e.g. \code{probColonize[2]} describes the transition probability from
+#' t = 2 to t = 3). All extra values are ignored. This is to make it easier to
+#' use one distribution for many sites, some requiring probabilities of length 1.
 #'
 #' The third letter in the suffix indicates whether the detection probability
 #' is a constant (scalar), time-dependent (vector), or both time-dependent and
@@ -183,8 +190,8 @@ dDynOcc_vvm <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -240,7 +247,7 @@ dDynOcc_vsm <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
 
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -294,7 +301,7 @@ dDynOcc_svm <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
 
@@ -516,8 +523,8 @@ dDynOcc_vvv <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
@@ -571,7 +578,7 @@ dDynOcc_vsv <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
 
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
@@ -624,7 +631,7 @@ dDynOcc_svv <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
     ## x is a year by rep matix
@@ -846,8 +853,8 @@ dDynOcc_vvs <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- init
@@ -900,7 +907,7 @@ dDynOcc_vss <- nimbleFunction(
                  end = double(1),
                  log = double(0, default = 0)) {
 
-    if (length(probPersist) != dim(x)[1] - 1) stop("Length of probPersist vector does not match length of data.")
+    if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- init
@@ -952,7 +959,7 @@ dDynOcc_svs <- nimbleFunction(
                  start = double(1),
                  end = double(1),
                  log = double(0, default = 0)) {
-    if (length(probColonize) != dim(x)[1] - 1) stop("Length of probColonize vector does not match length of data.")
+    if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
     ## x is a year by rep matix
     ProbOccNextTime <- init

@@ -35,15 +35,15 @@
 #' probabilities, in that order, are scalar (s, meaning the probability applies
 #' to every \code{x[t]}) or vector (v, meaning the probability is a vector
 #' aligned with \code{x}).  When \code{probCapture} and/or \code{probSurvive} is
-#' a vector, they must be the same length as \code{x}. Note that in the case
-#' where \code{len = 2}, \code{probSurvive} must be scalar, since as it would
-#' have length \code{len - 1 = 1}.
+#' a vector, they must be the same length as \code{x}.
 #'
 #' It is important to use the time indexing correctly for survival.
-#' \code{probSurvive[t]} is the survival probabilty from time
-#' \code{t} to time \code{t + 1}.  Time indexing for detection is more
-#' obvious: \code{probDetect[t]} is the detection probability at time
-#' \code{t}.
+#' \code{probSurvive[t]} is the survival probabilty from time \code{t} to time
+#' \code{t + 1}. When a vector, \code{probSurvive} may have length greater than
+#' \code{length(x) - 1}, but all values beyond that index are ignored.
+#'
+#' Time indexing for detection is more obvious: \code{probDetect[t]} is the
+#' detection probability at time \code{t}.
 #'
 #' When called from R, the \code{len} argument to \code{dCJS_**} is not
 #' necessary. It will default to the length of \code{x}.  When used in
@@ -236,7 +236,8 @@ dCJS_vs <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
-    if (length(x) - 1 != length(probSurvive)) stop("Length of probSurvive does not match length of data.")
+    if (length(probSurvive) < length(x) - 1)
+      stop("Length of probSurvive must be at least length of data minus 1.")
 
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
@@ -286,7 +287,8 @@ dCJS_vv <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
-    if (length(x) - 1 != length(probSurvive)) stop("Length of probSurvive does not match length of data - 1.")
+    if (length(probSurvive) < length(x) - 1)
+      stop("Length of probSurvive must be at least length of data minus 1.")
     if (length(x) != length(probCapture)) stop("Length of probCapture does not match length of data.")
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
