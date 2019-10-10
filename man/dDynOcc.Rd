@@ -142,7 +142,14 @@ The first two letters following the 'dDynOcc_' indicate whether the
 probabilities of persistence and colonization are a constant scalar (s)
 or time-indexed vector (v). For example, \code{dDynOcc_svm} takes scalar
 persistence probability \code{probPersist} with a vector of colonization
-probabilities \code{probColonize[1:T]}.
+probabilities \code{probColonize[1:(T-1)]}.
+
+When vectors, \code{probColonize} and \code{probPersist} may be of any
+length greater than \code{length(x) - 1}. Only the first \code{length(x) - 1}
+indices are used, each corresponding to the transition from time t to t+1
+(e.g. \code{probColonize[2]} describes the transition probability from
+t = 2 to t = 3). All extra values are ignored. This is to make it easier to
+use one distribution for many sites, some requiring probabilities of length 1.
 
 The third letter in the suffix indicates whether the detection probability
 is a constant (scalar), time-dependent (vector), or both time-dependent and

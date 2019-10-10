@@ -30,14 +30,16 @@ rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
 \item{x}{capture-history vector of 0s (not captured) and 1s (captured).
-Do not include the initial capture, which is assumed to have occurred
-prior to \code{x[1]}.}
+Include the initial capture, so \code{x[1]} should equal 1.}
 
 \item{probSurvive}{survival probability, either a time-independent scalar
-(for dCJS_s*) or a time-dependent vector (for dCJS_v*).}
+(for dCJS_s*) or a time-dependent vector (for dCJS_v*) with length
+\code{len - 1}.}
 
 \item{probCapture}{capture probability, either a time-independent scalar
-(for dCJS_*s) or a time-dependent vector (for dCJS_*v).}
+(for dCJS_*s) or a time-dependent vector (for dCJS_*v) with length \code{len}.
+If a vector, first element is ignored, as the total probability is conditioned
+on the capture at \code{t = 1}.}
 
 \item{len}{length of capture history. Should equal \code{length(x)}}
 
@@ -62,18 +64,19 @@ These nimbleFunctions provide distributions that can be used directly in R or
 in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 and \code{\link[nimble]{nimbleModel}}).
 
-The letters following the 'dCJS_' indicate whether survival and/or
-capture probabilities, in that order, are scalar (s, meaning the
-probability applies to every \code{x[t]}) or vector (v, meaning the
-probability is a vector aligned with \code{x}).  When
-\code{probCapture} and/or \code{probSurvive} is a vector, they must
-be the same length as \code{x}.
+The letters following the 'dCJS_' indicate whether survival and/or capture
+probabilities, in that order, are scalar (s, meaning the probability applies
+to every \code{x[t]}) or vector (v, meaning the probability is a vector
+aligned with \code{x}).  When \code{probCapture} and/or \code{probSurvive} is
+a vector, they must be the same length as \code{x}.
 
 It is important to use the time indexing correctly for survival.
-\code{probSurvive[t]} is the survival probabilty from time
-\code{t-1} to time \code{t}.  Time indexing for detection is more
-obvious: \code{probDetect[t]} is the detection probability at time
-\code{t}.
+\code{probSurvive[t]} is the survival probabilty from time \code{t} to time
+\code{t + 1}. When a vector, \code{probSurvive} may have length greater than
+\code{length(x) - 1}, but all values beyond that index are ignored.
+
+Time indexing for detection is more obvious: \code{probDetect[t]} is the
+detection probability at time \code{t}.
 
 When called from R, the \code{len} argument to \code{dCJS_**} is not
 necessary. It will default to the length of \code{x}.  When used in
@@ -85,9 +88,10 @@ For more explanation, see
 \code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent state for
-true alive/dead status at each time and a separate scalar datum for each observation, use
-of these distributions allows one to directly sum (marginalize) over the
-discrete latent states and calculate the probability of the detection history for one individual jointly.
+true alive/dead status at each time and a separate scalar datum for each
+observation, use of these distributions allows one to directly sum
+(marginalize) over the discrete latent states and calculate the probability
+of the detection history for one individual jointly.
 
 These are \code{nimbleFunction}s written in the format of user-defined
 distributions for NIMBLE's extension of the BUGS model language. More
@@ -118,23 +122,23 @@ will make a similar invocation of \code{rCJS_ss}, with \code{n = 1}.
 
 If both survival and capture probabilities are time-dependent, use
 
-\code{captures[i,1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}
+\code{captures[i,1:T] ~ dCSJ_vv(survive[1:(T-1)], capture[1:T], T)}
 
 and so on for each combination of time-dependent and time-independent parameters.
 }
 \examples{
 \donttest{
 # Set up constants and initial values for defining the model
-dat <- c(1,1,0,0) # A vector of observations
-probSurvive <- 0.6
+dat <- c(1,1,0,0,0) # A vector of observations
+probSurvive <- c(0.6, 0.3, 0.3, 0.1)
 probCapture <- 0.4
 
 
 # Define code for a nimbleModel
 nc <- nimbleCode({
-  x[1:4] ~ dCJS_ss(probSurvive, probCapture, len = 4)
+  x[1:4] ~ dCJS_vs(probSurvive, probCapture, len = 4)
   probSurvive ~ dunif(0,1)
-  probCapture ~ dunif(0,1)
+  for (i in 1:4) probSurvive[i] ~ dunif(0, 1)
 })
 
 # Build the model, providing data and initial values

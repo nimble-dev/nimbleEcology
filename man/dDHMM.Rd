@@ -73,7 +73,8 @@ the number of time intervals.
 
 \code{probTrans} has dimension S x S x (T - 1). \code{probTrans}[i, j, t] is
 the probability that an individual in state \code{i} at time \code{t} takes on
-state \code{j} at time \code{t+1}.
+state \code{j} at time \code{t+1}. The length of the third dimension may be greater
+than (T - 1) but all values indexed greater than T - 1 will be ignored.
 
 \code{initStates} has length S. \code{initStates[i]} is the
 probability of being in state \code{i} at the first observation time.
