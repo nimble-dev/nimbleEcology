@@ -10,7 +10,7 @@
 \alias{rCJS_sv}
 \alias{rCJS_vs}
 \alias{rCJS_vv}
-\title{Cormack-Jolly-Seber distribution for use in NIMBLE models}
+\title{Cormack-Jolly-Seber distribution for use in \code{nimble} models}
 \usage{
 dCJS_ss(x, probSurvive, probCapture, len = 0, log = 0)
 
@@ -29,67 +29,116 @@ rCJS_vs(n, probSurvive, probCapture, len = 0)
 rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
-\item{x}{capture-history vector of 0s (not captured) and 1s (captured). Do not include the initial capture, which is assumed.}
+\item{x}{capture-history vector of 0s (not captured) and 1s (captured).
+Include the initial capture, so \code{x[1]} should equal 1.}
 
-\item{probSurvive}{survival probability, either a scalar (for dCJS_s*) or a vector (for dCJS_v*).}
+\item{probSurvive}{survival probability, either a time-independent scalar
+(for dCJS_s*) or a time-dependent vector (for dCJS_v*) with length
+\code{len - 1}.}
 
-\item{probCapture}{capture probability, either a scalar (for dCJS_*s) or a vector (for dCJS_*v).}
+\item{probCapture}{capture probability, either a time-independent scalar
+(for dCJS_*s) or a time-dependent vector (for dCJS_*v) with length \code{len}.
+If a vector, first element is ignored, as the total probability is conditioned
+on the capture at \code{t = 1}.}
 
-\item{len}{length of capture history (needed for rCJSxx).}
+\item{len}{length of capture history. Should equal \code{length(x)}}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.}
 
-\item{n}{length of random sequence}
+\item{n}{number of random draws, each returning a vector of length
+\code{len}. Currently only \code{n = 1} is supported, but the
+argument exists for standardization of "\code{r}" functions.}
+}
+\value{
+For \code{dCJS_**}: the probability (or likelihood) or log probability of observation vector \code{x}.
+
+For \code{rCJS_**}: a simulated capture history, \code{x}.
 }
 \description{
-\code{dCJS_**} functions provide a basic distribution for capture history vectors based
- on survival and capture probabilities. The different aliases are for scalar ("s", time-independent)
- versus vector ("v", time-dependent) survival and capture probabilities, in that order.
+\code{dCJS_**} and \code{rCJS_**} provide Cormack-Jolly-Seber capture-recapture
+distributions that can be used directly from R or in \code{nimble}
+models.
 }
 \details{
-These nimbleFunctions provide distributions that can be used in code (via \code{nimbleCode}) for \link{nimbleModel}.
+These nimbleFunctions provide distributions that can be used directly in R or
+in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
+and \code{\link[nimble]{nimbleModel}}).
 
-These are written in the format of user-defined distributions to extend NIMBLE's
-use of the BUGS model language.  More information about writing user-defined distributions can be found
-in the NIMBLE User Manual at \code{https://r-nimble.org}.
+The letters following the 'dCJS_' indicate whether survival and/or capture
+probabilities, in that order, are scalar (s, meaning the probability applies
+to every \code{x[t]}) or vector (v, meaning the probability is a vector
+aligned with \code{x}).  When \code{probCapture} and/or \code{probSurvive} is
+a vector, they must be the same length as \code{x}.
 
-The first argument to a "d" function is always named \code{x} and is given on the
-left-hand side of a (stochastic) model declaration in the BUGS model language (used by NIMBLE).
-When using these distributions in a NIMBLE model, the user
-should not provide the \code{log} argument.  (It is always set to \code{TRUE} when used
-in a NIMBLE model.)
+It is important to use the time indexing correctly for survival.
+\code{probSurvive[t]} is the survival probabilty from time \code{t} to time
+\code{t + 1}. When a vector, \code{probSurvive} may have length greater than
+\code{length(x) - 1}, but all values beyond that index are ignored.
 
-For example,
+Time indexing for detection is more obvious: \code{probDetect[t]} is the
+detection probability at time \code{t}.
 
-\code{captures[1:T] ~ dCSJ_ss(survive, capture, T)}
+When called from R, the \code{len} argument to \code{dCJS_**} is not
+necessary. It will default to the length of \code{x}.  When used in
+\code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
+(even though it may seem redundant).
 
-declares a vector node, \code{captures[1:T]}, that follows a capture-recapture distribution
+For more explanation, see
+\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+\code{vignette("Introduction_to_nimbleEcology")}).
+
+Compared to writing \code{nimble} models with a discrete latent state for
+true alive/dead status at each time and a separate scalar datum for each
+observation, use of these distributions allows one to directly sum
+(marginalize) over the discrete latent states and calculate the probability
+of the detection history for one individual jointly.
+
+These are \code{nimbleFunction}s written in the format of user-defined
+distributions for NIMBLE's extension of the BUGS model language. More
+information can be found in the NIMBLE User Manual at
+\href{https://r-nimble.org}{https://r-nimble.org}.
+
+When using these distributions in a \code{nimble} model, the left-hand side
+will be used as \code{x}, and the user should not provide the \code{log}
+argument.
+
+For example, in \code{nimble} model code,
+
+\code{captures[i, 1:T] ~ dCSJ_ss(survive, capture, T)}
+
+declares a vector node, \code{captures[i, 1:T]}, (detection history for individual
+\code{i},  for example) that follows a CJS distribution
 with scalar survival probability \code{survive} and scalar capture probability \code{capture}
 (assuming \code{survive} and \code{capture} are defined elsewhere in the model).
-If time-dependent survival and capture probabilities are needed, use
 
-\code{captures[1:T] ~ dCSJ_vv(survive[1:T], capture[1:T], T)}.
+This will invoke (something like) the following call to \code{dCJS_ss} when \code{nimble} uses the
+model such as for MCMC:
 
-In fact, the \code{len} argument (\code{T} in these examples) will be ignored during model
-probability calculations.  It will be used only for simulations.
+\code{dCJS_ss(captures[i, 1:T], survive, capture, len = T, log = TRUE)}
 
-It is important to use the time indexing correctly for survival.  \code{probSurvive[t]} is the survival
-probabilty from time \code{t-1} to time \code{t}.  Time indexing for detection is more obvious:
-\code{probDetect[t]} is the detection probability at time \code{t}.
+If an algorithm using a \code{nimble} model with this declaration
+needs to generate a random draw for \code{captures[i, 1:T]}, it
+will make a similar invocation of \code{rCJS_ss}, with \code{n = 1}.
+
+If both survival and capture probabilities are time-dependent, use
+
+\code{captures[i,1:T] ~ dCSJ_vv(survive[1:(T-1)], capture[1:T], T)}
+
+and so on for each combination of time-dependent and time-independent parameters.
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up constants and initial values for defining the model
-dat <- c(1,1,0,0) # A vector of observations
-probSurvive <- 0.6
+dat <- c(1,1,0,0,0) # A vector of observations
+probSurvive <- c(0.6, 0.3, 0.3, 0.1)
 probCapture <- 0.4
 
 
 # Define code for a nimbleModel
 nc <- nimbleCode({
-  x[1:4] ~ dCJS_ss(probSurvive, probCapture, len = 4)
+  x[1:4] ~ dCJS_vs(probSurvive, probCapture, len = 4)
   probSurvive ~ dunif(0,1)
-  probCapture ~ dunif(0,1)
+  for (i in 1:4) probSurvive[i] ~ dunif(0, 1)
 })
 
 # Build the model, providing data and initial values
@@ -108,7 +157,7 @@ Carlo sampling for hierarchical hidden Markov models. Environmental and Ecologic
 23:549–564. DOI 10.1007/s10651-016-0353-z
 }
 \seealso{
-For multi-state or multi-event capture-recapture models, see \link{dHMM} or \link{dDHMM}.
+For multi-state or multi-event capture-recapture models, see \code{\link{dHMM}} or \code{\link{dDHMM}}.
 }
 \author{
 Ben Goldstein, Perry de Valpine, and Daniel Turek
