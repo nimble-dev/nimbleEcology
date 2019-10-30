@@ -19,9 +19,19 @@
 #' @param x count observation data, 0 and positive integers
 #' @param lambda expected value of the Poisson distribution of true abundance
 #' @param prob observation probability for each X
-#' @param notZero 0 if datum is structural zero, 1 otherwise. Allows for zero-inflated Poisson models
-#' @param minN the minimum true abundance to sum over. Set to -1 for distribution to select based on lambda
-#' @param maxN the maximum true abundance to sum over. Set to -1 for distribution to select based on lambda
+#' @param notZero 0 if datum is structural zero, 1 otherwise. Allows for
+#'        zero-inflated Poisson models
+#' @param minN the minimum true abundance to sum over. Set to -1 for distribution
+#'        to select based on lambda. Ignored if dynamicMinMax = TRUE
+#' @param maxN the maximum true abundance to sum over. Set to -1 for distribution
+#'        to select based on lambda. Ignored if dynamicMinMax = TRUE
+#' @param dynamicMinMax 0 to use input minN and maxN, 1 to ignore
+#'        provided minN and maxN and algorithmically select reasonable bounds for N.
+#' @param n number of random draws, each returning a vector of length
+#'     \code{len}. Currently only \code{n = 1} is supported, but the
+#'     argument exists for standardization of "\code{r}" functions.
+#' @param len The length of the x vector. Only used for simulation in \code{rNmixture},
+#'     ignored in \code{dNmixture}
 #'
 #' @author Lauren Ponisio, Ben Goldstein, Perry de Valpine
 #'
@@ -53,36 +63,35 @@ NULL
 #' @export
 dNmixture <- nimbleFunction(
     run = function(x = double(1),
-                   lambda = double(),
-                   prob = double(1),
-                   notZero = double(),
-                   minN = double(),
-                   maxN = double(),
+                   lambda = double(0),
+                   prob = double(1), # Two cases, p scalar and p vector
+                   minN = double(0, default = -1),
+                   maxN = double(0, default = -1),
+                   dynamicMinMax = double(0, default = 0),
+                   len = double(0, default = 0),
                    log = integer(0, default = 0)) {
+    # Lambda cannot be negative
     if (lambda < 0) {
         if (log) return(-Inf)
         else return(0)
     }
+    # Check if there is any data
     if (is.na.vec(x) | is.nan.vec(x)) {
         if (log) return(-Inf)
         return(0)
     }
-    if (notZero == 0) { ## It is structural zero
-        if (all(x == 0)) {
-            if (log) return(0)
-            else return(1)
-        } else {
-            if (log) return(-Inf)
-            else return(0)
-        }
+
+    if (minN == -1 & maxN == -1 & !dynamicMinMax) {
+      stop("minN and maxN must be provided if dynamicMinMax is not 1.")
     }
-    ## It is not a structural zero.
-    ##
+
     ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
-    maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
-    minN <- max( max(x), minN ) ## set minN to at least the largest x
+    if (dynamicMinMax) {
+      minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      minN <- max( max(x), minN ) ## set minN to at least the largest x
+    }
 
     obsProb <- 0
     if (maxN > minN) { ## should normally be true, but check in case it isn't in some corner case.
@@ -100,3 +109,16 @@ dNmixture <- nimbleFunction(
     else return(obsProb)
     returnType(double(0))
   })
+
+
+rNmixture <- nimbleFunction(
+  run = function(n = integer(),
+                 lambda = double(),
+                 prob = double(1),
+                 minN = double(),
+                 maxN = double(),
+                 dynamicMinMax = integer(0),
+                 len = double()) {
+  stop("Not implemented yet")
+})
+

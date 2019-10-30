@@ -282,5 +282,23 @@
                 'len = double()'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
-    )})
-}
+    )
+
+  registerDistributions(list(
+    dNmixture = list(
+      BUGSdist = "dNmixture(lambda, prob, minN, maxN, dynamicMinMax, len)",
+      Rdist = "dNmixture(lambda, prob, minN, maxN, dynamicMinMax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double(1)',
+                'minN = double()',
+                'maxN = double()',
+                'dynamicMinMax = integer(0)',
+                'len = double()'),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = T
+  )
+
+})}
