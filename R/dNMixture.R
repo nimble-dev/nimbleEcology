@@ -63,31 +63,26 @@ NULL
 #' @export
 dNmixture <- nimbleFunction(
     run = function(x = double(1),
-                   lambda = double(0),
+                   lambda = double(),
                    prob = double(1), # Two cases, p scalar and p vector
-                   minN = double(0, default = -1),
-                   maxN = double(0, default = -1),
-                   dynamicMinMax = double(0, default = 0),
-                   len = double(0, default = 0),
+                   minN = double(),
+                   maxN = double(),
                    log = integer(0, default = 0)) {
     # Lambda cannot be negative
     if (lambda < 0) {
         if (log) return(-Inf)
         else return(0)
     }
-    # Check if there is any data
-    if (is.na.vec(x) | is.nan.vec(x)) {
-        if (log) return(-Inf)
-        return(0)
-    }
 
-    if (minN == -1 & maxN == -1 & !dynamicMinMax) {
-      stop("minN and maxN must be provided if dynamicMinMax is not 1.")
-    }
+    # Check if there is any data
+    # if (is.na.vec(x) | is.nan.vec(x)) {
+    #     if (log) return(-Inf)
+    #     return(0)
+    # }
 
     ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (dynamicMinMax) {
+    if (minN == -1 & maxN == -1) {
       minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
       maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
       minN <- max( max(x), minN ) ## set minN to at least the largest x
@@ -107,18 +102,17 @@ dNmixture <- nimbleFunction(
     }
     if (log) return(log(obsProb))
     else return(obsProb)
-    returnType(double(0))
+    returnType(double())
   })
 
 
 rNmixture <- nimbleFunction(
-  run = function(n = integer(),
+  run = function(n = double(),
                  lambda = double(),
                  prob = double(1),
                  minN = double(),
-                 maxN = double(),
-                 dynamicMinMax = integer(0),
-                 len = double()) {
-  stop("Not implemented yet")
+                 maxN = double()) {
+  return(rep(0, length(prob)))
+  returnType(double(1))
 })
 

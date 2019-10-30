@@ -15,9 +15,9 @@ test_that("dNmixture works",
           prob <- c(0.5, 0.3, 0.5, 0.4, 0.1)
           minN <- 0
           maxN <- 250
-          dynamicMinMax <- 0
 
-          probX <- dNmixture(x, lambda, prob, minN, maxN, dynamicMinMax)
+
+          probX <- dNmixture(x, lambda, prob, minN, maxN)
       # Manually calculate the correct answer
           correctProbX <- 0
           for (N in minN:maxN) {
@@ -27,37 +27,36 @@ test_that("dNmixture works",
           expect_equal(probX, correctProbX)
 
       # Uncompiled log probability
-          lProbX <- dNmixture(x, lambda, prob, minN, maxN, dynamicMinMax, log = TRUE)
+          lProbX <- dNmixture(x, lambda, prob, minN, maxN, log = TRUE)
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
 
       # Compilation and compiled calculations
           CdNmixture <- compileNimble(dNmixture)
-          CprobX <- CdNmixture(x, lambda, prob, minN, maxN, dynamicMinMax)
+          CprobX <- CdNmixture(x, lambda, prob, minN, maxN)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdNmixture(x, lambda, prob, minN, maxN, dynamicMinMax, log = TRUE)
+          ClProbX <- CdNmixture(x, lambda, prob, minN, maxN, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
             x[1:5] ~ dNmixture(lambda = lambda, prob = prob[1:5],
-                               minN = minN, maxN = maxN,
-                               dynamicMinMax = dynamicMinMax, len = 5)
+                               minN = minN, maxN = maxN)
+
           })
 
           m <- nimbleModel(code = nc,
                            data = list(x = x),
                            inits = list(lambda = lambda,
                                         prob = prob),
-                           constants = list(minN = minN, maxN = maxN,
-                                            dynamicMinMax = dynamicMinMax))
+                           constants = list(minN = minN, maxN = maxN))
           m$calculate()
           MlProbX <- m$getLogProb("x")
           expect_equal(MlProbX, lProbX)
 
       # Compiled model
-          cm <- compileNimble(m)
+          cm <- compileNimble(m, showCompilerOutput = TRUE)
           cm$calculate()
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
