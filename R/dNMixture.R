@@ -14,7 +14,7 @@
 #' all observations from one site jointly.
 #'
 #' @name dNmixture
-#' @aliases dDynOcc_ss dDynOcc_sv dDynOcc_vs dDynOcc_vv
+#' @aliases dNmixture_v dNmixture_s
 #'
 #' @param x count observation data, 0 and positive integers
 #' @param lambda expected value of the Poisson distribution of true abundance
@@ -30,8 +30,7 @@
 #' @param n number of random draws, each returning a vector of length
 #'     \code{len}. Currently only \code{n = 1} is supported, but the
 #'     argument exists for standardization of "\code{r}" functions.
-#' @param len The length of the x vector. Only used for simulation in \code{rNmixture},
-#'     ignored in \code{dNmixture}
+#' @param len The length of the x vector. Needed for simulation in \code{rNmixture_*}.
 #'
 #' @author Lauren Ponisio, Ben Goldstein, Perry de Valpine
 #'
@@ -61,13 +60,17 @@
 NULL
 #' @rdname dNmixture
 #' @export
-dNmixture <- nimbleFunction(
+dNmixture_v <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
-                   prob = double(1), # Two cases, p scalar and p vector
+                   prob = double(1),
                    minN = double(),
                    maxN = double(),
+                   len = double(),
                    log = integer(0, default = 0)) {
+    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+    if (length(prob) != len) stop("in dNmixture_v, len must equal length(prob).")
+
     # Lambda cannot be negative
     if (lambda < 0) {
         if (log) return(-Inf)
@@ -105,14 +108,99 @@ dNmixture <- nimbleFunction(
     returnType(double())
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
+dNmixture_s <- nimbleFunction(
+    run = function(x = double(1),
+                   lambda = double(),
+                   prob = double(),
+                   minN = double(),
+                   maxN = double(),
+                   len = double(),
+                   log = integer(0, default = 0)) {
+    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
 
-rNmixture <- nimbleFunction(
+    # Lambda cannot be negative
+    if (lambda < 0) {
+        if (log) return(-Inf)
+        else return(0)
+    }
+
+    # Check if there is any data
+    # if (is.na.vec(x) | is.nan.vec(x)) {
+    #     if (log) return(-Inf)
+    #     return(0)
+    # }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (minN == -1 & maxN == -1) {
+      minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      minN <- max( max(x), minN ) ## set minN to at least the largest x
+    }
+
+    obsProb <- 0
+    if (maxN > minN) { ## should normally be true, but check in case it isn't in some corner case.
+    ##    print("counting from ", minN, " to ", maxN, " with lambda = ", lambda)
+        for (N in minN:maxN) {
+            thisObsProb <- dpois(N, lambda) * prod(dbinom(x, size = N, prob = prob))
+            obsProb <- obsProb + thisObsProb
+        }
+    } else {
+        ## return a potentially non-zero obsProb
+        N <- max(x)
+        obsProb <- dpois(N, lambda) * prod(dbinom(x, size = N, prob = prob))
+    }
+    if (log) return(log(obsProb))
+    else return(obsProb)
+    returnType(double())
+  })
+
+NULL
+#' @rdname dNmixture
+#' @export
+rNmixture_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(1),
                  minN = double(),
-                 maxN = double()) {
-  return(rep(0, length(prob)))
-  returnType(double(1))
+                 maxN = double(),
+                 len = double()) {
+    if (n != 1) stop("rNmixture_v only works for n = 1")
+    if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
+    trueN <- rpois(1, lambda)
+    ans <- numeric(len)
+    for (i in 1:len) {
+      ans[i] <- rbinom(n = 1, size = trueN, prob = prob[i])
+    }
+
+    return(ans)
+    returnType(double(1))
 })
+
+NULL
+#' @rdname dNmixture
+#' @export
+rNmixture_s <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 prob = double(),
+                 minN = double(),
+                 maxN = double(),
+                 len = double()) {
+    if (n != 1) stop("rNmixture_v only works for n = 1")
+    trueN <- rpois(1, lambda)
+    ans <- numeric(len)
+    for (i in 1:len) {
+      ans[i] <- rbinom(n = 1, size = trueN, prob = prob)
+    }
+
+    return(ans)
+    returnType(double(1))
+})
+
+
+
 
