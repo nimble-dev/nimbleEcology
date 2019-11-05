@@ -2,7 +2,7 @@
 .onAttach <- function(libname, pkgname) {
 
   packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions: ",
-                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM")
+                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -298,7 +298,7 @@
                 ),
       mixedSizes = FALSE,
       pqAvail = FALSE
-    )), verbose = T
+    )), verbose = F
   )
 
   registerDistributions(list(
@@ -315,7 +315,7 @@
                 ),
       mixedSizes = FALSE,
       pqAvail = FALSE
-    )), verbose = T
+    )), verbose = F
   )
 
 })}

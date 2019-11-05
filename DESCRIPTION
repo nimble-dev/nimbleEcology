@@ -24,6 +24,7 @@ Collate:
   dDHMM.R
   dHMM.R
   dOcc.R
+  dNmixture.R
   zzz.R
 RoxygenNote: 6.1.1
 Suggests: 
