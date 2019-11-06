@@ -2,7 +2,7 @@
 .onAttach <- function(libname, pkgname) {
 
   packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions: ",
-                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM")
+                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -282,5 +282,40 @@
                 'len = double()'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
-    )})
-}
+    )
+
+  registerDistributions(list(
+    dNmixture_v = list(
+      BUGSdist = "dNmixture_v(lambda, prob, minN, maxN, len)",
+      Rdist = "dNmixture_v(lambda, prob, minN, maxN, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double(1)',
+                'minN = double()',
+                'maxN = double()',
+                'len = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+  registerDistributions(list(
+    dNmixture_s = list(
+      BUGSdist = "dNmixture_s(lambda, prob, minN, maxN, len)",
+      Rdist = "dNmixture_s(lambda, prob, minN, maxN, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double()',
+                'minN = double()',
+                'maxN = double()',
+                'len = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+})}
