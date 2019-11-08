@@ -13,12 +13,12 @@
 #' @param prob observation probability for each X
 #' @param notZero 0 if datum is structural zero, 1 otherwise. Allows for
 #'        zero-inflated Poisson models
-#' @param minN the minimum true abundance to sum over. Set to -1 for distribution
+#' @param Nmin the minimum true abundance to sum over. Set to -1 for distribution
 #'        to select based on lambda. Ignored if dynamicMinMax = TRUE
-#' @param maxN the maximum true abundance to sum over. Set to -1 for distribution
+#' @param Nmax the maximum true abundance to sum over. Set to -1 for distribution
 #'        to select based on lambda. Ignored if dynamicMinMax = TRUE
-#' @param dynamicMinMax 0 to use input minN and maxN, 1 to ignore
-#'        provided minN and maxN and algorithmically select reasonable bounds for N.
+#' @param dynamicMinMax 0 to use input Nmin and Nmax, 1 to ignore
+#'        provided Nmin and Nmax and algorithmically select reasonable bounds for N.
 #' @param len The length of the x vector. Needed for simulation in \code{rNmixture_*}.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #'        Need not be specified in the model context.
@@ -66,7 +66,7 @@
 #'
 #' \code{observedCounts[i, 1:T] ~ dNmixture_v(lambda[i],
 #' prob[i, 1:T],
-#' minN, maxN, T)}
+#' Nmin, Nmax, T)}
 #'
 #' declares that the \code{observedCounts[i, 1:T]} (observed
 #' counts for site \code{i}, for example) vector follows an
@@ -80,7 +80,7 @@
 #'
 #' \code{dNmixture_v(observedCounts[i, 1:T], lambda[i],
 #' prob[i, 1:T],
-#' minN, maxN, T)}
+#' Nmin, Nmax, T)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{observedCounts[1:T]}, it
@@ -90,7 +90,7 @@
 #'
 #' \code{observedCounts[1:T] ~ dNmixture_s(observedCounts[i, 1:T], lambda[i],
 #' prob[i],
-#' minN, maxN, T)}
+#' Nmin, Nmax, T)}
 #'
 #' @return
 #' For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
@@ -117,7 +117,7 @@
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'    x[1:5] ~ dNmixture_v(lambda, prob = [1:5],
-#'                         minN = -1, maxN = -1, len = 5)
+#'                         Nmin = -1, Nmax = -1, len = 5)
 #'
 #'    lambda ~ dunif(0, 1000)
 #'
@@ -144,8 +144,8 @@ dNmixture_v <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(1),
-                   minN = double(),
-                   maxN = double(),
+                   Nmin = integer(0, default = -1),
+                   Nmax = integer(0, default = -1),
                    len = double(),
                    log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
@@ -165,16 +165,16 @@ dNmixture_v <- nimbleFunction(
 
     ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (minN == -1 & maxN == -1) {
-      minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
-      maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
-      minN <- max( max(x), minN ) ## set minN to at least the largest x
+    if (Nmin == -1 & Nmax == -1) {
+      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     }
 
     obsProb <- 0
-    if (maxN > minN) { ## should normally be true, but check in case it isn't in some corner case.
-    ##    print("counting from ", minN, " to ", maxN, " with lambda = ", lambda)
-        for (N in minN:maxN) {
+    if (Nmax > Nmin) { ## should normally be true, but check in case it isn't in some corner case.
+    ##    print("counting from ", Nmin, " to ", Nmax, " with lambda = ", lambda)
+        for (N in Nmin:Nmax) {
             thisObsProb <- dpois(N, lambda) * prod(dbinom(x, size = N, prob = prob))
             obsProb <- obsProb + thisObsProb
         }
@@ -195,8 +195,8 @@ dNmixture_s <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(),
-                   minN = double(),
-                   maxN = double(),
+                   Nmin = integer(0, default = -1),
+                   Nmax = integer(0, default = -1),
                    len = double(),
                    log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
@@ -215,16 +215,16 @@ dNmixture_s <- nimbleFunction(
 
     ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (minN == -1 & maxN == -1) {
-      minN <- min(x + qpois(0.00001, lambda * (1 - prob)))
-      maxN <- max(x + qpois(0.99999, lambda * (1 - prob)))
-      minN <- max( max(x), minN ) ## set minN to at least the largest x
+    if (Nmin == -1 & Nmax == -1) {
+      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     }
 
     obsProb <- 0
-    if (maxN > minN) { ## should normally be true, but check in case it isn't in some corner case.
-    ##    print("counting from ", minN, " to ", maxN, " with lambda = ", lambda)
-        for (N in minN:maxN) {
+    if (Nmax > Nmin) { ## should normally be true, but check in case it isn't in some corner case.
+    ##    print("counting from ", Nmin, " to ", Nmax, " with lambda = ", lambda)
+        for (N in Nmin:Nmax) {
             thisObsProb <- dpois(N, lambda) * prod(dbinom(x, size = N, prob = prob))
             obsProb <- obsProb + thisObsProb
         }
@@ -245,8 +245,8 @@ rNmixture_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(1),
-                 minN = double(),
-                 maxN = double(),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
@@ -267,8 +267,8 @@ rNmixture_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(),
-                 minN = double(),
-                 maxN = double(),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     trueN <- rpois(1, lambda)

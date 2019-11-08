@@ -292,8 +292,8 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double(1)',
-                'minN = double()',
-                'maxN = double()',
+                'Nmin = integer(0)',
+                'Nmax = integer(0)',
                 'len = double()'
                 ),
       mixedSizes = FALSE,
@@ -309,8 +309,8 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double()',
-                'minN = double()',
-                'maxN = double()',
+                'Nmin = integer(0)',
+                'Nmax = integer(0)',
                 'len = double()'
                 ),
       mixedSizes = FALSE,
