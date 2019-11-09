@@ -42,7 +42,8 @@ test_that("dNmixture_v works",
       # Use in Nimble model
           nc <- nimbleCode({
             x[1:5] ~ dNmixture_v(lambda = lambda, prob = prob[1:5],
-                                 Nmin = Nmin, Nmax = Nmax, len = len)
+                                 Nmin = Nmin, Nmax = Nmax,
+                                 len = len)
 
           })
 
