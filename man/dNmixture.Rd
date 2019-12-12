@@ -8,28 +8,28 @@
 \alias{rNmixture_v}
 \title{N-mixture distribution for use in NIMBLE models}
 \usage{
-dNmixture_v(x, lambda, prob, minN, maxN, len, log = 0)
+dNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
 
-dNmixture_s(x, lambda, prob, minN, maxN, len, log = 0)
+dNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
 
-rNmixture_v(n, lambda, prob, minN, maxN, len)
+rNmixture_v(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 
-rNmixture_s(n, lambda, prob, minN, maxN, len)
+rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 }
 \arguments{
-\item{x}{count observation data, 0 and positive integers}
+\item{x}{count observation data. 0 and positive integers}
 
 \item{lambda}{expected value of the Poisson distribution of true abundance}
 
 \item{prob}{observation probability for each X}
 
-\item{minN}{the minimum true abundance to sum over. Set to -1 for distribution
-to select based on lambda. Ignored if dynamicMinMax = TRUE}
+\item{Nmin}{the minimum abundance to sum over. Set to -1 for distribution
+to select based on lambda}
 
-\item{maxN}{the maximum true abundance to sum over. Set to -1 for distribution
-to select based on lambda. Ignored if dynamicMinMax = TRUE}
+\item{Nmax}{the maximum abundance to sum over. Set to -1 for distribution
+to select based on lambda}
 
-\item{len}{The length of the x vector. Needed for simulation in \code{rNmixture_*}.}
+\item{len}{The length of the x vector}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability.
 Need not be specified in the model context.}
@@ -37,12 +37,6 @@ Need not be specified in the model context.}
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the
 argument exists for standardization of "\code{r}" functions.}
-
-\item{notZero}{0 if datum is structural zero, 1 otherwise. Allows for
-zero-inflated Poisson models}
-
-\item{dynamicMinMax}{0 to use input minN and maxN, 1 to ignore
-provided minN and maxN and algorithmically select reasonable bounds for N.}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
@@ -58,7 +52,7 @@ These nimbleFunctions provide distributions that can be used directly in R or
 in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 and \code{\link[nimble]{nimbleModel}}).
 
-N-mixture models model abundance at a series of sites over many replicate observations.
+N-mixture models describe abundance at a series of sites over many replicate observations.
 The likelihood of an observation in site \code{s} at visit \code{t} depends on the
 true abundance N, which is assumed to be drawn from a Poisson distribution with
 mean \code{lambda}. It also depends on the probability of detecting an individual
@@ -66,9 +60,9 @@ mean \code{lambda}. It also depends on the probability of detecting an individua
 according to the Binomial distribution with size parameter N and probability \code{prob}
 
 The distribution has two forms, \code{dNmixture_s} and
-\code{dNmixture_v}. These differentiate between whether the detection
-probability \code{prob} is visit-dependent (vector, \code{dNmixture_v})
-or visit-independent (scalar, dNmixture_s).
+\code{dNmixture_v}. These differentiate whether the detection
+probability \code{prob} is visit-dependent (a vector, \code{dNmixture_v})
+or visit-independent (a scalar, dNmixture_s).
 
 For more explanation, see
 \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
@@ -93,7 +87,7 @@ For example, in \code{nimble} model code,
 
 \code{observedCounts[i, 1:T] ~ dNmixture_v(lambda[i],
 prob[i, 1:T],
-minN, maxN, T)}
+Nmin, Nmax, T)}
 
 declares that the \code{observedCounts[i, 1:T]} (observed
 counts for site \code{i}, for example) vector follows an
@@ -102,12 +96,12 @@ assuming all the parameters have been declared elsewhere in the
 model. As above, \code{lambda[i]} is the mean of the abundance distribution at site i,
 \code{prob[i, 1:T]} is a vector of detection probabilities at site i, and
 \code{T} is the number of observation occasions. This will invoke
-(something like) the following call to \code{dHMM} when
+(something like) the following call to \code{dNmixture_v} when
 \code{nimble} uses the model such as for MCMC:
 
 \code{dNmixture_v(observedCounts[i, 1:T], lambda[i],
 prob[i, 1:T],
-minN, maxN, T)}
+Nmin, Nmax, T)}
 
 If an algorithm using a \code{nimble} model with this declaration
 needs to generate a random draw for \code{observedCounts[1:T]}, it
@@ -117,7 +111,7 @@ If the observation probabilities are occasion-independent, one would use:
 
 \code{observedCounts[1:T] ~ dNmixture_s(observedCounts[i, 1:T], lambda[i],
 prob[i],
-minN, maxN, T)}
+Nmin, Nmax, T)}
 }
 \examples{
 \donttest{
@@ -130,7 +124,7 @@ prob <- c(0.2, 0.3, 0.2, 0.1, 0.4) # A vector of detection probabilities
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:5] ~ dNmixture_v(lambda, prob = [1:5],
-                        minN = -1, maxN = -1, len = 5)
+                        Nmin = -1, Nmax = -1, len = 5)
 
    lambda ~ dunif(0, 1000)
 
@@ -151,8 +145,10 @@ nmix_model$calculate()
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte
-Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
-23:549–564. DOI 10.1007/s10651-016-0353-z
+Carlo sampling for hierarchical hidden Markov models. Environmental and
+Ecological Statistics 23:549–564. DOI 10.1007/s10651-016-0353-z
+T. Meehan, N. Michel and H. Rue. 2017. Estimating animal abundance with N-mixture
+models using the R-INLA package for R. arXiv. arXiv:1705.01581
 }
 \seealso{
 For occupancy models dealing with detection/nondetection data,
