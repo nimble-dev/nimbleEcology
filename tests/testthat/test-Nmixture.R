@@ -13,36 +13,37 @@ test_that("dNmixture_v works",
           x <- c(1, 0, 1, 3, 0)
           lambda <- 8
           prob <- c(0.5, 0.3, 0.5, 0.4, 0.1)
-          minN <- 0
-          maxN <- 250
+          Nmin <- 0
+          Nmax <- 250
           len <- 5
 
-          probX <- dNmixture_v(x, lambda, prob, minN, maxN, len)
+          probX <- dNmixture_v(x, lambda, prob, Nmin, Nmax, len)
       # Manually calculate the correct answer
           correctProbX <- 0
-          for (N in minN:maxN) {
+          for (N in Nmin:Nmax) {
             correctProbX <- correctProbX + dpois(N, lambda) * prod(dbinom(x, N, prob))
           }
 
           expect_equal(probX, correctProbX)
 
       # Uncompiled log probability
-          lProbX <- dNmixture_v(x, lambda, prob, minN, maxN, len, log = TRUE)
+          lProbX <- dNmixture_v(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
 
       # Compilation and compiled calculations
           CdNmixture_v <- compileNimble(dNmixture_v)
-          CprobX <- CdNmixture_v(x, lambda, prob, minN, maxN, len)
+          CprobX <- CdNmixture_v(x, lambda, prob, Nmin, Nmax, len)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdNmixture_v(x, lambda, prob, minN, maxN, len, log = TRUE)
+          ClProbX <- CdNmixture_v(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
             x[1:5] ~ dNmixture_v(lambda = lambda, prob = prob[1:5],
-                                 minN = minN, maxN = maxN, len = len)
+                                 Nmin = Nmin, Nmax = Nmax,
+                                 len = len)
 
           })
 
@@ -50,7 +51,7 @@ test_that("dNmixture_v works",
                            data = list(x = x),
                            inits = list(lambda = lambda,
                                         prob = prob),
-                           constants = list(minN = minN, maxN = maxN,
+                           constants = list(Nmin = Nmin, Nmax = Nmax,
                                             len = len))
           m$calculate()
           MlProbX <- m$getLogProb("x")
@@ -67,7 +68,7 @@ test_that("dNmixture_v works",
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(lambda = lambda,
                               prob = prob),
-                 constants = list(minN = minN, maxN = maxN,
+                 constants = list(Nmin = Nmin, Nmax = Nmax,
                                             len = len))
 
 
@@ -87,14 +88,14 @@ test_that("dNmixture_v works",
           xSim <- array(NA, dim = c(nSim, len))
           set.seed(1)
           for (i in 1:nSim) {
-            xSim[i,] <- rNmixture_v(1, lambda, prob, minN, maxN, len)
+            xSim[i,] <- rNmixture_v(1, lambda, prob, Nmin, Nmax, len)
           }
 
           CrNmixture_v <- compileNimble(rNmixture_v)
           CxSim <- array(NA, dim = c(nSim, len))
           set.seed(1)
           for (i in 1:nSim) {
-            CxSim[i,] <- CrNmixture_v(1, lambda, prob, minN, maxN, len)
+            CxSim[i,] <- CrNmixture_v(1, lambda, prob, Nmin, Nmax, len)
           }
           expect_identical(xSim, CxSim)
 
@@ -124,36 +125,36 @@ test_that("dNmixture_s works",
           x <- c(1, 0, 1, 3, 0)
           lambda <- 8
           prob <- 0.4
-          minN <- 0
-          maxN <- 250
+          Nmin <- 0
+          Nmax <- 250
           len <- 5
 
-          probX <- dNmixture_s(x, lambda, prob, minN, maxN, len)
+          probX <- dNmixture_s(x, lambda, prob, Nmin, Nmax, len)
       # Manually calculate the correct answer
           correctProbX <- 0
-          for (N in minN:maxN) {
+          for (N in Nmin:Nmax) {
             correctProbX <- correctProbX + dpois(N, lambda) * prod(dbinom(x, N, prob))
           }
 
           expect_equal(probX, correctProbX)
 
       # Uncompiled log probability
-          lProbX <- dNmixture_s(x, lambda, prob, minN, maxN, len, log = TRUE)
+          lProbX <- dNmixture_s(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
 
       # Compilation and compiled calculations
           CdNmixture_s <- compileNimble(dNmixture_s)
-          CprobX <- CdNmixture_s(x, lambda, prob, minN, maxN, len)
+          CprobX <- CdNmixture_s(x, lambda, prob, Nmin, Nmax, len)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdNmixture_s(x, lambda, prob, minN, maxN, len, log = TRUE)
+          ClProbX <- CdNmixture_s(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
             x[1:5] ~ dNmixture_s(lambda = lambda, prob = prob,
-                                 minN = minN, maxN = maxN, len = len)
+                                 Nmin = Nmin, Nmax = Nmax, len = len)
 
           })
 
@@ -161,7 +162,7 @@ test_that("dNmixture_s works",
                            data = list(x = x),
                            inits = list(lambda = lambda,
                                         prob = prob),
-                           constants = list(minN = minN, maxN = maxN,
+                           constants = list(Nmin = Nmin, Nmax = Nmax,
                                             len = len))
           m$calculate()
           MlProbX <- m$getLogProb("x")
@@ -178,7 +179,7 @@ test_that("dNmixture_s works",
           mNA <- nimbleModel(nc, data = list(x = xNA),
                  inits = list(lambda = lambda,
                               prob = prob),
-                 constants = list(minN = minN, maxN = maxN,
+                 constants = list(Nmin = Nmin, Nmax = Nmax,
                                             len = len))
 
 
@@ -198,14 +199,14 @@ test_that("dNmixture_s works",
           xSim <- array(NA, dim = c(nSim, len))
           set.seed(1)
           for (i in 1:nSim) {
-            xSim[i,] <- rNmixture_s(1, lambda, prob, minN, maxN, len)
+            xSim[i,] <- rNmixture_s(1, lambda, prob, Nmin, Nmax, len)
           }
 
           CrNmixture_s <- compileNimble(rNmixture_s)
           CxSim <- array(NA, dim = c(nSim, len))
           set.seed(1)
           for (i in 1:nSim) {
-            CxSim[i,] <- CrNmixture_s(1, lambda, prob, minN, maxN, len)
+            CxSim[i,] <- CrNmixture_s(1, lambda, prob, Nmin, Nmax, len)
           }
           expect_identical(xSim, CxSim)
 
