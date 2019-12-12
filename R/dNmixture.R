@@ -76,7 +76,7 @@
 #'
 #' \code{dNmixture_v(observedCounts[i, 1:T], lambda[i],
 #' prob[i, 1:T],
-#' Nmin, Nmax, T)}
+#' Nmin, Nmax, T, log = TRUE)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{observedCounts[1:T]}, it
@@ -117,7 +117,7 @@
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
-#'    x[1:5] ~ dNmixture_v(lambda, prob = [1:5],
+#'    x[1:5] ~ dNmixture_v(lambda, prob = prob[1:5],
 #'                         Nmin = -1, Nmax = -1, len = 5)
 #'
 #'    lambda ~ dunif(0, 1000)
