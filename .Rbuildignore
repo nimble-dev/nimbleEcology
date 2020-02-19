@@ -7,3 +7,4 @@ run_tests\.R
 ^\.travis\.yml$
 ^doc$
 ^Meta$
+\.Rmd$
