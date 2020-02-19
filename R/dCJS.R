@@ -148,6 +148,8 @@ dCJS_ss <- nimbleFunction(
     if (len != 0) {
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
+    if (x[1] != 1) stop("dCJS requires specifying first capture. x[1] must equal 1.")
+
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
@@ -191,6 +193,7 @@ dCJS_sv <- nimbleFunction(
       if (len != length(x)) stop("Argument len must match length of data, or be 0.")
     }
     if (length(x) != length(probCapture)) stop("Length of probCapture does not match length of data.")
+    if (x[1] != 1) stop("dCJS requires specifying first capture. x[1] must equal 1.")
 
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
@@ -238,6 +241,7 @@ dCJS_vs <- nimbleFunction(
     }
     if (length(probSurvive) < length(x) - 1)
       stop("Length of probSurvive must be at least length of data minus 1.")
+    if (x[1] != 1) stop("dCJS requires specifying first capture. x[1] must equal 1.")
 
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
@@ -290,6 +294,8 @@ dCJS_vv <- nimbleFunction(
     if (length(probSurvive) < length(x) - 1)
       stop("Length of probSurvive must be at least length of data minus 1.")
     if (length(x) != length(probCapture)) stop("Length of probCapture does not match length of data.")
+    if (x[1] != 1) stop("dCJS requires specifying first capture. x[1] must equal 1.")
+
     ## Note the calculations used here are actually in hidden Markov model form.
     probAliveGivenHistory <- 1
     ## logProbData will be the final answer
