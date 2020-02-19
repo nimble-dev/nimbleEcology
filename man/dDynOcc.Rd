@@ -26,7 +26,7 @@
 \alias{rDynOcc_vss}
 \alias{rDynOcc_svs}
 \alias{rDynOcc_sss}
-\title{Dynamic occupancy distribution for use in NIMBLE models
+\title{Dynamic occupancy distribution for use in \code{nimble} models
 \code{dDynOcc_**} and \code{rDynOcc_**} provide dynamic occupancy
 model distributions that can be used directly from R or in \code{nimble}
 models.}
@@ -122,7 +122,7 @@ of observation vector \code{x}.
 For \code{rDynOcc_***}: a simulated detection history, \code{x}.
 }
 \description{
-Dynamic occupancy distribution for use in NIMBLE models
+Dynamic occupancy distribution for use in \code{nimble} models
 \code{dDynOcc_**} and \code{rDynOcc_**} provide dynamic occupancy
 model distributions that can be used directly from R or in \code{nimble}
 models.

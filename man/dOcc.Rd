@@ -6,7 +6,7 @@
 \alias{dOcc_v}
 \alias{rOcc_s}
 \alias{rOcc_v}
-\title{Occupancy distribution suitable for use in code{nimble} models}
+\title{Occupancy distribution suitable for use in \code{nimble} models}
 \usage{
 dOcc_s(x, probOcc, probDetect, len = 0, log = 0)
 
@@ -49,7 +49,7 @@ These nimbleFunctions provide distributions that can be used directly in R or
 in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 and \code{\link[nimble]{nimbleModel}}).
 
-The probability (or likelihood) of observation vector \code{x} depends on
+The probability of observation vector \code{x} depends on
 occupancy probability, \code{probOcc}, and detection probability,
 \code{probDetect} or \code{probDetect[t]}.
 

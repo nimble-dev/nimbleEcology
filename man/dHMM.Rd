@@ -5,7 +5,7 @@
 \alias{dHMMo}
 \alias{rHMM}
 \alias{rHMMo}
-\title{Hidden Markov Model distribution for use in NIMBLE models}
+\title{Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
 dHMM(x, init, probObs, probTrans, len = 0, log = 0)
 

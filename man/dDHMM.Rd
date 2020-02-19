@@ -5,7 +5,7 @@
 \alias{dDHMMo}
 \alias{rDHMM}
 \alias{rDHMMo}
-\title{Dynamic Hidden Markov Model distribution for use in NIMBLE models}
+\title{Dynamic Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
 dDHMM(x, init, probObs, probTrans, len, log = 0)
 
@@ -52,7 +52,7 @@ For \code{rDHMM} and \code{rDHMMo}: a simulated detection history, \code{x}.
 }
 \description{
 \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model
-distributions for NIMBLE models.
+distributions for \code{nimble} models.
 }
 \details{
 These nimbleFunctions provide distributions that can be used directly in R or
