@@ -37,7 +37,7 @@
 #' is a scalar, independent of visit, so \code{prob[i]} should be
 #' replaced with \code{prob} above.  With \code{dNmixture_v},
 #' detection probability is a vector, with one element for each visit,
-#' as written above..
+#' as written above.
 #'
 #' For more explanation, see
 #' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
@@ -59,7 +59,7 @@
 #'
 #' The summation over N uses the efficient method given by Meehan et
 #' al. (2017).
-#' 
+#'
 #' These are \code{nimbleFunction}s written in the format of
 #' user-defined distributions for NIMBLE's extension of the BUGS model
 #' language. More information can be found in the NIMBLE User Manual
