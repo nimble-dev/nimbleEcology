@@ -1,5 +1,5 @@
 
-#' Occupancy distribution suitable for use in code{nimble} models
+#' Occupancy distribution suitable for use in \code{nimble} models
 #'
 #' \code{dOcc_*} and \code{rOcc_*} provide occupancy model
 #' distributions that can be used directly from R or in \code{nimble}
@@ -29,7 +29,7 @@
 #' in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
 #' and \code{\link[nimble]{nimbleModel}}).
 #'
-#' The probability (or likelihood) of observation vector \code{x} depends on
+#' The probability of observation vector \code{x} depends on
 #' occupancy probability, \code{probOcc}, and detection probability,
 #' \code{probDetect} or \code{probDetect[t]}.
 #'

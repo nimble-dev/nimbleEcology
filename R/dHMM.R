@@ -1,4 +1,4 @@
-#' Hidden Markov Model distribution for use in NIMBLE models
+#' Hidden Markov Model distribution for use in \code{nimble} models
 #'
 #' \code{dHMM} and \code{dHMMo} provide hidden Markov model
 #' distributions that can be used directly from R or in \code{nimble}

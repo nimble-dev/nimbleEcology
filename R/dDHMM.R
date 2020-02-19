@@ -1,7 +1,7 @@
-#' Dynamic Hidden Markov Model distribution for use in NIMBLE models
+#' Dynamic Hidden Markov Model distribution for use in \code{nimble} models
 #'
 #' \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model
-#' distributions for NIMBLE models.
+#' distributions for \code{nimble} models.
 #'
 #' @name dDHMM
 #' @aliases dDHMM dDHMMo rDHMM rDHMMo
