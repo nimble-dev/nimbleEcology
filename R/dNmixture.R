@@ -178,7 +178,8 @@ dNmixture_v <- nimbleFunction(
     }
     if (Nmax == -1) {
       Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-    }    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    }
+    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
     logProb <- -Inf
     if (Nmax > Nmin) {
