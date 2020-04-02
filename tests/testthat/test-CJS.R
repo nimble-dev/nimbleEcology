@@ -417,6 +417,10 @@ test_that("dCJS errors", {
   expect_error(
     dCJS_ss(x = c(1,0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
   )
+  expect_error(
+    dCJS_ss(x = c(0,0,1,0,0), probCapture = 0.4, probSurvive = 0.5)
+  )
+
 
 # dCJS_sv error checks
   expect_error(
@@ -425,6 +429,11 @@ test_that("dCJS errors", {
   expect_error(
     dCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
   )
+  expect_error(
+    dCJS_vs(x = c(0,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4))
+  )
+
+
 
 # dCJS_vs error checks
   expect_error(
@@ -432,6 +441,9 @@ test_that("dCJS errors", {
   )
   expect_error(
     dCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4), probSurvive = 0.8)
+  )
+  expect_error(
+    dCJS_sv(x = c(0,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4, 0.4), probSurvive = 0.1)
   )
 
 # dCJS_vv error checks
@@ -445,6 +457,11 @@ test_that("dCJS errors", {
     dCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0,0),
             probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
   )
+  expect_error(
+    dCJS_vv(x = c(0,0,1,0,0), probCapture = c(1,0,1,0,0),
+            probSurvive = c(0.9, 0.9, 0.1, 0.1))
+  )
+
 
 ### Compiled errors
   CdCJS_ss <- compileNimble(dCJS_ss)
@@ -455,6 +472,10 @@ test_that("dCJS errors", {
   expect_error(
     CdCJS_ss(x = c(1,0,1,0,0), probCapture = 0.4, probSurvive = 0.5, len = 3)
   )
+  expect_error(
+    CdCJS_ss(x = c(0,0,1,0,0), probCapture = 0.4, probSurvive = 0.5)
+  )
+
 
 # dCJS_sv error checks
   expect_error(
@@ -463,6 +484,10 @@ test_that("dCJS errors", {
   expect_error(
     CdCJS_vs(x = c(1,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4))
   )
+  expect_error(
+    CdCJS_vs(x = c(0,0,1,0,0), probCapture = 0.1, probSurvive = c(0.9, 0.9, 0.4, 0.4))
+  )
+
 
 # dCJS_vs error checks
   expect_error(
@@ -471,6 +496,10 @@ test_that("dCJS errors", {
   expect_error(
     CdCJS_sv(x = c(1,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4), probSurvive = 0.8)
   )
+  expect_error(
+    CdCJS_sv(x = c(0,0,1,0,0), probCapture = c(1,0.9, 0.9, 0.4, 0.4), probSurvive = 0.1)
+  )
+
 
 # dCJS_vv error checks
   expect_error(
@@ -483,5 +512,10 @@ test_that("dCJS errors", {
     CdCJS_vv(x = c(1,0,1,0,0), probCapture = c(1,0,1,0,0),
             probSurvive = c(0.9, 0.9, 0.1, 0.1), len = 2)
   )
+  expect_error(
+    CdCJS_vv(x = c(0,0,1,0,0), probCapture = c(1,0,1,0,0),
+            probSurvive = c(0.9, 0.9, 0.1, 0.1))
+  )
+
 })
 

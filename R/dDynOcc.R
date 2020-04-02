@@ -1,5 +1,5 @@
 # dDynOcc
-#' Dynamic occupancy distribution for use in NIMBLE models
+#' Dynamic occupancy distribution for use in \code{nimble} models
 #' \code{dDynOcc_**} and \code{rDynOcc_**} provide dynamic occupancy
 #' model distributions that can be used directly from R or in \code{nimble}
 #' models.

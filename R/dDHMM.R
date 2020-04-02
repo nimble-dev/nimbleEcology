@@ -1,7 +1,7 @@
-#' Dynamic Hidden Markov Model distribution for use in NIMBLE models
+#' Dynamic Hidden Markov Model distribution for use in \code{nimble} models
 #'
 #' \code{dDHMM} and \code{dDHMMo} provide Dynamic hidden Markov model
-#' distributions for NIMBLE models.
+#' distributions for \code{nimble} models.
 #'
 #' @name dDHMM
 #' @aliases dDHMM dDHMMo rDHMM rDHMMo
@@ -330,34 +330,3 @@ rDHMMo <- nimbleFunction(
 #     }
 #     return(ans)
 #   })
-
-
-
-registerDistributions(list(
-  dDHMM = list(
-    BUGSdist = "dDHMM(init, probObs, probTrans, len)",
-    Rdist = "dDHMM(init, probObs, probTrans, len)",
-    discrete = TRUE,
-    types = c('value = double(1)',
-              'init = double(1)',
-              'probObs = double(2)',
-              'probTrans = double(3)',
-              'len = double()'),
-    mixedSizes = TRUE,
-    pqAvail = FALSE))
-  )
-
-registerDistributions(list(
-  dDHMMo = list(
-    BUGSdist = "dDHMMo(init, probObs, probTrans, len)",
-    Rdist = "dDHMMo(init, probObs, probTrans, len)",
-    discrete = TRUE,
-    types = c('value = double(1)',
-              'init = double(1)',
-              'probObs = double(3)',
-              'probTrans = double(3)',
-              'len = double()'),
-    mixedSizes = TRUE,
-    pqAvail = FALSE))
-  )
-
