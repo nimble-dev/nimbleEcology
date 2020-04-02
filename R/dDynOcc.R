@@ -133,24 +133,25 @@
 #' @examples
 #' \donttest{
 #' # Set up constants and initial values for defining the model
-#'   x <- matrix(c(0,0,NA,0,
+#'   x <- matrix(c(0,0,0,0,
 #'                 1,1,1,0,
 #'                 0,0,0,0,
 #'                 0,0,1,0,
-#'                 0,0,0,NA), nrow = 4)
-#'   start <- c(1,1,2,1)
-#'   end <- c(5,5,5,4)
+#'                 0,0,0,0), nrow = 4)
+#'   start <- c(1,1,2,1,1)
+#'   end <- c(5,5,5,4,5)
 #'   init <- 0.7
 #'   probPersist <- 0.5
 #'   probColonize <- 0.2
-#'   p <- 0.8
+#'   p <- matrix(rep(0.5, 20), nrow = 4)
 #'
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'
-#'    x[1:2, 1:5] ~ dDynOcc_vvm(nrep[1:2], init,
-#'    probPersist[1:2], probColonize[1:2], p[1:2,1:5])
+#'    x[1:2, 1:5] ~ dDynOcc_vvm(init,
+#'      probPersist[1:2], probColonize[1:2], p[1:2,1:5],
+#'      start = start[1:4], end = end[1:4])
 #'
 #'    init ~ dunif(0,1)
 #'
@@ -167,12 +168,13 @@
 #'  })
 #'
 #' # Build the model, providing data and initial values
-#' DynOcc_model <- nimbleModel(nc, data = list(x = dat, nrep = nrep),
+#' DynOcc_model <- nimbleModel(nc, data = list(x = x),
+#'                             constants = list(start = start, end = end),
 #'                             inits = list(p = p, probPersist = probPersist,
 #'                                          init = init, probColonize = probColonize))
 #'
 #' # Calculate log probability of data from the model
-#' DynOcc_model$calculate()
+#' DynOcc_model$calculate("x")
 #' # Use the model for a variety of other purposes...
 #' }
 
