@@ -146,7 +146,7 @@
 #'                     inits = list(lambda = lambda,
 #'                                  prob = prob))
 #' # Calculate log probability of data from the model
-#' nmix_model$calculate()
+#' nmix$calculate()
 #' # Use the model for a variety of other purposes...
 #' }
 
@@ -209,7 +209,7 @@ dNmixture_s <- nimbleFunction(
                    Nmax = double(0, default = -1),
                    len = double(),
                    log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+    if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
 
     # Lambda cannot be negative
     if (lambda < 0) {

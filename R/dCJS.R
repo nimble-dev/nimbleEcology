@@ -117,8 +117,8 @@
 #'
 #' # Define code for a nimbleModel
 #' nc <- nimbleCode({
-#'   x[1:4] ~ dCJS_vs(probSurvive, probCapture, len = 4)
-#'   probSurvive ~ dunif(0,1)
+#'   x[1:4] ~ dCJS_vs(probSurvive[1:4], probCapture, len = 4)
+#'   probCapture ~ dunif(0,1)
 #'   for (i in 1:4) probSurvive[i] ~ dunif(0, 1)
 #' })
 #'
