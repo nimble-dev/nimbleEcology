@@ -182,16 +182,31 @@ dNmixture_v <- nimbleFunction(
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
     logProb <- -Inf
+
     if (Nmax > Nmin) {
-      fac <- 1
-      ## ff = lambda prod((1-p_i)) N^(numReps - 1)
-      ff <- lambda * prod( (1-prob) )
-      numN <- Nmax - Nmin + 1 - 1 ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      for (i in 1:numN) {
-        N <- Nmax - i + 1
-        fac <- 1 + fac * ff * prod(N/(N - x)) / N
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+      for (i in (Nmin + 1):Nmax) {
+        prods[i - Nmin] <- prod(i/(i - x)) / i
       }
-      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log(fac)
+
+      ff <- log(lambda) + log(prod(1-prob)) + log(prods)
+      ff_g1 <- ff[ff > 0] # largest element is the length(ff_g1)th product
+      max_index <- length(ff_g1)
+
+      terms <- rep(0, numN + 1)
+      terms[max_index + 1] <- 1
+
+      for (i in 1:max_index) {
+        terms[i] <- 1 / exp(sum(ff[i:max_index]))
+      }
+      for (i in (max_index + 1):numN) {
+        terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+      }
+
+      log_fac <- sum(ff_g1) + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)
+
+      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
@@ -228,16 +243,31 @@ dNmixture_s <- nimbleFunction(
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
     logProb <- -Inf
+
     if (Nmax > Nmin) {
-      fac <- 1
-      ## ff = lambda prod((1-p_i)) N^(numReps - 1)
-      ff <- lambda * ((1-prob)^len)
-      numN <- Nmax - Nmin + 1 - 1 ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      for (i in 1:numN) {
-        N <- Nmax - i + 1
-        fac <- 1 + fac * ff * prod(N/(N - x)) / N
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+      for (i in (Nmin + 1):Nmax) {
+        prods[i - Nmin] <- prod(i/(i - x)) / i
       }
-      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log(fac)
+
+      ff <- log(lambda) + log(1-prob)*len + log(prods)
+      ff_g1 <- ff[ff > 0] # largest element is the length(ff_g1)th product
+      max_index <- length(ff_g1)
+
+      terms <- rep(0, numN + 1)
+      terms[max_index + 1] <- 1
+
+      for (i in 1:max_index) {
+        terms[i] <- 1 / exp(sum(ff[i:max_index]))
+      }
+      for (i in (max_index + 1):numN) {
+        terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+      }
+
+      log_fac <- sum(ff_g1) + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)
+
+      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
