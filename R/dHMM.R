@@ -137,18 +137,16 @@
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
-#'    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:2,1:3],
+#'    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
 #'                  probTrans = probTrans[1:3, 1:3], len = 5)
 #'
 #'    for (i in 1:3) {
-#'      init[i] ~ dunif(0,1)
-#'
 #'      for (j in 1:3) {
 #'        probTrans[i,j] ~ dunif(0,1)
 #'      }
 #'
 #'      probObs[i, 1] ~ dunif(0,1)
-#'      probObs[i, 2] <- 1 - probObs[1,i]
+#'      probObs[i, 2] <- 1 - probObs[i, 1]
 #'    }
 #'  })
 #'
