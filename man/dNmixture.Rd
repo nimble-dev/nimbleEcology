@@ -152,7 +152,7 @@ nmix <- nimbleModel(nc,
                     inits = list(lambda = lambda,
                                  prob = prob))
 # Calculate log probability of data from the model
-nmix_model$calculate()
+nmix$calculate()
 # Use the model for a variety of other purposes...
 }
 }

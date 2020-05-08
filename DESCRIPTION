@@ -26,8 +26,7 @@ Collate:
   dOcc.R
   dNmixture.R
   zzz.R
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
     rmarkdown,
     testthat (>= 2.1.0)
-
