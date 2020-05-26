@@ -25,8 +25,7 @@ Welcome to `nimbleEcology`.  This package provides distributions that can be use
 - Dynamic hidden Markov models (DHMMs), which are used in multi-state and multi-event capture-recapture models.
 - Occupancy models.
 - Dynamic occupancy models.
-
-We expect to add N-mixture models in the future.
+- N-mixture models.
 
 # What is nimble?
 

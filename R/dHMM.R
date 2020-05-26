@@ -23,8 +23,9 @@
 #'     system states) x (number of possible observation classes). \code{dHMMo} and
 #'     \code{rHMMo}
 #'     expects an additional third dimension of size (number of observation times).
+#'     See Details for more info.
 #' @param probTrans time-independent matrix of state transition
-#'     probabilities.
+#'     probabilities. See Details for more info.
 #' @param len length of \code{x} (see below).
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
@@ -52,7 +53,7 @@
 #' an individual in state \code{i} is observed in state \code{j}.
 #'
 #' \code{probTrans} has dimension S x S. \code{probTrans}[i, j] is the
-#' tune-independent probability that an individual in state \code{i} at
+#' time-independent probability that an individual in state \code{i} at
 #' time \code{t} transitions to state \code{j} time \code{t+1}.
 #'
 #' \code{initStates} has length S. \code{initStates[i]} is the
@@ -185,7 +186,7 @@ dHMM <- nimbleFunction(
       Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (asRow(Zpi) %*% probTrans[, ]/sumZpi)[1, ] # State probabilities at t+1
+      if (t != len) pi <- (asRow(Zpi) %*% probTrans / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -219,7 +220,7 @@ dHMMo <- nimbleFunction(
       Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (asRow(Zpi) %*% probTrans[, ]/sumZpi)[1, ] # State probabilities at t+1
+      if (t != len) pi <- (asRow(Zpi) %*% probTrans / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
