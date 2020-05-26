@@ -4,9 +4,9 @@ author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction_to_nimbleEcology}
+  %\VignetteIndexEntry{From base R to dplyr}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
@@ -124,7 +124,7 @@ In this example, we also need simulated data.  We can use the same model to crea
 #### Build the model
 
 ```{r}
-occupancy_model <- nimbleModel(occupancy_code, 
+occupancy_model <- nimbleModel(occupancy_code,
                                constants = list(nSites = 50, nVisits = 5))
 ```
 
@@ -167,7 +167,7 @@ samples <- runMCMC(CMCMC, niter = 10000, nburnin = 500, thin = 10)
 Next we show all of the same steps, except for simulating data, using the new version of the model.
 
 ```{r, results='hide', messages=FALSE,warnings=FALSE}
-occupancy_model_new <- nimbleModel(occupancy_code_new, 
+occupancy_model_new <- nimbleModel(occupancy_code_new,
                                    constants = list(nSites = 50, nVisits = 5),
                                    data = list(y = occupancy_model$y),
                                    inits = list(psi = 0.7, p = 0.15))
@@ -194,7 +194,7 @@ ggplot(data = Scombo, aes(x = Value)) +
 # plot(density(as.data.frame(samples)$psi), col = "red", main = "psi")
 # points(density(as.data.frame(samples_new)$psi), col = "blue", type = "l", add = TRUE)
 # }
-# 
+#
 # {
 # plot(density(as.data.frame(samples)$psi), col = "red", main = "psi")
 # points(density(as.data.frame(samples_new)$psi), col = "blue", type = "l", add = TRUE)
@@ -238,7 +238,7 @@ The static typing requirement may be relaxed somewhat in the future.
 
 Cormack-Jolly-Seber models give the probability of a capture history for each of many individuals, conditional on first capture, based on parameters for survival and detection probability.  `nimbleEcology` provides a distribution for individual capture histories, with variants for time-independent and time-dependent survival and/or detection probability.  Of course, the survival and detection parameters for the CJS probability may themselves depend on other parameters and/or random effects. The rest of this summary will focus on one individual's capture history.
 
-Define $\phi_t$ as survival from time $t$ to $t+1$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  We use "time" and "sampling occasion" as synonyms in this context, so $T$ is the number of sampling occasions.  (Be careful with indexing. Sometimes you might see $\phi_t$ defined as survival from time $t-1$ to $t$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, **is included** in $\mathbf{y}$.  
+Define $\phi_t$ as survival from time $t$ to $t+1$ and $\mathbf{\phi} = (\phi_1, \ldots, \phi_T)$, where $T$ is the length of the series.  We use "time" and "sampling occasion" as synonyms in this context, so $T$ is the number of sampling occasions.  (Be careful with indexing. Sometimes you might see $\phi_t$ defined as survival from time $t-1$ to $t$.)  Define $p_t$ as detection probability at time $t$ and $\mathbf{p} = (p_1, \ldots, p_T)$.  Define the capture history as $\mathbf{y} = y_{1:T} = (y_1, \ldots, y_T)$, where each $y_t$ is 0 or 1.  The notation $y_{i:j}$ means the sequence of observations from time $i$ to time $j$.  The first observation, $y_0 = 1$, **is included** in $\mathbf{y}$.
 
 There are multiple ways to write the CJS probability.  We will do so in a state-space format because that leads to the more general DHMM case next. The probability of observations given parameters, $P(\mathbf{y} | \mathbf{\phi}, \mathbf{p})$, is factored as:
 \[
@@ -276,10 +276,10 @@ The usage for each is similar.  An example for `dCJS_vs` is:
 
 Note the following points:
 
-- `y[i, 1:T]` is a vector of capture history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.  
+- `y[i, 1:T]` is a vector of capture history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.
 - Arguments to `dCJS_sv` are named.  As in R, this is optional but helpful.  Without names, the order matters.
 - `probSurvive` is provided as a scalar value, assuming there is a variable called `phi`.
-- In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is $phi_t$ above, namely the probability of survival from occasion $t$ to $t+1$. 
+- In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is $phi_t$ above, namely the probability of survival from occasion $t$ to $t+1$.
 - `probCapture` is provided as a vector value, assuming there is a matrix variable called `p`.  The value of `probCapture` could be any vector from any variable in the model.
 - `probCapture[t]` (i.e., the $t^{\mbox{th}}$ element of `probCapture`, which is `p[i, t]` in this example) is $p_t$ above, namely the probability of capture, if alive, at time $t$.
 - The length parameter `len` is in some cases redundant (the information could be determined by the length of other inputs), but nevertheless it is required.
@@ -342,7 +342,7 @@ Note the following points:
 - `nCat` is $K$ above.
 - `init[i]` is the initial probability of being in state `i`, namely $A_{i, 1}$ above.
 - `obsProb[i, j]` (i.e., `p[i, j]` in this example) is probability of observing an individual who is truly in state `i` as being in observation state `j`.  This is $p_{i, j}$ above if indexing by $t$ is not needed.  If observation probabilities are time-dependent (in `dHMMo` and `dDHMMo`), then `obsProb[i, j, t]` is $p_{i, j, t}$ above.
-- `transProb[i, j, t]` (i.e., `Trans[i, j, t]` in this example) is the probability that an individual changes from state `i` to state `j` during time step `t` to `t+1`.  This is $\psi_{i,j,t}$ above.  
+- `transProb[i, j, t]` (i.e., `Trans[i, j, t]` in this example) is the probability that an individual changes from state `i` to state `j` during time step `t` to `t+1`.  This is $\psi_{i,j,t}$ above.
 - `len` is the length of the observation record, `T` in this example.
 - `len` must match the length of the data, `y[i, 1:T]` in this example.
 - The dimensions of `obsProb` must be $K \times S$ in the time-independent case (`dHMM` or `dDHMM`) or $K \times S \times T$ in the time-dependent case (`dHMMo` or `dDHMMo`).
@@ -356,7 +356,7 @@ Define $y_t$ to be the observation at time $t$, with $y_t = 1$ for a detection a
 
 Define $\psi$ as the probability that a site is occupied. Define $p_t$ as the probability of a detection on sampling occasion $t$ if the site is occupied, and $\mathbf{p} = (p_1, \ldots, p_T)$.  Then the probability of the data given the parameters is:
 \[
-P(\mathbf{y} | \psi, \mathbf{p}) = \psi \prod_{t = 1}^T p_t^{y_t} (1-p_t)^{1-y_t} + (1-\psi) I\left(\sum_{t=1}^T y_t= 0 \right) 
+P(\mathbf{y} | \psi, \mathbf{p}) = \psi \prod_{t = 1}^T p_t^{y_t} (1-p_t)^{1-y_t} + (1-\psi) I\left(\sum_{t=1}^T y_t= 0 \right)
 \]
 The indicator function usage in the last term, $I(\cdot)$, is 1 if the given summation is 0, i.e. if no detections were made.  Otherwise it is 0.
 
@@ -395,9 +395,9 @@ P(\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p
 \]
 Here $A_r$ is the probability that the site is occupied in year $r$ given observations up to the previous year $\mathbf{y}_{1:r-1}$.  Otherwise, this equation is just like the occupancy model above, except there are indices for year $r$ in many places.  $A_r$ is calculated as:
 \[
-A_r = G_{r-1} \phi_{r-1} + (1-G_{r-1}) \gamma_{r-1} 
+A_r = G_{r-1} \phi_{r-1} + (1-G_{r-1}) \gamma_{r-1}
 \]
-Here $G_r$ is the probability that the site is occupied given the data up to time $r$, $\mathbf{y}_{1:r}$.  This is calculated as 
+Here $G_r$ is the probability that the site is occupied given the data up to time $r$, $\mathbf{y}_{1:r}$.  This is calculated as
 \[
 G_r = \frac{A_{r} \prod_{t = 1}^T p_{r,t}^{y_{r,t}} (1-p_{r,t})^{1-y_{r,t}}}{\mathbf{y}_{r} | \mathbf{y}_{1:r-1}, \mathbf{\phi}, \mathbf{\gamma}, \mathbf{p})}
 \]
