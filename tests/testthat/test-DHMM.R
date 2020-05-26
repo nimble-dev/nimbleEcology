@@ -49,8 +49,8 @@ test_that("Testing dDHMM", {
     correctProbX1 <- correctProbX1 * sumZ1
     correctProbX2 <- correctProbX2 * sumZ2
 
-    if (i != len) pi1 <- (probTrans[,,i] %*% asCol(stateprob1) / sumZ1)[ ,1]
-    if (i != len) pi2 <- (probTrans[,,i] %*% asCol(stateprob2) / sumZ2)[ ,1]
+    if (i != len) pi1 <- (asRow(stateprob1) %*% probTrans[,,i]/sumZ1)[1, ]
+    if (i != len) pi2 <- (asRow(stateprob2) %*% probTrans[,,i]/sumZ2)[1, ]
   }
 
   # Calculate probabilities of x1 and x2 using dDHMM
@@ -204,8 +204,8 @@ test_that("Testing dDHMMo", {
     correctProbX1 <- correctProbX1 * sumZ1
     correctProbX2 <- correctProbX2 * sumZ2
 
-    if (i != len) pi1 <- (probTrans[,,i] %*% asCol(stateprob1) / sumZ1)[ ,1]
-    if (i != len) pi2 <- (probTrans[,,i] %*% asCol(stateprob2) / sumZ2)[ ,1]
+    if (i != len) pi1 <- (asRow(stateprob1) %*% probTrans[,,i]/sumZ1)[1, ]
+    if (i != len) pi2 <- (asRow(stateprob2) %*% probTrans[,,i]/sumZ2)[1, ]
   }
 
   # Calculate probabilities of x1 and x2 using dDHMM

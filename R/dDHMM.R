@@ -184,7 +184,7 @@ dDHMM <- nimbleFunction(
       Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != lengthX) pi <- (probTrans[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != lengthX) pi <- (asRow(Zpi) %*% probTrans[,,t]/sumZpi)[1, ] # State probabilities at t+1
     }
 
     returnType(double())
@@ -218,7 +218,7 @@ dDHMMo <- nimbleFunction(
       Zpi <- probObs[, x[t], t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != lengthX)   pi <- (probTrans[,,t] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != lengthX) pi <- (asRow(Zpi) %*% probTrans[,,t]/sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)

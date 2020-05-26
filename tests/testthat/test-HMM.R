@@ -50,8 +50,8 @@ test_that("dHMM works", {
     correctProbX1 <- correctProbX1 * sumZ1
     correctProbX2 <- correctProbX2 * sumZ2
 
-    pi1 <- (probTrans[,] %*% asCol(stateprob1) / sumZ1)[ ,1]
-    pi2 <- (probTrans[,] %*% asCol(stateprob2) / sumZ2)[ ,1]
+    pi1 <- (asRow(stateprob1) %*% probTrans[, ]/sumZ1)[1, ]
+    pi2 <- (asRow(stateprob2) %*% probTrans[, ]/sumZ2)[1, ]
   }
 
   # Calculate probabilities of x1 and x2 using dHMM
@@ -200,8 +200,8 @@ test_that("dHMMo works", {
     correctProbX1 <- correctProbX1 * sumZ1
     correctProbX2 <- correctProbX2 * sumZ2
 
-    pi1 <- (probTrans[,] %*% asCol(stateprob1) / sumZ1)[ ,1]
-    pi2 <- (probTrans[,] %*% asCol(stateprob2) / sumZ2)[ ,1]
+    pi1 <- (asRow(stateprob1) %*% probTrans[, ]/sumZ1)[1, ]
+    pi2 <- (asRow(stateprob2) %*% probTrans[, ]/sumZ2)[1, ]
   }
 
   # Calculate probabilities of xs using the function dHMMo
