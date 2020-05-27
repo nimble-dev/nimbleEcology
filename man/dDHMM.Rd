@@ -7,13 +7,13 @@
 \alias{rDHMMo}
 \title{Dynamic Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
-dDHMM(x, init, probObs, probTrans, len, log = 0)
+dDHMM(x, init, probObs, probTrans, len, checkProbs = 1, log = 0)
 
-dDHMMo(x, init, probObs, probTrans, len, log = 0)
+dDHMMo(x, init, probObs, probTrans, len, checkProbs = 1, log = 0)
 
-rDHMM(n, init, probObs, probTrans, len)
+rDHMM(n, init, probObs, probTrans, len, checkProbs = 1)
 
-rDHMMo(n, init, probObs, probTrans, len)
+rDHMMo(n, init, probObs, probTrans, len, checkProbs = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
@@ -42,6 +42,12 @@ that an individual truly in state i at time t will be in state j at time t+1.
 See Details for more info.}
 
 \item{len}{length of observations (needed for rDHMM)}
+
+\item{checkProbs}{Logical argument.  If true, then the probObs and probTrans
+matrices are verified to guarantee the necessary condition that all row sums
+are equal to unity.  If false, no checking of row sums takes place, which provides
+faster execution but allows possible misspecification of these probability
+transition matrices.  Default value is true.}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability}
 

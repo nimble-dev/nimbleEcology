@@ -30,8 +30,11 @@
 #'     in latent state i transitions to latent state j at the next timestep.
 #'     See Details for more info.
 #' @param len length of \code{x} (see below).
-#' @param checkProbs Should an error be thrown if a row in probObs or probTrans doesn't
-#' sum to 1? This helps prevent misspecifications of probability arrays. Defaults to true.
+#' @param checkProbs Logical argument.  If true, then the probObs and probTrans
+#' matrices are verified to guarantee the necessary condition that all row sums
+#' are equal to unity.  If false, no checking of row sums takes place, which provides
+#' faster execution but allows possible misspecification of these probability
+#' transition matrices.  Default value is true.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
 #' @param n number of random draws, each returning a vector of length

@@ -91,7 +91,7 @@ test_that("Testing dDHMM", {
     # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
     x[1:5] ~ dDHMM(init[1:3], probObs = probObs[1:3,1:2],
-                   probTrans = probTrans[1:3, 1:3, 1:4], len = 5)
+                   probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkProbs = 1)
   })
 
   m <- nimbleModel(nc, data = list(x = x1),
@@ -246,7 +246,7 @@ test_that("Testing dDHMMo", {
   # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
     x[1:5] ~ dDHMMo(init[1:3], probObs = probObs[1:3,1:2,1:5],
-                    probTrans = probTrans[1:3, 1:3, 1:4], len = 5)
+                    probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkProbs = 1)
   })
 
   m <- nimbleModel(nc, data = list(x = x1),
@@ -446,7 +446,15 @@ test_that("dDHMMo errors where expected", {
             0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
             0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
             ),
-          c(1,6,4))
+          c(1,9,4))
+  badT2 <- array(
+          c(0.8, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(3,3,4))
+
   probObs_unmatched <- array(
          c(0.2, 0.8, 1, 0,
            0.2, 0.8, 1, 0,
@@ -501,6 +509,6 @@ test_that("dDHMMo errors where expected", {
   # Bad sums for probTrans:
   probX <- expect_error(
             dDHMM(x = x, init = init,
-                 probObs = probObs, probTrans = badProbTrans,
+                 probObs = probObs, probTrans = badT2,
                  len = len, log = F))
 })

@@ -7,13 +7,13 @@
 \alias{rHMMo}
 \title{Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
-dHMM(x, init, probObs, probTrans, len = 0, log = 0)
+dHMM(x, init, probObs, probTrans, len = 0, checkProbs = 1, log = 0)
 
-dHMMo(x, init, probObs, probTrans, len = 0, log = 0)
+dHMMo(x, init, probObs, probTrans, len = 0, checkProbs = 1, log = 0)
 
-rHMM(n, init, probObs, probTrans, len = 0)
+rHMM(n, init, probObs, probTrans, len = 0, checkProbs = 1)
 
-rHMMo(n, init, probObs, probTrans, len = 0)
+rHMMo(n, init, probObs, probTrans, len = 0, checkProbs = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
@@ -40,6 +40,12 @@ in latent state i transitions to latent state j at the next timestep.
 See Details for more info.}
 
 \item{len}{length of \code{x} (see below).}
+
+\item{checkProbs}{Logical argument.  If true, then the probObs and probTrans
+matrices are verified to guarantee the necessary condition that all row sums
+are equal to unity.  If false, no checking of row sums takes place, which provides
+faster execution but allows possible misspecification of these probability
+transition matrices.  Default value is true.}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to
 return probability.}

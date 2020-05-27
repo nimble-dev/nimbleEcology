@@ -92,7 +92,7 @@ test_that("dHMM works", {
   # Create code for a nimbleModel using the distribution
   nc <- nimbleCode({
     x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-                  probTrans = probTrans[1:3, 1:3], len = 5)
+                  probTrans = probTrans[1:3, 1:3], len = 5, checkProbs = 1)
   })
 
   # Create a nimbleModel using the distribution
@@ -243,7 +243,7 @@ test_that("dHMMo works", {
   # Create code for a nimbleModel using dHMMo
   nc <- nimbleCode({
     x[1:5] ~ dHMMo(init[1:3], probObs = probObs[1:3, 1:2, 1:5],
-                  probTrans = probTrans[1:3, 1:3], len = 5)
+                  probTrans = probTrans[1:3, 1:3], len = 5, checkProbs = 1)
   })
   # Build a nimbleModel
   m <- nimbleModel(nc, data = list(x = x1),
