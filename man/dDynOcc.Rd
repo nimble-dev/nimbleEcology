@@ -212,7 +212,6 @@ probPersist = persistence_prob,
 probColonize = colonization_prob[1:(T-1)], p = p[1:S, 1:T])}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
   x <- matrix(c(0,0,0,0,
                 1,1,1,0,
@@ -257,7 +256,6 @@ DynOcc_model <- nimbleModel(nc, data = list(x = x),
 # Calculate log probability of data from the model
 DynOcc_model$calculate("x")
 # Use the model for a variety of other purposes...
-}
 }
 \seealso{
 For basic occupancy models, see documentation for

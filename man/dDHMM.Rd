@@ -29,17 +29,17 @@ another value of which can correspond to "dead" or
 \code{rDHMMo}) of observation probabilities.
 First two dimensions of \code{probObs} are of size x (number of possible
 system states) x (number of possible observation classes). \code{dDHMMo}
-and \code{rDHMMo} expects an additional third dimension of size (number of
+and \code{rDHMMo} expect an additional third dimension of size (number of
 observation times). probObs[i, j (,t)] is the probability that an
 individual in the ith latent state is recorded as being in the jth detection state
-(at time t). See Details for more info.}
+(at time t). See Details for more information.}
 
 \item{probTrans}{time-dependent array of system state transition
 probabilities. Dimension of \code{probTrans} is (number of possible
 system states) x  (number of possible system states)
 x (number of observation times). probTrans[i,j,t] is the probability
 that an individual truly in state i at time t will be in state j at time t+1.
-See Details for more info.}
+See Details for more information.}
 
 \item{len}{length of observations (needed for rDHMM)}
 
@@ -137,7 +137,6 @@ dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
 transitionProbs[1:S, 1:S, 1:(T-1)], T)}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,2,1,1) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
@@ -146,13 +145,13 @@ probObs <- t(array( # A matrix of observation probabilities
          0, 1,
          0.8, 0.2), c(2, 3)))
 
-probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+probTrans <- array(rep(1/3, 27), # A matrix of time-indexed transition probabilities
             c(3,3,3))
 
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
-                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4)
+                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkProbs = 1)
 
    for (i in 1:3) {
      init[i] ~ dunif(0,1)
@@ -177,7 +176,6 @@ DHMM_model <- nimbleModel(nc,
 # Calculate log probability of x from the model
 DHMM_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

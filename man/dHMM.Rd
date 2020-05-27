@@ -32,12 +32,12 @@ system states) x (number of possible observation classes). \code{dDHMMo}
 and \code{rDHMMo} expects an additional third dimension of size (number of
 observation times). probObs[i, j (,t)] is the probability that an
 individual in the ith latent state is recorded as being in the jth detection state
-(at time t). See Details for more info.}
+(at time t). See Details for more information.}
 
 \item{probTrans}{time-independent matrix of state transition
 probabilities. probTrans[i,j] is the probability that an individual
 in latent state i transitions to latent state j at the next timestep.
-See Details for more info.}
+See Details for more information.}
 
 \item{len}{length of \code{x} (see below).}
 
@@ -140,7 +140,6 @@ If the observation probabilities are time-dependent, one would use:
 transitionProbs[1:S, 1:S], T)}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 len <- 5 # length of dataset
 dat <- c(1,2,1,1,2) # A vector of observations
@@ -157,7 +156,7 @@ probTrans <- t(array( # A matrix of transition probabilities
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-                 probTrans = probTrans[1:3, 1:3], len = 5)
+                 probTrans = probTrans[1:3, 1:3], len = 5, checkProbs = 1)
 
    for (i in 1:3) {
      for (j in 1:3) {
@@ -178,7 +177,6 @@ HMM_model <- nimbleModel(nc,
 # Calculate log probability of data from the model
 HMM_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

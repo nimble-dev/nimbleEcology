@@ -22,13 +22,13 @@
 #'     and \code{rDHMMo} expect an additional third dimension of size (number of
 #'     observation times). probObs[i, j (,t)] is the probability that an
 #'     individual in the ith latent state is recorded as being in the jth detection state
-#'     (at time t). See Details for more info.
+#'     (at time t). See Details for more information.
 #' @param probTrans time-dependent array of system state transition
 #' probabilities. Dimension of \code{probTrans} is (number of possible
 #' system states) x  (number of possible system states)
 #' x (number of observation times). probTrans[i,j,t] is the probability
 #' that an individual truly in state i at time t will be in state j at time t+1.
-#' See Details for more info.
+#' See Details for more information.
 #' @param len length of observations (needed for rDHMM)
 #' @param checkProbs Logical argument.  If true, then the probObs and probTrans
 #' matrices are verified to guarantee the necessary condition that all row sums

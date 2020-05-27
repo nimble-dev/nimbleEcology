@@ -127,7 +127,6 @@ If both survival and capture probabilities are time-dependent, use
 and so on for each combination of time-dependent and time-independent parameters.
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0,0) # A vector of observations
 probSurvive <- c(0.6, 0.3, 0.3, 0.1)
@@ -149,7 +148,6 @@ CJS_model <- nimbleModel(nc, data = list(x = dat),
 # Calculate log probability of data from the model
 CJS_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

@@ -64,7 +64,7 @@ necessary. It will default to the length of \code{x}.  When used in
 (even though it may seem redundant).
 
 For more explanation, see
-\href{../inst/doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 \code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent state for
@@ -106,7 +106,6 @@ If the detection probabilities are time-dependent, use:
 detectionProbability[1:T], len = T)}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
 probOcc <- 0.6
@@ -128,7 +127,6 @@ Occ_model <- nimbleModel(nc, data = list(x = dat),
 # Calculate log probability of data from the model
 Occ_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \seealso{
 For dynamic occupancy models, see documentation for
