@@ -19,8 +19,7 @@ notifications:
     on_failure: change
 
 install:
-  - Rscript -e "install.packages(tidyverse); library(tidyverse);"
-
+  - Rscript -e "install.packages('tidyverse')"
 
 script:
   - R CMD build .
