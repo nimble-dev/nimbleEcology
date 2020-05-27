@@ -10,7 +10,7 @@ bibentry(
  author = c(person("Benjamin R.", "Goldstein"),
               person("Daniel", "Turek"),
               person("Lauren", "Ponisio"),
-              person("Perry", "de Valpine"))
+              person("Perry", "de Valpine")),
  url = "https://cran.r-project.org/package=nimbleEcology",
  year = year,
  version = meta$Version,
