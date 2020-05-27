@@ -18,6 +18,10 @@ notifications:
     on_success: change
     on_failure: change
 
+install:
+  - Rscript -e "install.packages(tidyverse); library(tidyverse);"
+
+
 script:
   - R CMD build .
   - R CMD check *tar.gz --as-cran
