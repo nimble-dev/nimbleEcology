@@ -18,9 +18,6 @@ notifications:
     on_success: change
     on_failure: change
 
-install:
-  - Rscript -e "install.packages('ggplot2'); install.packages('tidyr'); install.packages('dplyr')"
-
 script:
   - R CMD build .
   - R CMD check *tar.gz --as-cran
