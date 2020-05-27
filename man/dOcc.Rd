@@ -56,7 +56,7 @@ occupancy probability, \code{probOcc}, and detection probability,
 The letter following the 'dOcc_' indicates whether detection probability is
 scalar (s, meaning \code{probDetect} is detection probability for every
 \code{x[t]}) or vector (v, meaning \code{probDetect[t]} is detection
-probabilityfor \code{x[t]}).
+probability for \code{x[t]}).
 
 When used directly from R, the \code{len} argument to \code{dOcc_*} is not
 necessary. It will default to the length of \code{x}.  When used in
@@ -64,7 +64,7 @@ necessary. It will default to the length of \code{x}.  When used in
 (even though it may seem redundant).
 
 For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+\href{../inst/doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 \code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent state for

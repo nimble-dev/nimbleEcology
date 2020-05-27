@@ -20,12 +20,15 @@
 #'     \code{rHMM}) or time-dependent array (\code{dHMMo} and
 #'     \code{rHMMo}) of observation probabilities.
 #'     First two dimensions of \code{probObs} are of size x (number of possible
-#'     system states) x (number of possible observation classes). \code{dHMMo} and
-#'     \code{rHMMo}
-#'     expects an additional third dimension of size (number of observation times).
-#'     See Details for more info.
+#'     system states) x (number of possible observation classes). \code{dDHMMo}
+#'     and \code{rDHMMo} expects an additional third dimension of size (number of
+#'     observation times). probObs[i, j (,t)] is the probability that an
+#'     individual in the ith latent state is recorded as being in the jth detection state
+#'     (at time t). See Details for more info.
 #' @param probTrans time-independent matrix of state transition
-#'     probabilities. See Details for more info.
+#'     probabilities. probTrans[i,j] is the probability that an individual
+#'     in latent state i transitions to latent state j at the next timestep.
+#'     See Details for more info.
 #' @param len length of \code{x} (see below).
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
@@ -104,7 +107,7 @@
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+#' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
 #' transitionProbs[1:S, 1:S], T)}
 #'
 #' @return

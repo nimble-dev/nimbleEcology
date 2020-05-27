@@ -8,7 +8,7 @@
 #'
 #' @name dCJS
 #'
-#' @param x capture-history vector of 0s (not captured) and 1s (captured).
+#' @param x capture history vector of 0s (not captured) and 1s (captured).
 #' Include the initial capture, so \code{x[1]} should equal 1.
 #' @param probSurvive survival probability, either a time-independent scalar
 #' (for dCJS_s*) or a time-dependent vector (for dCJS_v*) with length

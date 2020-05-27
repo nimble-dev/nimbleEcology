@@ -15,16 +15,20 @@
 #'     "removed from system").
 #' @param init vector of initial state probabilities. Must sum to 1
 #' @param probObs time-independent matrix (\code{dDHMM} and
-#'     \code{rHMM}) or time-dependent 3D array (\code{dDHMMo} and
-#'     \code{rHMMo}) of observation probabilities.
+#'     \code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
+#'     \code{rDHMMo}) of observation probabilities.
 #'     First two dimensions of \code{probObs} are of size x (number of possible
 #'     system states) x (number of possible observation classes). \code{dDHMMo}
-#'     and \code{rHMMo} expects an additional third dimension of size (number of
-#'     observation times). See Details for more info.
+#'     and \code{rDHMMo} expects an additional third dimension of size (number of
+#'     observation times). probObs[i, j (,t)] is the probability that an
+#'     individual in the ith latent state is recorded as being in the jth detection state
+#'     (at time t). See Details for more info.
 #' @param probTrans time-dependent array of system state transition
 #' probabilities. Dimension of \code{probTrans} is (number of possible
 #' system states) x  (number of possible system states)
-#' x (number of observation times). See Details for more info.
+#' x (number of observation times). probTrans[i,j,t] is the probability
+#' that an individual truly in state i at time t will be in state j at time t+1.
+#' See Details for more info.
 #' @param len length of observations (needed for rDHMM)
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability
 #' @param n number of random draws, each returning a vector of length

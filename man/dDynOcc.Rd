@@ -134,8 +134,8 @@ and \code{\link[nimble]{nimbleModel}}).
 
 The probability (or likelihood) of observation \code{x[t, o]} depends on
 the occupancy status of the site at time t-1, the transitition
-probability of persistence (\code{probPersist} or \code{probPersist[t]}),
-colonization (\code{probColonize} or \code{probColonize[t]}), and a
+probability of persistence (\code{probPersist} or \code{probPersist[t-1]}),
+colonization (\code{probColonize} or \code{probColonize[t-1]}), and a
 detection probability (\code{p}, \code{p[t]}, or \code{p[t, o]}).
 
 The first two letters following the 'dDynOcc_' indicate whether the

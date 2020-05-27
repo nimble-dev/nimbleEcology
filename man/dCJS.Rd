@@ -29,7 +29,7 @@ rCJS_vs(n, probSurvive, probCapture, len = 0)
 rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
-\item{x}{capture-history vector of 0s (not captured) and 1s (captured).
+\item{x}{capture history vector of 0s (not captured) and 1s (captured).
 Include the initial capture, so \code{x[1]} should equal 1.}
 
 \item{probSurvive}{survival probability, either a time-independent scalar

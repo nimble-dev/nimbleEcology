@@ -16,6 +16,7 @@ License: GPL-3
 Copyright: Copyright (c) 2019, Perry de Valpine, Ben Goldstein, Daniel Turek, Lauren Ponisio
 Depends: R (>= 3.4.0), nimble
 Encoding: UTF-8
+VignetteBuilder: knitr
 LazyData: true
 URL: https://github.com/nimble-dev/nimbleEcology
 Collate:
@@ -31,4 +32,3 @@ Suggests:
     rmarkdown,
     knitr,
     testthat (>= 2.1.0)
-VignetteBuilder: knitr

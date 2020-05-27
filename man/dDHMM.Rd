@@ -25,17 +25,21 @@ another value of which can correspond to "dead" or
 \item{init}{vector of initial state probabilities. Must sum to 1}
 
 \item{probObs}{time-independent matrix (\code{dDHMM} and
-\code{rHMM}) or time-dependent 3D array (\code{dDHMMo} and
-\code{rHMMo}) of observation probabilities.
+\code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
+\code{rDHMMo}) of observation probabilities.
 First two dimensions of \code{probObs} are of size x (number of possible
 system states) x (number of possible observation classes). \code{dDHMMo}
-and \code{rHMMo} expects an additional third dimension of size (number of
-observation times)}
+and \code{rDHMMo} expects an additional third dimension of size (number of
+observation times). probObs[i, j (,t)] is the probability that an
+individual in the ith latent state is recorded as being in the jth detection state
+(at time t). See Details for more info.}
 
 \item{probTrans}{time-dependent array of system state transition
 probabilities. Dimension of \code{probTrans} is (number of possible
 system states) x  (number of possible system states)
-x (number of observation times)}
+x (number of observation times). probTrans[i,j,t] is the probability
+that an individual truly in state i at time t will be in state j at time t+1.
+See Details for more info.}
 
 \item{len}{length of observations (needed for rDHMM)}
 

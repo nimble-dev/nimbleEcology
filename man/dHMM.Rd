@@ -28,12 +28,16 @@ another value of which can correspond to "dead" or
 \code{rHMM}) or time-dependent array (\code{dHMMo} and
 \code{rHMMo}) of observation probabilities.
 First two dimensions of \code{probObs} are of size x (number of possible
-system states) x (number of possible observation classes). \code{dHMMo} and
-\code{rHMMo}
-expects an additional third dimension of size (number of observation times).}
+system states) x (number of possible observation classes). \code{dDHMMo}
+and \code{rDHMMo} expects an additional third dimension of size (number of
+observation times). probObs[i, j (,t)] is the probability that an
+individual in the ith latent state is recorded as being in the jth detection state
+(at time t). See Details for more info.}
 
 \item{probTrans}{time-independent matrix of state transition
-probabilities.}
+probabilities. probTrans[i,j] is the probability that an individual
+in latent state i transitions to latent state j at the next timestep.
+See Details for more info.}
 
 \item{len}{length of \code{x} (see below).}
 
@@ -75,7 +79,7 @@ case, \code{probObs[i, j, t]} is the probability at time \code{t} that
 an individual in state \code{i} is observed in state \code{j}.
 
 \code{probTrans} has dimension S x S. \code{probTrans}[i, j] is the
-tune-independent probability that an individual in state \code{i} at
+time-independent probability that an individual in state \code{i} at
 time \code{t} transitions to state \code{j} time \code{t+1}.
 
 \code{initStates} has length S. \code{initStates[i]} is the
@@ -126,7 +130,7 @@ will make a similar invocation of \code{rHMM}, with \code{n = 1}.
 
 If the observation probabilities are time-dependent, one would use:
 
-\code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
+\code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
 transitionProbs[1:S, 1:S], T)}
 }
 \examples{
