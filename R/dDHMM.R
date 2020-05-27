@@ -19,7 +19,7 @@
 #'     \code{rDHMMo}) of observation probabilities.
 #'     First two dimensions of \code{probObs} are of size x (number of possible
 #'     system states) x (number of possible observation classes). \code{dDHMMo}
-#'     and \code{rDHMMo} expects an additional third dimension of size (number of
+#'     and \code{rDHMMo} expect an additional third dimension of size (number of
 #'     observation times). probObs[i, j (,t)] is the probability that an
 #'     individual in the ith latent state is recorded as being in the jth detection state
 #'     (at time t). See Details for more info.
