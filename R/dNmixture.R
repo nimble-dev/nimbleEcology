@@ -121,7 +121,6 @@
 #'
 #'
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' len <- 5 # length of dataset
 #' dat <- c(1,2,0,1,5) # A vector of observations
@@ -148,7 +147,6 @@
 #' # Calculate log probability of data from the model
 #' nmix$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
 
 
 NULL

@@ -131,7 +131,6 @@
 #' @seealso For basic occupancy models, see documentation for
 #'   \code{\link{dOcc}}.
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #'   x <- matrix(c(0,0,0,0,
 #'                 1,1,1,0,
@@ -176,7 +175,6 @@
 #' # Calculate log probability of data from the model
 #' DynOcc_model$calculate("x")
 #' # Use the model for a variety of other purposes...
-#' }
 
 NULL
 #' @rdname dDynOcc

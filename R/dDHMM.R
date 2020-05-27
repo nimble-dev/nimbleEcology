@@ -125,7 +125,6 @@
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' dat <- c(1,2,1,1) # A vector of observations
 #' init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
@@ -134,13 +133,13 @@
 #'          0, 1,
 #'          0.8, 0.2), c(2, 3)))
 #'
-#' probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+#' probTrans <- array(rep(1/3, 27), # A matrix of time-indexed transition probabilities
 #'             c(3,3,3))
 #'
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
-#'                   probTrans = probTrans[1:3, 1:3, 1:3], len = 4)
+#'                   probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkProbs = 1)
 #'
 #'    for (i in 1:3) {
 #'      init[i] ~ dunif(0,1)
@@ -165,7 +164,6 @@
 #' # Calculate log probability of x from the model
 #' DHMM_model$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
 
 NULL
 

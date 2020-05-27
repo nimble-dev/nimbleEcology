@@ -108,7 +108,6 @@
 #' @importFrom stats rbinom runif dbinom
 #'
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' dat <- c(1,1,0,0,0) # A vector of observations
 #' probSurvive <- c(0.6, 0.3, 0.3, 0.1)
@@ -130,7 +129,6 @@
 #' # Calculate log probability of data from the model
 #' CJS_model$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
 
 
 NULL
