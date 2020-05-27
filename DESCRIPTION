@@ -29,4 +29,6 @@ Collate:
 RoxygenNote: 7.1.0
 Suggests: 
     rmarkdown,
-    testthat (>= 2.1.0)
+    testthat (>= 2.1.0),
+    knitr
+VignetteBuilder: knitr
