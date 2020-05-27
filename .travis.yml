@@ -19,7 +19,7 @@ notifications:
     on_failure: change
 
 install:
-  - Rscript -e "install.packages('tidyverse')"
+  - Rscript -e "install.packages('ggplot2'); install.packages('tidyr'); install.packages('dplyr')"
 
 script:
   - R CMD build .
