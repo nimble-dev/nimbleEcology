@@ -3,8 +3,10 @@ title: "Introduction to nimbleEcology"
 author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+description: >
+  An overview of functioning in nimbleEcology.
 vignette: >
-  %\VignetteIndexEntry{From base R to dplyr}
+  %\VignetteIndexEntry{Introduction to nimbleEcology}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -178,18 +180,18 @@ CMCMC_new <- compileNimble(MCMC_new, project = occupancy_model_new)
 samples_new <- runMCMC(CMCMC_new, niter = 10000, nburnin = 500, thin = 10)
 ```
 
-We see that the results of the two versions match closely.
+The results of the two versions match closely.
 
 ```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE}
-library(tidyr)
-library(dplyr)
-S1 <- gather(as.data.frame(samples), key = "Parameter", value = "Value")
-S2 <- gather(as.data.frame(samples_new), key = "Parameter", value = "Value")
-Scombo <- bind_rows(list(familiar = S1, new = S2), .id = 'Version')
-library(ggplot2)
-ggplot(data = Scombo, aes(x = Value)) +
-  geom_density(aes(group = Version, color = Version)) +
-  facet_grid(cols = vars(Parameter))
+# library(tidyr)
+# library(dplyr)
+# S1 <- gather(as.data.frame(samples), key = "Parameter", value = "Value")
+# S2 <- gather(as.data.frame(samples_new), key = "Parameter", value = "Value")
+# Scombo <- bind_rows(list(familiar = S1, new = S2), .id = 'Version')
+# library(ggplot2)
+# ggplot(data = Scombo, aes(x = Value)) +
+#   geom_density(aes(group = Version, color = Version)) +
+#   facet_grid(cols = vars(Parameter))
 
 # {
 # plot(density(as.data.frame(samples)$psi), col = "red", main = "psi")

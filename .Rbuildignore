@@ -5,4 +5,3 @@
 \.RDataTmp
 run_tests\.R
 ^\.travis\.yml$
-^Meta$

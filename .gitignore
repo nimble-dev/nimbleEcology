@@ -4,4 +4,6 @@
 .Ruserdata
 .RDataTmp
 ..Rcheck
+doc
+Meta
 inst/doc
