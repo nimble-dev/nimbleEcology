@@ -6,8 +6,9 @@ This repository provides user-defined distributions that can be used in NIMBLE m
 
 * basic capture-recapture distributions (Cormack-Jolly-Seber),
 * hidden Markov model distributions for multi-state and multi-event capture-recapture models,
-* occupancy models, and
-* dynamic occupancy models.
+* occupancy models,
+* dynamic occupancy models, and
+* N-mixture models.
 
 Community contributions or suggestions for other needs are welcome.
 

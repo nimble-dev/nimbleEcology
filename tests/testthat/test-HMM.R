@@ -397,6 +397,21 @@ test_that("dHMM errors where expected", {
                    probObs = probObs, probTrans = probTrans,
                    len = len, log = F))
 
+  # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,] <- 0
+  probX <- expect_error(
+            dHMM(x = x, init = init,
+                 probObs = t(probObs), probTrans = probTrans,
+                 len = len, log = F))
+
+  # Bad sums for probTrans:
+  probX <- expect_error(
+            dHMM(x = x, init = init,
+                 probObs = probObs, probTrans = t(probTrans),
+                 len = len, log = F))
+
+
 })
 
 # -----------------------------------------------------------------------------
@@ -466,6 +481,20 @@ test_that("dHMMo errors where expected", {
               dHMMo(x = x, init = init,
                    probObs = probObs_unmatched, probTrans = probTrans,
                    len = len, log = F))
+
+    # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,,] <- 0
+  probX <- expect_error(
+            dHMM(x = x, init = init,
+                 probObs = t(probObs), probTrans = probTrans,
+                 len = len, log = F))
+
+  # Bad sums for probTrans:
+  probX <- expect_error(
+            dHMM(x = x, init = init,
+                 probObs = probObs, probTrans = t(probTrans),
+                 len = len, log = F))
 })
 
 

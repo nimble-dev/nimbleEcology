@@ -30,6 +30,8 @@
 #'     in latent state i transitions to latent state j at the next timestep.
 #'     See Details for more info.
 #' @param len length of \code{x} (see below).
+#' @param checkProbs Should an error be thrown if a row in probObs or probTrans doesn't
+#' sum to 1? This helps prevent misspecifications of probability arrays. Defaults to true.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
 #' @param n number of random draws, each returning a vector of length
@@ -175,11 +177,21 @@ dHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkProbs = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+
+    if (checkProbs) {
+      for (i in 1:dim(probTrans)[1]) {
+        if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+      }
+      for (i in 1:dim(probObs)[1]) {
+        if (abs(sum(probObs[i,]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+      }
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -205,6 +217,7 @@ dHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkProbs = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
@@ -214,6 +227,17 @@ dHMMo <- nimbleFunction(
       stop("Length of time dimension of Z must match length of data.")
     }
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+
+    if (checkProbs) {
+      for (i in 1:dim(probTrans)[1]) {
+        if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+      }
+      for (i in 1:dim(probObs)[1]) {
+        for (k in 1:dim(probObs)[3]) {
+          if (abs(sum(probObs[i,,k]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+        }
+      }
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -238,7 +262,8 @@ rHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0)) {
+                 len = double(0, default = 0),
+                 checkProbs = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 
@@ -277,7 +302,8 @@ rHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0)) {
+                 len = double(0, default = 0),
+                 checkProbs = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 

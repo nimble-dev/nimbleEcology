@@ -30,6 +30,8 @@
 #' that an individual truly in state i at time t will be in state j at time t+1.
 #' See Details for more info.
 #' @param len length of observations (needed for rDHMM)
+#' @param checkProbs Should an error be thrown if a row in probObs or probTrans doesn't
+#' sum to 1? This helps prevent misspecifications of probability arrays. Defaults to true.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability
 #' @param n number of random draws, each returning a vector of length
 #'     \code{len}. Currently only \code{n = 1} is supported, but the
@@ -172,12 +174,23 @@ dDHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
+                 checkProbs = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (length(init) != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("len - 1 does not match dim(probTrans)[3] in dDHMM.")
+    if (checkProbs) {
+      for (i in 1:dim(probTrans)[1]) {
+        for (k in 1:dim(probTrans)[3]) {
+          if (abs(sum(probTrans[i,,k]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+        }
+      }
+      for (i in 1:dim(probObs)[1]) {
+        if (abs(sum(probObs[i,]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+      }
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -205,6 +218,7 @@ dDHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
+                 checkProbs = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("Length of init does not match ncol of probObs in dDHMMo.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMMo.")
@@ -212,6 +226,19 @@ dDHMMo <- nimbleFunction(
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("dim(probTrans)[3] does not match len - 1 in dDHMMo.")
     if (len != dim(probObs)[3]) stop("dim(probObs)[3] does not match len in dDHMMo.")
+
+    if (checkProbs) {
+      for (i in 1:dim(probTrans)[1]) {
+        for (k in 1:dim(probTrans)[3]) {
+          if (abs(sum(probTrans[i,,k]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+        }
+      }
+      for (i in 1:dim(probObs)[1]) {
+        for (k in 1:dim(probObs)[3]) {
+          if (abs(sum(probObs[i,,k]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+        }
+      }
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
@@ -237,7 +264,8 @@ rDHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(3),
-                 len = double()) {
+                 len = double(),
+                 checkProbs = double(0, default = 1)) {
     nStates <- length(init)
     if (nStates != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
     if (nStates != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
@@ -286,7 +314,8 @@ rDHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(3),
-                 len = double()) {
+                 len = double(),
+                 checkProbs = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 

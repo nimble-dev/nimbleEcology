@@ -231,55 +231,59 @@
       )
   registerDistributions(list(
     dHMM = list(
-      BUGSdist = "dHMM(init, probObs, probTrans, len)",
-      Rdist = "dHMM(init, probObs, probTrans, len = 0)",
+      BUGSdist = "dHMM(init, probObs, probTrans, len, checkProbs)",
+      Rdist = "dHMM(init, probObs, probTrans, len = 0, checkProbs = 1)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(2)',
-                'len = double(0)'),
+                'len = double(0)',
+                'checkProbs = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
     dHMMo = list(
-      BUGSdist = "dHMMo(init, probObs, probTrans, len)",
-      Rdist = "dHMMo(init, probObs, probTrans, len = 0)",
+      BUGSdist = "dHMMo(init, probObs, probTrans, len, checkProbs)",
+      Rdist = "dHMMo(init, probObs, probTrans, len = 0, checkProbs = 1)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(2)',
-                'len = double(0)'),
+                'len = double(0)',
+                'checkProbs = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
   registerDistributions(list(
     dDHMM = list(
-      BUGSdist = "dDHMM(init, probObs, probTrans, len)",
-      Rdist = "dDHMM(init, probObs, probTrans, len)",
+      BUGSdist = "dDHMM(init, probObs, probTrans, len, checkProbs)",
+      Rdist = "dDHMM(init, probObs, probTrans, len, checkProbs)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(3)',
-                'len = double()'),
+                'len = double()',
+                'checkProbs = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
     dDHMMo = list(
-      BUGSdist = "dDHMMo(init, probObs, probTrans, len)",
-      Rdist = "dDHMMo(init, probObs, probTrans, len)",
+      BUGSdist = "dDHMMo(init, probObs, probTrans, len, checkProbs)",
+      Rdist = "dDHMMo(init, probObs, probTrans, len, checkProbs)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(3)',
-                'len = double()'),
+                'len = double()',
+                'checkProbs = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
