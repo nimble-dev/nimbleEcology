@@ -44,7 +44,7 @@
 #' (even though it may seem redundant).
 #'
 #' For more explanation, see
-#' \href{../inst/doc/Introduction_to_nimbleEcology.html}{package vignette} (or
+#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
 #' \code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent state for

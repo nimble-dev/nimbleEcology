@@ -24,5 +24,5 @@ install:
 script:
   - R CMD build .
   - R CMD check *tar.gz --as-cran
-  - R CMD INSTALL *tar.gz --install-tests
+  - Rscript -e "devtools::install('.', build_vignettes=TRUE)"
   - Rscript ./run_tests.R
