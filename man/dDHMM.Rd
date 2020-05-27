@@ -7,13 +7,13 @@
 \alias{rDHMMo}
 \title{Dynamic Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
-dDHMM(x, init, probObs, probTrans, len, checkProbs = 1, log = 0)
+dDHMM(x, init, probObs, probTrans, len, checkRowSums = 1, log = 0)
 
-dDHMMo(x, init, probObs, probTrans, len, checkProbs = 1, log = 0)
+dDHMMo(x, init, probObs, probTrans, len, checkRowSums = 1, log = 0)
 
-rDHMM(n, init, probObs, probTrans, len, checkProbs = 1)
+rDHMM(n, init, probObs, probTrans, len, checkRowSums = 1)
 
-rDHMMo(n, init, probObs, probTrans, len, checkProbs = 1)
+rDHMMo(n, init, probObs, probTrans, len, checkRowSums = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
@@ -43,7 +43,7 @@ See Details for more information.}
 
 \item{len}{length of observations (needed for rDHMM)}
 
-\item{checkProbs}{Logical argument.  If true, then the probObs and probTrans
+\item{checkRowSums}{Logical argument.  If true, then the probObs and probTrans
 matrices are verified to guarantee the necessary condition that all row sums
 are equal to unity.  If false, no checking of row sums takes place, which provides
 faster execution but allows possible misspecification of these probability
@@ -151,7 +151,7 @@ probTrans <- array(rep(1/3, 27), # A matrix of time-indexed transition probabili
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
-                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkProbs = 1)
+                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkRowSums = 1)
 
    for (i in 1:3) {
      init[i] ~ dunif(0,1)

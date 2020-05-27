@@ -30,7 +30,7 @@
 #' that an individual truly in state i at time t will be in state j at time t+1.
 #' See Details for more information.
 #' @param len length of observations (needed for rDHMM)
-#' @param checkProbs Logical argument.  If true, then the probObs and probTrans
+#' @param checkRowSums Logical argument.  If true, then the probObs and probTrans
 #' matrices are verified to guarantee the necessary condition that all row sums
 #' are equal to unity.  If false, no checking of row sums takes place, which provides
 #' faster execution but allows possible misspecification of these probability
@@ -139,7 +139,7 @@
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
-#'                   probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkProbs = 1)
+#'                   probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkRowSums = 1)
 #'
 #'    for (i in 1:3) {
 #'      init[i] ~ dunif(0,1)
@@ -175,14 +175,14 @@ dDHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
-                 checkProbs = double(0, default = 1),
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (length(init) != dim(probTrans)[2]) stop("Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    if (checkProbs) {
+    if (checkRowSums) {
       for (i in 1:dim(probTrans)[1]) {
         for (k in 1:dim(probTrans)[3]) {
           if (abs(sum(probTrans[i,,k]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
@@ -219,7 +219,7 @@ dDHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(3),
                  len = double(),## length of x (needed as a separate param for rDHMM)
-                 checkProbs = double(0, default = 1),
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("Length of init does not match ncol of probObs in dDHMMo.")
     if (length(init) != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMMo.")
@@ -228,7 +228,7 @@ dDHMMo <- nimbleFunction(
     if (len - 1 > dim(probTrans)[3]) stop("dim(probTrans)[3] does not match len - 1 in dDHMMo.")
     if (len != dim(probObs)[3]) stop("dim(probObs)[3] does not match len in dDHMMo.")
 
-    if (checkProbs) {
+    if (checkRowSums) {
       for (i in 1:dim(probTrans)[1]) {
         for (k in 1:dim(probTrans)[3]) {
           if (abs(sum(probTrans[i,,k]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
@@ -266,7 +266,7 @@ rDHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(3),
                  len = double(),
-                 checkProbs = double(0, default = 1)) {
+                 checkRowSums = double(0, default = 1)) {
     nStates <- length(init)
     if (nStates != dim(probObs)[1]) stop("Length of init does not match nrow of probObs in dDHMM.")
     if (nStates != dim(probTrans)[1]) stop("Length of init does not match dim(probTrans)[1] in dDHMM.")
@@ -316,7 +316,7 @@ rDHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(3),
                  len = double(),
-                 checkProbs = double(0, default = 1)) {
+                 checkRowSums = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 

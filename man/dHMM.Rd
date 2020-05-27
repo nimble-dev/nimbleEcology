@@ -7,13 +7,13 @@
 \alias{rHMMo}
 \title{Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
-dHMM(x, init, probObs, probTrans, len = 0, checkProbs = 1, log = 0)
+dHMM(x, init, probObs, probTrans, len = 0, checkRowSums = 1, log = 0)
 
-dHMMo(x, init, probObs, probTrans, len = 0, checkProbs = 1, log = 0)
+dHMMo(x, init, probObs, probTrans, len = 0, checkRowSums = 1, log = 0)
 
-rHMM(n, init, probObs, probTrans, len = 0, checkProbs = 1)
+rHMM(n, init, probObs, probTrans, len = 0, checkRowSums = 1)
 
-rHMMo(n, init, probObs, probTrans, len = 0, checkProbs = 1)
+rHMMo(n, init, probObs, probTrans, len = 0, checkRowSums = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
@@ -41,7 +41,7 @@ See Details for more information.}
 
 \item{len}{length of \code{x} (see below).}
 
-\item{checkProbs}{Logical argument.  If true, then the probObs and probTrans
+\item{checkRowSums}{Logical argument.  If true, then the probObs and probTrans
 matrices are verified to guarantee the necessary condition that all row sums
 are equal to unity.  If false, no checking of row sums takes place, which provides
 faster execution but allows possible misspecification of these probability
@@ -156,7 +156,7 @@ probTrans <- t(array( # A matrix of transition probabilities
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-                 probTrans = probTrans[1:3, 1:3], len = 5, checkProbs = 1)
+                 probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 1)
 
    for (i in 1:3) {
      for (j in 1:3) {

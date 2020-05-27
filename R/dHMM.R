@@ -30,7 +30,7 @@
 #'     in latent state i transitions to latent state j at the next timestep.
 #'     See Details for more information.
 #' @param len length of \code{x} (see below).
-#' @param checkProbs Logical argument.  If true, then the probObs and probTrans
+#' @param checkRowSums Logical argument.  If true, then the probObs and probTrans
 #' matrices are verified to guarantee the necessary condition that all row sums
 #' are equal to unity.  If false, no checking of row sums takes place, which provides
 #' faster execution but allows possible misspecification of these probability
@@ -146,7 +146,7 @@
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-#'                  probTrans = probTrans[1:3, 1:3], len = 5, checkProbs = 1)
+#'                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 1)
 #'
 #'    for (i in 1:3) {
 #'      for (j in 1:3) {
@@ -179,14 +179,14 @@ dHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkProbs = double(0, default = 1),
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
-    if (checkProbs) {
+    if (checkRowSums) {
       for (i in 1:dim(probTrans)[1]) {
         if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
       }
@@ -219,7 +219,7 @@ dHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkProbs = double(0, default = 1),
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
@@ -230,7 +230,7 @@ dHMMo <- nimbleFunction(
     }
     if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
 
-    if (checkProbs) {
+    if (checkRowSums) {
       for (i in 1:dim(probTrans)[1]) {
         if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
       }
@@ -265,7 +265,7 @@ rHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(2),
                  len = double(0, default = 0),
-                 checkProbs = double(0, default = 1)) {
+                 checkRowSums = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 
@@ -305,7 +305,7 @@ rHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(2),
                  len = double(0, default = 0),
-                 checkProbs = double(0, default = 1)) {
+                 checkRowSums = double(0, default = 1)) {
   returnType(double(1))
   ans <- numeric(len)
 
