@@ -498,4 +498,157 @@ test_that("dHMMo errors where expected", {
 })
 
 
+# -----------------------------------------------------------------------------
+# 5. Test that rHMM errors when input assumptions are violated
+test_that("rHMM errors where expected", {
+
+# Start with good inputs and break it one by one
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  badprobObs <- t(matrix(
+         c(1, 0.2, 1,
+           0, 0.8, 0),
+         nrow = length(init)))
+
+  probTrans <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3,
+            0, 0, 1),
+          ncol = length(init)))
+  # T isn't square:
+  badT <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+  # probObs doesn't match T:
+  probObs <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+  # Inits don't sum to 0:
+  badInit <- c(0.1, 0.2, 0.2)
+
+# Check for errors when rHMM is given bad input
+  # len != length of x:
+  probX <- expect_error(
+              rHMM(init = init,
+                   probObs = probObs, probTrans = probTrans,
+                   len = 4))
+  # T isn't square:
+  probX <- expect_error(
+              rHMM(init = init,
+                   probObs = probObs, probTrans =badT,
+                   len = len))
+  # probObs doesn't match T:
+  probX <- expect_error(
+              rHMM(init = init,
+                   probObs = badprobObs, probTrans = probTrans,
+                   len = len))
+  # Inits don't sum to 1:
+  probX <- expect_error(
+              rHMM(init = badInit,
+                   probObs = probObs, probTrans = probTrans,
+                   len = len))
+
+  # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,] <- 0
+  probX <- expect_error(
+            rHMM(init = init,
+                 probObs = bpo2, probTrans = probTrans,
+                 len = len))
+
+  # Bad sums for probTrans:
+  probX <- expect_error(
+            rHMM(init = init,
+                 probObs = probObs, probTrans = t(probTrans),
+                 len = len))
+
+
+})
+
+# -----------------------------------------------------------------------------
+# 6. Test that rHMMo errors when input assumptions are violated
+
+test_that("rHMMo errors where expected", {
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  probObs <- array(
+         c(1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2),
+         c(3, 2, 5))
+
+  probTrans <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3,
+            0, 0, 1),
+          ncol = length(init)))
+  badT <- t(matrix(
+          c(0.6, 0.3, 0.1,
+            0, 0.7, 0.3),
+          ncol = length(init)))
+  probObs_unmatched <- array(
+         c(0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 0.5, 0.5),
+         c(2, 2, 5))
+  probObs_badtime <- array(
+         c(1, 0, 0.2, 0.8, 1, 0,
+           0.9, 0.1, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0),
+         c(2, 3, 4))
+  badInits <- c(0.1, 0.1, 0.1)
+
+
+# rHMMo tests
+  # len != length of x:
+  probX <- expect_error(
+              rHMMo(init = init,
+                   probObs = probObs, probTrans = probTrans,
+                   len = 4))
+  # T is not square
+  probX <- expect_error(
+              rHMMo(init = init,
+                   probObs = probObs, probTrans =badT,
+                   len = len))
+  # probObs time index doesn't match len
+  probX <- expect_error(
+              rHMMo(init = init,
+                   probObs = badprobObs, probTrans = probTrans,
+                   len = len))
+  # probObs doesn't match T
+  probX <- expect_error(
+              rHMMo(init = init,
+                   probObs = probObs_unmatched, probTrans = probTrans,
+                   len = len))
+  # Inits don't sum to 1
+  probX <- expect_error(
+              rHMMo(init = badInit,
+                   probObs = probObs, probTrans = probTrans,
+                   len = len))
+
+    # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,,] <- 0
+  probX <- expect_error(
+            rHMMo(init = init,
+                 probObs = bpo2, probTrans = probTrans,
+                 len = len))
+
+  # Bad sums for probTrans:
+  probX <- expect_error(
+            rHMMo(init = init,
+                 probObs = probObs, probTrans = t(probTrans),
+                 len = len))
+})
 

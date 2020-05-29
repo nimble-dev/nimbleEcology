@@ -514,3 +514,165 @@ test_that("dDHMMo errors where expected", {
                  probObs = probObs, probTrans = badT2,
                  len = len, log = F))
 })
+
+
+
+
+
+test_that("rDHMM errors where expected", {
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  probObs <- t(array(
+         c(1, 0,
+           0, 1,
+           0.8, 0.2),
+         c(2, 3)))
+
+
+  probTrans <- array(
+          c(0.6, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(3,3,4))
+  badT <- array(
+          c(0.6, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(10,3,4))
+  probObs_unmatched <- t(array(
+         c(1, 0,
+           0, 1,
+           0.8, 0.2),
+         c(1, 6)))
+
+  badInits <- c(0.1, 0.1, 0.1)
+
+
+# dHMMo tests
+  # T is not square
+  probX <- expect_error(
+              rDHMM(init = init,
+                   probObs = probObs, probTrans = badT,
+                   len = len))
+  # probObs doesn't match T
+  probX <- expect_error(
+              rDHMM(init = init,
+                   probObs = probObs_unmatched, probTrans = probTrans,
+                   len = len))
+  # Inits don't sum to 1
+  probX <- expect_error(
+              rDHMM(init = badInits,
+                   probObs = probObs, probTrans = probTrans,
+                   len = len))
+
+  # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,] <- 0
+  probX <- expect_error(
+            rDHMM(init = init,
+                 probObs = bpo2, probTrans = probTrans,
+                 len = len))
+
+  # Bad sums for probTrans:
+  bpt2 <- probTrans
+  bpt2[1,,1] <- 0
+  probX <- expect_error(
+            rDHMM(init = init,
+                 probObs = probObs, probTrans = bpt2,
+                 len = len))
+})
+
+
+test_that("rDHMMo errors where expected", {
+  len <- 5
+  x <- c(1, 1, 1, 2, 1)
+  init <- c(0.4, 0.2, 0.4)
+
+  probObs <- array(
+         c(1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2,
+           1, 0, 0.8, 0, 1, 0.2),
+         c(3, 2, 5))
+
+  probTrans <- array(
+          c(0.6, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(3,3,4))
+  badT <- array(
+          c(0.6, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(1,9,4))
+  badT2 <- array(
+          c(0.8, 0, 0, 0.3, 0.7, 0.25, 0.1, 0.3, 0.75,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
+            0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
+            ),
+          c(3,3,4))
+
+  probObs_unmatched <- array(
+         c(0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 1, 0,
+           0.2, 0.8, 0.5, 0.5),
+         c(2, 2, 5))
+  probObs_badtime <- array(
+         c(1, 0, 0.2, 0.8, 1, 0,
+           0.9, 0.1, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0,
+           1, 0, 0.2, 0.8, 1, 0),
+         c(2, 3, 4))
+  badInits <- c(0.1, 0.1, 0.1)
+
+
+# rDHMMo tests
+  # T is not square
+  probX <- expect_error(
+              rDHMMo(init = init,
+                   probObs = probObs, probTrans =badT,
+                   len = len))
+  # probObs time index doesn't match len
+  probX <- expect_error(
+              rDHMMo(init = init,
+                   probObs = probObs_badtime, probTrans = probTrans,
+                   len = len))
+  # probObs doesn't match T
+  probX <- expect_error(
+              rDHMMo(init = init,
+                   probObs = probObs_unmatched, probTrans = probTrans,
+                   len = len))
+  # Inits don't sum to 1
+  probX <- expect_error(
+              rDHMMo(init = badInit,
+                   probObs = probObs, probTrans = probTrans,
+                   len = len))
+
+  # Bad sums for probObs:
+  bpo2 <- probObs
+  bpo2[1,,] <- 0
+  probX <- expect_error(
+            rDHMMo(init = init,
+                 probObs = bpo2, probTrans = probTrans,
+                 len = len))
+
+  # Bad sums for probTrans:
+  probX <- expect_error(
+            rDHMMo(init = init,
+                 probObs = probObs, probTrans = badT2,
+                 len = len))
+})

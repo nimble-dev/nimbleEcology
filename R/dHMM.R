@@ -185,7 +185,7 @@ dHMM <- nimbleFunction(
                  checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
     if (sum(init) != 1) stop("In dHMM: Initial probabilities must sum to 1.")
 
@@ -243,7 +243,7 @@ dHMMo <- nimbleFunction(
                  checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMMo: probTrans must be a square matrix.")
     if (dim(probObs)[3] != len) {
       if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of probObs must match length of data. Did you mean dHMM?")
@@ -267,7 +267,7 @@ dHMMo <- nimbleFunction(
         for (k in 1:dim(probObs)[3]) {
           thisCheckSum <- sum(probObs[i,,k])
           if (abs(thisCheckSum - 1) > 1e-6) {
-            print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+            print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = " , k, ". The sum should be 1 but is ", thisCheckSum)
             obsCheckPasses <- FALSE
           }
         }
@@ -400,7 +400,7 @@ rHMMo <- nimbleFunction(
       for (k in 1:dim(probObs)[3]) {
         thisCheckSum <- sum(probObs[i,,k])
         if (abs(thisCheckSum - 1) > 1e-6) {
-          print("In rHMMo: Problem with sum(probObs[i,,k]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          print("In rHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
           obsCheckPasses <- FALSE
         }
       }
