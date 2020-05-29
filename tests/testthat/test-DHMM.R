@@ -372,7 +372,7 @@ test_that("dDHMM errors where expected", {
             0.6, 0, 0, 0.2, 0.7, 0, 0.2, 0.3, 1,
             0.6, 0, 0.2, 0.3, 0.7, 0, 0.1, 0.3, 0.8
             ),
-          c(1,6,4))
+          c(10,3,4))
   probObs_unmatched <- t(array(
          c(1, 0,
            0, 1,
@@ -385,23 +385,23 @@ test_that("dDHMM errors where expected", {
 # dHMMo tests
   # len != length of x:
   probX <- expect_error(
-              dDHMMo(x = x, init = init,
+              dDHMM(x = x, init = init,
                    probObs = probObs, probTrans = probTrans,
                    len = 4, log = F))
   # T is not square
   probX <- expect_error(
-              dDHMMo(x = x, init = init,
+              dDHMM(x = x, init = init,
                    probObs = probObs, probTrans =badT,
                    len = len, log = F))
   # probObs doesn't match T
   probX <- expect_error(
-              dDHMMo(x = x, init = init,
+              dDHMM(x = x, init = init,
                    probObs = probObs_unmatched, probTrans = probTrans,
                    len = len, log = F))
   # Inits don't sum to 1
   probX <- expect_error(
-              dDHMMo(x = x, init = init,
-                   probObs = probObs_unmatched, probTrans = probTrans,
+              dDHMM(x = x, init = badInits,
+                   probObs = probObs, probTrans = probTrans,
                    len = len, log = F))
 
   # Bad sums for probObs:
@@ -409,13 +409,15 @@ test_that("dDHMM errors where expected", {
   bpo2[1,] <- 0
   probX <- expect_error(
             dDHMM(x = x, init = init,
-                 probObs = t(probObs), probTrans = probTrans,
+                 probObs = bpo2, probTrans = probTrans,
                  len = len, log = F))
 
   # Bad sums for probTrans:
+  bpt2 <- probTrans
+  bpt2[1,,1] <- 0
   probX <- expect_error(
             dDHMM(x = x, init = init,
-                 probObs = probObs, probTrans = badProbTrans,
+                 probObs = probObs, probTrans = bpt2,
                  len = len, log = F))
 })
 
@@ -495,20 +497,20 @@ test_that("dDHMMo errors where expected", {
   # Inits don't sum to 1
   probX <- expect_error(
               dDHMMo(x = x, init = init,
-                   probObs = probObs_unmatched, probTrans = probTrans,
+                   probObs = probObs, probTrans = probTrans,
                    len = len, log = F))
 
   # Bad sums for probObs:
   bpo2 <- probObs
   bpo2[1,,] <- 0
   probX <- expect_error(
-            dDHMM(x = x, init = init,
-                 probObs = t(probObs), probTrans = probTrans,
+            dDHMMo(x = x, init = init,
+                 probObs = bpo2, probTrans = probTrans,
                  len = len, log = F))
 
   # Bad sums for probTrans:
   probX <- expect_error(
-            dDHMM(x = x, init = init,
+            dDHMMo(x = x, init = init,
                  probObs = probObs, probTrans = badT2,
                  len = len, log = F))
 })

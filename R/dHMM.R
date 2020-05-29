@@ -243,11 +243,11 @@ dHMMo <- nimbleFunction(
                  checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: Number of cols in Z must equal number of cols in T.")
-    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMMo: T must be a square matrix.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMMo: probTrans must be a square matrix.")
     if (dim(probObs)[3] != len) {
-      if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of Z must match length of data. Did you mean dHMM?")
-      stop("In dHMMo: Length of time dimension of Z must match length of data.")
+      if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of probObs must match length of data. Did you mean dHMM?")
+      stop("In dHMMo: Length of time dimension of probObs must match length of data.")
     }
     if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
 
@@ -287,7 +287,7 @@ dHMMo <- nimbleFunction(
       if (x[t] > nObsClasses | x[t] < 1) stop("In dHMMo: Invalid value of x[t].")
       Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
-      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
+      logL <- logL + log(sumZpi)  # Accumulate log probabilities through timeÍ
       if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())

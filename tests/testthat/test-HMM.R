@@ -402,7 +402,7 @@ test_that("dHMM errors where expected", {
   bpo2[1,] <- 0
   probX <- expect_error(
             dHMM(x = x, init = init,
-                 probObs = t(probObs), probTrans = probTrans,
+                 probObs = bpo2, probTrans = probTrans,
                  len = len, log = F))
 
   # Bad sums for probTrans:
@@ -469,7 +469,7 @@ test_that("dHMMo errors where expected", {
   # probObs time index doesn't match len
   probX <- expect_error(
               dHMMo(x = x, init = init,
-                   probObs = probObs_badtime, probTrans = probTrans,
+                   probObs = badprobObs, probTrans = probTrans,
                    len = len, log = F))
   # probObs doesn't match T
   probX <- expect_error(
@@ -478,21 +478,21 @@ test_that("dHMMo errors where expected", {
                    len = len, log = F))
   # Inits don't sum to 1
   probX <- expect_error(
-              dHMMo(x = x, init = init,
-                   probObs = probObs_unmatched, probTrans = probTrans,
+              dHMMo(x = x, init = badInit,
+                   probObs = probObs, probTrans = probTrans,
                    len = len, log = F))
 
     # Bad sums for probObs:
   bpo2 <- probObs
   bpo2[1,,] <- 0
   probX <- expect_error(
-            dHMM(x = x, init = init,
-                 probObs = t(probObs), probTrans = probTrans,
+            dHMMo(x = x, init = init,
+                 probObs = bpo2, probTrans = probTrans,
                  len = len, log = F))
 
   # Bad sums for probTrans:
   probX <- expect_error(
-            dHMM(x = x, init = init,
+            dHMMo(x = x, init = init,
                  probObs = probObs, probTrans = t(probTrans),
                  len = len, log = F))
 })
