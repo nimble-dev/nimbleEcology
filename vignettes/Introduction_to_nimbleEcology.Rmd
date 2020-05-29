@@ -190,7 +190,7 @@ points(density(as.data.frame(samples_new)$psi), col = "blue", type = "l", add = 
 }
 
 {
-plot(density(as.data.frame(samples)$p), col = "red", main = "psi")
+plot(density(as.data.frame(samples)$p), col = "red", main = "p")
 points(density(as.data.frame(samples_new)$p), col = "blue", type = "l", add = TRUE)
 }
 
