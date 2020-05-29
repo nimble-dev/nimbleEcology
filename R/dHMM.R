@@ -30,11 +30,14 @@
 #'     in latent state i transitions to latent state j at the next timestep.
 #'     See Details for more information.
 #' @param len length of \code{x} (see below).
-#' @param checkRowSums Logical argument.  If true, then the probObs and probTrans
-#' matrices are verified to guarantee the necessary condition that all row sums
-#' are equal to unity.  If false, no checking of row sums takes place, which provides
-#' faster execution but allows possible misspecification of these probability
-#' transition matrices.  Default value is true.
+#' @param checkRowSums should validity of \code{probObs} and
+#'   \code{probTrans} be checked?  Both of these are required to have
+#'   each set of probabilities sum to 1 (over each row, or second
+#'   dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+#'   these conditions will be checked within a tolerance of 1e-6.  If
+#'   it is 0 (or \code{FALSE}), they will not be checked. Not checking
+#'   should result in faster execution, but whether that is appreciable
+#'   will be case-specific.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
 #' @param n number of random draws, each returning a vector of length
@@ -181,29 +184,47 @@ dHMM <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
-    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
-    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+    if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Number of cols in probObs must equal number of cols in probTrans.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
+    if (sum(init) != 1) stop("In dHMM: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
+      transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+        thisCheckSum <- sum(probTrans[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          ## Compilation doesn't support more than a simple string for stop()
+          ## so we provide more detail using a print().
+          print("In dHMM: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          transCheckPasses <- FALSE
+        }
       }
+      obsCheckPasses <- TRUE
       for (i in 1:dim(probObs)[1]) {
-        if (abs(sum(probObs[i,]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+        thisCheckSum <- sum(probObs[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In dHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
       }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In dHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In dHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In dHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
     }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[2]
+    nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMM: Invalid value of x[t].")
       Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (asRow(Zpi) %*% probTrans / sumZpi)[1, ] # State probabilities at t+1
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -221,35 +242,53 @@ dHMMo <- nimbleFunction(
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
                  checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
-    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("T must be a square matrix.")
+    if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: Number of cols in Z must equal number of cols in T.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMMo: T must be a square matrix.")
     if (dim(probObs)[3] != len) {
-      if (dim(probObs)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
-      stop("Length of time dimension of Z must match length of data.")
+      if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of Z must match length of data. Did you mean dHMM?")
+      stop("In dHMMo: Length of time dimension of Z must match length of data.")
     }
-    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+    if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
+      transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        if (abs(sum(probTrans[i,]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
-      }
-      for (i in 1:dim(probObs)[1]) {
-        for (k in 1:dim(probObs)[3]) {
-          if (abs(sum(probObs[i,,k]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+        thisCheckSum <- sum(probTrans[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          ## Compilation doesn't support more than a simple string for stop()
+          ## so we provide more detail using a print().
+          print("In dHMMo: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          transCheckPasses <- FALSE
         }
       }
+      obsCheckPasses <- TRUE
+      for (i in 1:dim(probObs)[1]) {
+        for (k in 1:dim(probObs)[3]) {
+          thisCheckSum <- sum(probObs[i,,k])
+          if (abs(thisCheckSum - 1) > 1e-6) {
+            print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+            obsCheckPasses <- FALSE
+          }
+        }
+      }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In dHMMo: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In dHMMo: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In dHMMo: probObs was not specified correctly. Probabilities in each row must sum to 1.")
     }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[2]
+    nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMMo: Invalid value of x[t].")
       Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (asRow(Zpi) %*% probTrans / sumZpi)[1, ] # State probabilities at t+1
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
