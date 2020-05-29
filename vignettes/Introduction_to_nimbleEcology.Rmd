@@ -273,7 +273,7 @@ Note the following points:
 - `y[i, 1:T]` is a vector of capture history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.
 - Arguments to `dCJS_sv` are named.  As in R, this is optional but helpful.  Without names, the order matters.
 - `probSurvive` is provided as a scalar value, assuming there is a variable called `phi`.
-- In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is $phi_t$ above, namely the probability of survival from occasion $t$ to $t+1$.
+- In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is $\phi_t$ above, namely the probability of survival from occasion $t$ to $t+1$.
 - `probCapture` is provided as a vector value, assuming there is a matrix variable called `p`.  The value of `probCapture` could be any vector from any variable in the model.
 - `probCapture[t]` (i.e., the $t^{\mbox{th}}$ element of `probCapture`, which is `p[i, t]` in this example) is $p_t$ above, namely the probability of capture, if alive, at time $t$.
 - The length parameter `len` is in some cases redundant (the information could be determined by the length of other inputs), but nevertheless it is required.
@@ -344,7 +344,7 @@ Note the following points:
 
 ## Occupancy
 
-An occupancy model usually gives the probability of a series of detection/non-detection records for a species during multiple visits to a site.  The occupancy distributions in `nimbleEcology` give the probability of the detection history for one site, so this summary focuses on data from one site.
+An occupancy model gives the probability of a series of detection/non-detection records for a species during multiple visits to a site.  The occupancy distributions in `nimbleEcology` give the probability of the detection history for one site, so this summary focuses on data from one site.
 
 Define $y_t$ to be the observation at time $t$, with $y_t = 1$ for a detection and $y_t = 0$ for a non-detection.  Again, we use "time" as a synonym for "sampling occasion".  Again, define the vector of observations as $\mathbf{y} = (y_1, \ldots, y_T)$, where $T$ is the number of sampling occasions.
 
