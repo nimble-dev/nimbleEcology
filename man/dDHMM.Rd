@@ -17,39 +17,43 @@ rDHMMo(n, init, probObs, probTrans, len, checkRowSums = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
-corresponding to an observation state
-(one value of which could can correspond to "not observed", and
-another value of which can correspond to "dead" or
-"removed from system").}
+corresponding to an observation state (one value of which could
+can correspond to "not observed", and another value of which can
+correspond to "dead" or "removed from system").}
 
 \item{init}{vector of initial state probabilities. Must sum to 1}
 
 \item{probObs}{time-independent matrix (\code{dDHMM} and
 \code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
-\code{rDHMMo}) of observation probabilities.
-First two dimensions of \code{probObs} are of size x (number of possible
-system states) x (number of possible observation classes). \code{dDHMMo}
-and \code{rDHMMo} expect an additional third dimension of size (number of
-observation times). probObs[i, j (,t)] is the probability that an
-individual in the ith latent state is recorded as being in the jth detection state
-(at time t). See Details for more information.}
+\code{rDHMMo}) of observation probabilities.  First two
+dimensions of \code{probObs} are of size x (number of possible
+system states) x (number of possible observation
+classes). \code{dDHMMo} and \code{rDHMMo} expect an additional
+third dimension of size (number of observation times). probObs[i,
+j (,t)] is the probability that an individual in the ith latent
+state is recorded as being in the jth detection state (at time
+t). See Details for more information.}
 
 \item{probTrans}{time-dependent array of system state transition
-probabilities. Dimension of \code{probTrans} is (number of possible
-system states) x  (number of possible system states)
-x (number of observation times). probTrans[i,j,t] is the probability
-that an individual truly in state i at time t will be in state j at time t+1.
-See Details for more information.}
+probabilities. Dimension of \code{probTrans} is (number of
+possible system states) x (number of possible system states) x
+(number of observation times). probTrans[i,j,t] is the
+probability that an individual truly in state i at time t will be
+in state j at time t+1.  See Details for more information.}
 
 \item{len}{length of observations (needed for rDHMM)}
 
-\item{checkRowSums}{Logical argument.  If true, then the probObs and probTrans
-matrices are verified to guarantee the necessary condition that all row sums
-are equal to unity.  If false, no checking of row sums takes place, which provides
-faster execution but allows possible misspecification of these probability
-transition matrices.  Default value is true.}
+\item{checkRowSums}{should validity of \code{probObs} and
+\code{probTrans} be checked?  Both of these are required to have
+each set of probabilities sum to 1 (over each row, or second
+dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+these conditions will be checked within a tolerance of 1e-6.  If
+it is 0 (or \code{FALSE}), they will not be checked. Not checking
+should result in faster execution, but whether that is appreciable
+will be case-specific.}
 
-\item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability}
+\item{log}{\code{TRUE} or 1 to return log probability. \code{FALSE}
+or 0 to return probability}
 
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the

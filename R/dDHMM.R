@@ -9,36 +9,40 @@
 #' @export
 #'
 #' @param x vector of observations, each one a positive integer
-#'     corresponding to an observation state
-#'     (one value of which could can correspond to "not observed", and
-#'     another value of which can correspond to "dead" or
-#'     "removed from system").
+#'   corresponding to an observation state (one value of which could
+#'   can correspond to "not observed", and another value of which can
+#'   correspond to "dead" or "removed from system").
 #' @param init vector of initial state probabilities. Must sum to 1
 #' @param probObs time-independent matrix (\code{dDHMM} and
-#'     \code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
-#'     \code{rDHMMo}) of observation probabilities.
-#'     First two dimensions of \code{probObs} are of size x (number of possible
-#'     system states) x (number of possible observation classes). \code{dDHMMo}
-#'     and \code{rDHMMo} expect an additional third dimension of size (number of
-#'     observation times). probObs[i, j (,t)] is the probability that an
-#'     individual in the ith latent state is recorded as being in the jth detection state
-#'     (at time t). See Details for more information.
+#'   \code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
+#'   \code{rDHMMo}) of observation probabilities.  First two
+#'   dimensions of \code{probObs} are of size x (number of possible
+#'   system states) x (number of possible observation
+#'   classes). \code{dDHMMo} and \code{rDHMMo} expect an additional
+#'   third dimension of size (number of observation times). probObs[i,
+#'   j (,t)] is the probability that an individual in the ith latent
+#'   state is recorded as being in the jth detection state (at time
+#'   t). See Details for more information.
 #' @param probTrans time-dependent array of system state transition
-#' probabilities. Dimension of \code{probTrans} is (number of possible
-#' system states) x  (number of possible system states)
-#' x (number of observation times). probTrans[i,j,t] is the probability
-#' that an individual truly in state i at time t will be in state j at time t+1.
-#' See Details for more information.
+#'   probabilities. Dimension of \code{probTrans} is (number of
+#'   possible system states) x (number of possible system states) x
+#'   (number of observation times). probTrans[i,j,t] is the
+#'   probability that an individual truly in state i at time t will be
+#'   in state j at time t+1.  See Details for more information.
 #' @param len length of observations (needed for rDHMM)
-#' @param checkRowSums Logical argument.  If true, then the probObs and probTrans
-#' matrices are verified to guarantee the necessary condition that all row sums
-#' are equal to unity.  If false, no checking of row sums takes place, which provides
-#' faster execution but allows possible misspecification of these probability
-#' transition matrices.  Default value is true.
-#' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability
+#' @param checkRowSums should validity of \code{probObs} and
+#'   \code{probTrans} be checked?  Both of these are required to have
+#'   each set of probabilities sum to 1 (over each row, or second
+#'   dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+#'   these conditions will be checked within a tolerance of 1e-6.  If
+#'   it is 0 (or \code{FALSE}), they will not be checked. Not checking
+#'   should result in faster execution, but whether that is appreciable
+#'   will be case-specific.
+#' @param log \code{TRUE} or 1 to return log probability. \code{FALSE}
+#'   or 0 to return probability
 #' @param n number of random draws, each returning a vector of length
-#'     \code{len}. Currently only \code{n = 1} is supported, but the
-#'     argument exists for standardization of "\code{r}" functions
+#'   \code{len}. Currently only \code{n = 1} is supported, but the
+#'   argument exists for standardization of "\code{r}" functions
 #'
 #' @details
 #' These nimbleFunctions provide distributions that can be used directly in R or
@@ -183,14 +187,32 @@ dDHMM <- nimbleFunction(
     if (length(x) != len) stop("Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("len - 1 does not match dim(probTrans)[3] in dDHMM.")
     if (checkRowSums) {
+      transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
         for (k in 1:dim(probTrans)[3]) {
-          if (abs(sum(probTrans[i,,k]) - 1) > 1e-6) stop("probTrans is not specified correctly. Rows must sum to 1.")
+          thisCheckSum <- sum(probTrans[i,,k])
+          if (abs(thisCheckSum - 1) > 1e-6) {
+            ## Compilation doesn't support more than a simple string for stop()
+            ## so we provide more detail using a print().
+            print("In dDHMM: Problem with sum(probTrans[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+            transCheckPasses <- FALSE
+          }
         }
       }
+      obsCheckPasses <- TRUE
       for (i in 1:dim(probObs)[1]) {
-        if (abs(sum(probObs[i,]) - 1) > 1e-6) stop("probObs is not specified correctly. Rows must sum to 1.")
+        thisCheckSum <- sum(probObs[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In dDHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
       }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In dDHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In dDHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In dDHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
     }
 
     pi <- init # State probabilities at time t=1
@@ -198,7 +220,7 @@ dDHMM <- nimbleFunction(
     nObsClasses <- dim(probObs)[2]
     lengthX <- length(x)
     for (t in 1:lengthX) {
-      if (x[t] > nObsClasses) stop("Invalid value of x[t] in dDHMM.")
+      if (x[t] > nObsClasses | x[t] < 1) stop("Invalid value of x[t] in dDHMM.")
       Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time

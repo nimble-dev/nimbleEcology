@@ -1,10 +1,10 @@
 # This file registers all distributions when the package is loaded.
 .onAttach <- function(libname, pkgname) {
 
-  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions: ",
-                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture",
-                        "\nPlease note that nimbleEcology 0.3.0 contains internal changes to dHMM and dDHMM",
-                        "\nto fix an error. These include an additional distribution argument in nimbleModels.")
+  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions:\n ",
+                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n",
+                        "Please note that prior to nimbleEcology version 0.3.0, dHMM and dDHMM\n",
+                        "contained a bug that gave incorrect results.")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
