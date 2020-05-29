@@ -260,7 +260,7 @@ dDHMMo <- nimbleFunction(
           if (abs(thisCheckSum - 1) > 1e-6) {
             ## Compilation doesn't support more than a simple string for stop()
             ## so we provide more detail using a print().
-            print("In dDHMM: Problem with sum(probTrans[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+            print("In dDHMMo: Problem with sum(probTrans[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
             transCheckPasses <- FALSE
           }
         }
@@ -270,17 +270,17 @@ dDHMMo <- nimbleFunction(
         for (k in 1:dim(probObs)[3]) {
           thisCheckSum <- sum(probObs[i,,k])
           if (abs(thisCheckSum - 1) > 1e-6) {
-            print("In dDHMM: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+            print("In dDHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
             obsCheckPasses <- FALSE
           }
         }
       }
       if(!(transCheckPasses | obsCheckPasses))
-        stop("In dDHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+        stop("In dDHMMo: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
       if(!transCheckPasses)
-        stop("In dDHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+        stop("In dDHMMo: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
       if(!obsCheckPasses)
-        stop("In dDHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+        stop("In dDHMMo: probObs was not specified correctly. Probabilities in each row must sum to 1.")
     }
 
     pi <- init # State probabilities at time t=1
@@ -315,6 +315,34 @@ rDHMM <- nimbleFunction(
     if (nStates != dim(probTrans)[2]) stop("In rDHMM: Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("In rDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
     if (sum(init) != 1) stop("In rDHMM: Initial probabilities must sum to 1.")
+    if (checkRowSums) {
+      transCheckPasses <- TRUE
+      for (i in 1:dim(probTrans)[1]) {
+        for (k in 1:dim(probTrans)[3]) {
+          thisCheckSum <- sum(probTrans[i,,k])
+          if (abs(thisCheckSum - 1) > 1e-6) {
+            ## Compilation doesn't support more than a simple string for stop()
+            ## so we provide more detail using a print().
+            print("In rDHMM: Problem with sum(probTrans[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+            transCheckPasses <- FALSE
+          }
+        }
+      }
+      obsCheckPasses <- TRUE
+      for (i in 1:dim(probObs)[1]) {
+        thisCheckSum <- sum(probObs[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In rDHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
+      }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In rDHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In rDHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In rDHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+    }
 
     returnType(double(1))
     ans <- numeric(len)
@@ -366,6 +394,36 @@ rDHMMo <- nimbleFunction(
   if (nStates != dim(probTrans)[2]) stop("In rDHMMo: Length of init does not match dim(probTrans)[2] in dDHMM.")
   if (len - 1 > dim(probTrans)[3]) stop("In rDHMMo: len - 1 does not match dim(probTrans)[3] in dDHMM.")
   if (sum(init) != 1) stop("In rDHMMo: Initial probabilities must sum to 1.")
+  if (checkRowSums) {
+    transCheckPasses <- TRUE
+    for (i in 1:dim(probTrans)[1]) {
+      for (k in 1:dim(probTrans)[3]) {
+        thisCheckSum <- sum(probTrans[i,,k])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          ## Compilation doesn't support more than a simple string for stop()
+          ## so we provide more detail using a print().
+          print("In rDHMMo: Problem with sum(probTrans[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+          transCheckPasses <- FALSE
+        }
+      }
+    }
+    obsCheckPasses <- TRUE
+    for (i in 1:dim(probObs)[1]) {
+      for (k in 1:dim(probObs)[3]) {
+        thisCheckSum <- sum(probObs[i,,k])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In rDHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
+      }
+    }
+    if(!(transCheckPasses | obsCheckPasses))
+      stop("In rDHMMo: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!transCheckPasses)
+      stop("In rDHMMo: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!obsCheckPasses)
+      stop("In rDHMMo: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+  }
 
   returnType(double(1))
   ans <- numeric(len)
