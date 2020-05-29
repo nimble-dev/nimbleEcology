@@ -496,7 +496,7 @@ test_that("dDHMMo errors where expected", {
                    len = len, log = F))
   # Inits don't sum to 1
   probX <- expect_error(
-              dDHMMo(x = x, init = init,
+              dDHMMo(x = x, init = badInit,
                    probObs = probObs, probTrans = probTrans,
                    len = len, log = F))
 
