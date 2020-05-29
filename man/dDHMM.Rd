@@ -90,12 +90,11 @@ the probability that an individual in state \code{i} at time \code{t} takes on
 state \code{j} at time \code{t+1}. The length of the third dimension may be greater
 than (T - 1) but all values indexed greater than T - 1 will be ignored.
 
-\code{initStates} has length S. \code{initStates[i]} is the
+\code{init} has length S. \code{init[i]} is the
 probability of being in state \code{i} at the first observation time.
 
-For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-\code{vignette("Introduction_to_nimbleEcology")}).
+For more explanation, see package vignette
+(\code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete true latent state
 and a separate scalar datum for each observation, use
@@ -116,7 +115,7 @@ For example, in a NIMBLE model,
 
 \code{observedStates[1:T] ~ dDHMM(initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S, 1:(T-1)], T)}
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 
 declares that the \code{observedStates[1:T]} vector follows a dynamic hidden
 Markov model distribution with parameters as indicated, assuming all the
@@ -128,7 +127,7 @@ will invoke (something like) the following call to \code{dDHMM} when
 
 \code{rDHMM(observedStates[1:T], initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S, 1:(T-1)], T, log = TRUE)}
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T, log = TRUE)}
 
 If an algorithm using a \code{nimble} model with this declaration
 needs to generate a random draw for \code{observedStates[1:T]}, it
@@ -137,8 +136,8 @@ will make a similar invocation of \code{rDHMM}, with \code{n = 1}.
 If the observation probabilities are time-dependent, one would use:
 
 \code{observedStates[1:T] ~
-dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
-transitionProbs[1:S, 1:S, 1:(T-1)], T)}
+dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 }
 \examples{
 # Set up constants and initial values for defining the model

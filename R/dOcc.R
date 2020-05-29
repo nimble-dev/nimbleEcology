@@ -31,7 +31,7 @@
 #'
 #' The probability of observation vector \code{x} depends on
 #' occupancy probability, \code{probOcc}, and detection probability,
-#' \code{probDetect} or \code{probDetect[t]}.
+#' \code{probDetect} or \code{probDetect[1:T]}.
 #'
 #' The letter following the 'dOcc_' indicates whether detection probability is
 #' scalar (s, meaning \code{probDetect} is detection probability for every
@@ -43,9 +43,8 @@
 #' \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 #' (even though it may seem redundant).
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent state for
 #' true occupancy status and a separate scalar datum for each observation, use

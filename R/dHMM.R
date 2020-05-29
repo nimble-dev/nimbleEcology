@@ -67,12 +67,11 @@
 #' time-independent probability that an individual in state \code{i} at
 #' time \code{t} transitions to state \code{j} time \code{t+1}.
 #'
-#' \code{initStates} has length S. \code{initStates[i]} is the
+#' \code{init} has length S. \code{init[i]} is the
 #' probability of being in state \code{i} at the first observation time.
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent
 #' state and a separate scalar datum for each observation time, use of
@@ -93,7 +92,7 @@
 #'
 #' \code{observedStates[i, 1:T] ~ dHMM(initStates[1:S],
 #' observationProbs[1:S, 1:O],
-#' transitionProbs[1:S, 1:S], T)}
+#' transitionProbs[1:S, 1:S], 1, T)}
 #'
 #' declares that the \code{observedStates[i, 1:T]} (observation
 #' history for individual \code{i}, for example) vector follows a
@@ -107,7 +106,7 @@
 #'
 #' \code{dHMM(observedStates[1:T], initStates[1:S],
 #' observationProbs[1:S, 1:O],
-#' transitionProbs[1:S, 1:S], T, log = TRUE)}
+#' transitionProbs[1:S, 1:S], 1, T, log = TRUE)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{observedStates[1:T]}, it
@@ -116,7 +115,7 @@
 #' If the observation probabilities are time-dependent, one would use:
 #'
 #' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
-#' transitionProbs[1:S, 1:S], T)}
+#' transitionProbs[1:S, 1:S], 1, T)}
 #'
 #' @return
 #' For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or log

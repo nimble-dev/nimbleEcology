@@ -57,7 +57,7 @@
 #' probabilities \code{probColonize[1:(T-1)]}.
 #'
 #' When vectors, \code{probColonize} and \code{probPersist} may be of any
-#' length greater than \code{length(x) - 1}. Only the first \code{length(x) - 1}
+#' length greater than or equal to \code{length(x) - 1}. Only the first \code{length(x) - 1}
 #' indices are used, each corresponding to the transition from time t to t+1
 #' (e.g. \code{probColonize[2]} describes the transition probability from
 #' t = 2 to t = 3). All extra values are ignored. This is to make it easier to
@@ -76,9 +76,8 @@
 #' \code{end = c(4,4,3)}. In this case, the value of \code{x[4,4]} would
 #' be ignored.
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent state for
 #' true occupancy status and a separate scalar datum for each observation, use
@@ -115,13 +114,13 @@
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{detections[1:T, 1:O]}, it
-#' will make a similar invocation of \code{rDynOcc_svm}, with \code{n = 1}.
+#' will make a similar invocation of \code{rDynOcc_ssm}, with \code{n = 1}.
 #'
 #' If the colonization probabilities are time-dependent, one would use:
 #'
 #' \code{detections[1:T] ~ dDynOcc_svm(nrep, init = init_prob,
 #' probPersist = persistence_prob,
-#' probColonize = colonization_prob[1:(T-1)], p = p[1:S, 1:T])}
+#' probColonize = colonization_prob[1:(T-1)], p = p[1:T, 1:O])}
 #'
 #' @return
 #' For \code{dDynOcc_***}: the probability (or likelihood) or log probability

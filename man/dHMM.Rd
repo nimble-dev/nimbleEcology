@@ -41,11 +41,14 @@ See Details for more information.}
 
 \item{len}{length of \code{x} (see below).}
 
-\item{checkRowSums}{Logical argument.  If true, then the probObs and probTrans
-matrices are verified to guarantee the necessary condition that all row sums
-are equal to unity.  If false, no checking of row sums takes place, which provides
-faster execution but allows possible misspecification of these probability
-transition matrices.  Default value is true.}
+\item{checkRowSums}{should validity of \code{probObs} and
+\code{probTrans} be checked?  Both of these are required to have
+each set of probabilities sum to 1 (over each row, or second
+dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+these conditions will be checked within a tolerance of 1e-6.  If
+it is 0 (or \code{FALSE}), they will not be checked. Not checking
+should result in faster execution, but whether that is appreciable
+will be case-specific.}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to
 return probability.}
@@ -88,12 +91,11 @@ an individual in state \code{i} is observed in state \code{j}.
 time-independent probability that an individual in state \code{i} at
 time \code{t} transitions to state \code{j} time \code{t+1}.
 
-\code{initStates} has length S. \code{initStates[i]} is the
+\code{init} has length S. \code{init[i]} is the
 probability of being in state \code{i} at the first observation time.
 
-For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-\code{vignette("Introduction_to_nimbleEcology")}).
+For more explanation, see package vignette
+(\code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent
 state and a separate scalar datum for each observation time, use of
@@ -114,7 +116,7 @@ For example, in \code{nimble} model code,
 
 \code{observedStates[i, 1:T] ~ dHMM(initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S], T)}
+transitionProbs[1:S, 1:S], 1, T)}
 
 declares that the \code{observedStates[i, 1:T]} (observation
 history for individual \code{i}, for example) vector follows a
@@ -128,7 +130,7 @@ model. As above, \code{S} is the number of system state categories,
 
 \code{dHMM(observedStates[1:T], initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S], T, log = TRUE)}
+transitionProbs[1:S, 1:S], 1, T, log = TRUE)}
 
 If an algorithm using a \code{nimble} model with this declaration
 needs to generate a random draw for \code{observedStates[1:T]}, it
@@ -137,7 +139,7 @@ will make a similar invocation of \code{rHMM}, with \code{n = 1}.
 If the observation probabilities are time-dependent, one would use:
 
 \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
-transitionProbs[1:S, 1:S], T)}
+transitionProbs[1:S, 1:S], 1, T)}
 }
 \examples{
 # Set up constants and initial values for defining the model

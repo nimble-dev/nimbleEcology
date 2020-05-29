@@ -50,9 +50,8 @@
 #' \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 #' (even though it may seem redundant).
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent state for
 #' true alive/dead status at each time and a separate scalar datum for each
