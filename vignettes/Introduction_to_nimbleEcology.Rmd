@@ -442,7 +442,8 @@ Define $y_t$ as the number of individuals counted at the site on sampling occasi
 
 The probability of the data given the parameters is:
 \[
-P(\mathbf{y} | \lambda, \mathbf{p}) = \sum_{N = 1}^\infty \lbrace{ P(N | \lambda) \prod_{t = 1}^T P(y_t | N)}\rbrace
+P(\mathbf{y} | \lambda, \mathbf{p}) = \sum_{N = 1}^\infty \left[ P(N | \lambda)
+\prod_{t = 1}^T P(y_t | N) \right]
 \]
 where $P(N | \lambda)$ is a Poisson probability and $P(y_t | N)$ is a binomial probability.  That is, $y_t \sim \mbox{Binomial}(N, p_t)$, and the $y_t$s are independent.
 
