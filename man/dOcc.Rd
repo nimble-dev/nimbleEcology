@@ -51,21 +51,20 @@ and \code{\link[nimble]{nimbleModel}}).
 
 The probability of observation vector \code{x} depends on
 occupancy probability, \code{probOcc}, and detection probability,
-\code{probDetect} or \code{probDetect[t]}.
+\code{probDetect} or \code{probDetect[1:T]}.
 
 The letter following the 'dOcc_' indicates whether detection probability is
 scalar (s, meaning \code{probDetect} is detection probability for every
 \code{x[t]}) or vector (v, meaning \code{probDetect[t]} is detection
-probabilityfor \code{x[t]}).
+probability for \code{x[t]}).
 
 When used directly from R, the \code{len} argument to \code{dOcc_*} is not
 necessary. It will default to the length of \code{x}.  When used in
 \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 (even though it may seem redundant).
 
-For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-\code{vignette("Introduction_to_nimbleEcology")}).
+For more explanation, see package vignette
+(\code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent state for
 true occupancy status and a separate scalar datum for each observation, use
@@ -106,7 +105,6 @@ If the detection probabilities are time-dependent, use:
 detectionProbability[1:T], len = T)}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
 probOcc <- 0.6
@@ -128,7 +126,6 @@ Occ_model <- nimbleModel(nc, data = list(x = dat),
 # Calculate log probability of data from the model
 Occ_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \seealso{
 For dynamic occupancy models, see documentation for

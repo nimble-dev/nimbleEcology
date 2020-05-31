@@ -29,7 +29,7 @@ rCJS_vs(n, probSurvive, probCapture, len = 0)
 rCJS_vv(n, probSurvive, probCapture, len = 0)
 }
 \arguments{
-\item{x}{capture-history vector of 0s (not captured) and 1s (captured).
+\item{x}{capture history vector of 0s (not captured) and 1s (captured).
 Include the initial capture, so \code{x[1]} should equal 1.}
 
 \item{probSurvive}{survival probability, either a time-independent scalar
@@ -83,9 +83,8 @@ necessary. It will default to the length of \code{x}.  When used in
 \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 (even though it may seem redundant).
 
-For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-\code{vignette("Introduction_to_nimbleEcology")}).
+For more explanation, see package vignette
+(\code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete latent state for
 true alive/dead status at each time and a separate scalar datum for each
@@ -127,7 +126,6 @@ If both survival and capture probabilities are time-dependent, use
 and so on for each combination of time-dependent and time-independent parameters.
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0,0) # A vector of observations
 probSurvive <- c(0.6, 0.3, 0.3, 0.1)
@@ -149,7 +147,6 @@ CJS_model <- nimbleModel(nc, data = list(x = dat),
 # Calculate log probability of data from the model
 CJS_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

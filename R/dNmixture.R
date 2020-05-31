@@ -30,7 +30,7 @@
 #' counted, N, follows a Poisson distribution with mean \code{lambda}.
 #' Each count, \code{x[i]} for visit \code{i}, #' follows a binomial
 #' distribution with size (number of trials) N and probability of
-#' success (being counted) \code{prob[i]}
+#' success (being counted) \code{prob[i]}.
 #'
 #' The distribution has two forms, \code{dNmixture_s} and
 #' \code{dNmixture_v}. With \code{dNmixture_s}, detection probability
@@ -39,9 +39,8 @@
 #' detection probability is a vector, with one element for each visit,
 #' as written above.
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent
 #' state of abundance N and a separate scalar datum for each count,
@@ -121,7 +120,6 @@
 #'
 #'
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' len <- 5 # length of dataset
 #' dat <- c(1,2,0,1,5) # A vector of observations
@@ -148,7 +146,6 @@
 #' # Calculate log probability of data from the model
 #' nmix$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
 
 
 NULL

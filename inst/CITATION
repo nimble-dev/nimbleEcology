@@ -1,0 +1,48 @@
+citHeader("In published work that uses or mentions nimbleEcology, please cite 
+ the package (Goldstein et al. 2020), including the version used. When using dCJS, dHMM and/or dDHMM, please also cite Turek et al. (2016). When using dOcc, dDynOcc and/or dNmixture, please also cite Ponisio et al. (2020).")
+
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("{R} package version %s", meta$Version)
+
+bibentry(
+ bibtype = "misc",
+ title = "{nimbleEcology}: Distributions for Ecological Models in {nimble}",
+ author = c(person("Benjamin R.", "Goldstein"),
+              person("Daniel", "Turek"),
+              person("Lauren", "Ponisio"),
+              person("Perry", "de Valpine")),
+ url = "https://cran.r-project.org/package=nimbleEcology",
+ year = year,
+ version = meta$Version,
+ note = note
+)
+
+bibentry(
+ bibtype = "article",
+ title = "Efficient Markov chain Monte Carlo sampling for hierarchical hidden Markov models",
+ journal = "Environmental and Ecological Statistics",
+ volume = "23",
+ pages = "549-564",
+ year = "2016",
+ author = c(person("D.", "Turek"),
+            person("P.", "de Valpine"),
+            person("C.J.", "Paciorek")),
+ doi = "10.1007/s10651-016-0353-z",
+ textVersion = "Turek D., P. de Valpine, and C.J. Paciorek. 2016. Efficient Markov chain Monte Carlo sampling for hierarchical hidden Markov models. Environmental and Ecological Statistics 23: 549-564. <DOI:10.1007/s10651-016-0353-z>."
+)
+
+bibentry(
+ bibtype = "article",
+ title = "One size does not fit all: Customizing MCMC methods for hierarchical models using {NIMBLE}",
+ journal = "Ecology and Evolution",
+ volume = "10",
+ pages = "2385–2416",
+ year = "2020",
+ author = c(person("L.", "Ponisio"),
+            person("P.", "de Valpine"),
+            person("N.", "Michaud"),
+            person("D.", "Turek")),
+ doi = "10.1002/ece3.6053",
+ textVersion = "Ponisio, L., P. de Valpine, N. Michaud, and D. Turek. 2020. One size does not fit all: Customizing MCMC methods for hierarchical models using NIMBLE. Ecology and Evolution 10: 2385–2416. <DOI:10.1002/ece3.6053>."
+)
+

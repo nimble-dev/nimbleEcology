@@ -7,39 +7,53 @@
 \alias{rDHMMo}
 \title{Dynamic Hidden Markov Model distribution for use in \code{nimble} models}
 \usage{
-dDHMM(x, init, probObs, probTrans, len, log = 0)
+dDHMM(x, init, probObs, probTrans, len, checkRowSums = 1, log = 0)
 
-dDHMMo(x, init, probObs, probTrans, len, log = 0)
+dDHMMo(x, init, probObs, probTrans, len, checkRowSums = 1, log = 0)
 
-rDHMM(n, init, probObs, probTrans, len)
+rDHMM(n, init, probObs, probTrans, len, checkRowSums = 1)
 
-rDHMMo(n, init, probObs, probTrans, len)
+rDHMMo(n, init, probObs, probTrans, len, checkRowSums = 1)
 }
 \arguments{
 \item{x}{vector of observations, each one a positive integer
-corresponding to an observation state
-(one value of which could can correspond to "not observed", and
-another value of which can correspond to "dead" or
-"removed from system").}
+corresponding to an observation state (one value of which could
+can correspond to "not observed", and another value of which can
+correspond to "dead" or "removed from system").}
 
 \item{init}{vector of initial state probabilities. Must sum to 1}
 
 \item{probObs}{time-independent matrix (\code{dDHMM} and
-\code{rHMM}) or time-dependent 3D array (\code{dDHMMo} and
-\code{rHMMo}) of observation probabilities.
-First two dimensions of \code{probObs} are of size x (number of possible
-system states) x (number of possible observation classes). \code{dDHMMo}
-and \code{rHMMo} expects an additional third dimension of size (number of
-observation times)}
+\code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
+\code{rDHMMo}) of observation probabilities.  First two
+dimensions of \code{probObs} are of size x (number of possible
+system states) x (number of possible observation
+classes). \code{dDHMMo} and \code{rDHMMo} expect an additional
+third dimension of size (number of observation times). probObs[i,
+j (,t)] is the probability that an individual in the ith latent
+state is recorded as being in the jth detection state (at time
+t). See Details for more information.}
 
 \item{probTrans}{time-dependent array of system state transition
-probabilities. Dimension of \code{probTrans} is (number of possible
-system states) x  (number of possible system states)
-x (number of observation times)}
+probabilities. Dimension of \code{probTrans} is (number of
+possible system states) x (number of possible system states) x
+(number of observation times). probTrans[i,j,t] is the
+probability that an individual truly in state i at time t will be
+in state j at time t+1.  See Details for more information.}
 
 \item{len}{length of observations (needed for rDHMM)}
 
-\item{log}{TRUE or 1 to return log probability. FALSE or 0 to return probability}
+\item{checkRowSums}{should validity of \code{probObs} and
+\code{probTrans} be checked?  Both of these are required to have
+each set of probabilities sum to 1 (over each row, or second
+dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+these conditions will be checked within a tolerance of 1e-6.  If
+it is 0 (or \code{FALSE}), they will not be checked. Not checking
+should result in faster execution, but whether that is appreciable
+will be case-specific.}
+
+\item{log}{\code{TRUE} or 1 to return log probability. \code{FALSE}
+or 0 to return probability}
 
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the
@@ -76,12 +90,11 @@ the probability that an individual in state \code{i} at time \code{t} takes on
 state \code{j} at time \code{t+1}. The length of the third dimension may be greater
 than (T - 1) but all values indexed greater than T - 1 will be ignored.
 
-\code{initStates} has length S. \code{initStates[i]} is the
+\code{init} has length S. \code{init[i]} is the
 probability of being in state \code{i} at the first observation time.
 
-For more explanation, see
-\href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-\code{vignette("Introduction_to_nimbleEcology")}).
+For more explanation, see package vignette
+(\code{vignette("Introduction_to_nimbleEcology")}).
 
 Compared to writing \code{nimble} models with a discrete true latent state
 and a separate scalar datum for each observation, use
@@ -102,7 +115,7 @@ For example, in a NIMBLE model,
 
 \code{observedStates[1:T] ~ dDHMM(initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S, 1:(T-1)], T)}
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 
 declares that the \code{observedStates[1:T]} vector follows a dynamic hidden
 Markov model distribution with parameters as indicated, assuming all the
@@ -114,7 +127,7 @@ will invoke (something like) the following call to \code{dDHMM} when
 
 \code{rDHMM(observedStates[1:T], initStates[1:S],
 observationProbs[1:S, 1:O],
-transitionProbs[1:S, 1:S, 1:(T-1)], T, log = TRUE)}
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T, log = TRUE)}
 
 If an algorithm using a \code{nimble} model with this declaration
 needs to generate a random draw for \code{observedStates[1:T]}, it
@@ -123,11 +136,10 @@ will make a similar invocation of \code{rDHMM}, with \code{n = 1}.
 If the observation probabilities are time-dependent, one would use:
 
 \code{observedStates[1:T] ~
-dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:(T-1)],
-transitionProbs[1:S, 1:S, 1:(T-1)], T)}
+dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
+transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 }
 \examples{
-\donttest{
 # Set up constants and initial values for defining the model
 dat <- c(1,2,1,1) # A vector of observations
 init <- c(0.4, 0.2, 0.4) # A vector of initial state probabilities
@@ -136,13 +148,13 @@ probObs <- t(array( # A matrix of observation probabilities
          0, 1,
          0.8, 0.2), c(2, 3)))
 
-probTrans <- array(rep(0.5, 27), # A matrix of time-indexed transition probabilities
+probTrans <- array(rep(1/3, 27), # A matrix of time-indexed transition probabilities
             c(3,3,3))
 
 # Define code for a nimbleModel
  nc <- nimbleCode({
    x[1:4] ~ dDHMM(init[1:3], probObs = probObs[1:3, 1:2],
-                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4)
+                  probTrans = probTrans[1:3, 1:3, 1:3], len = 4, checkRowSums = 1)
 
    for (i in 1:3) {
      init[i] ~ dunif(0,1)
@@ -167,7 +179,6 @@ DHMM_model <- nimbleModel(nc,
 # Calculate log probability of x from the model
 DHMM_model$calculate()
 # Use the model for a variety of other purposes...
-}
 }
 \references{
 D. Turek, P. de Valpine and C. J. Paciorek. 2016. Efficient Markov chain Monte

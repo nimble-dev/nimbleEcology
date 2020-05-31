@@ -20,12 +20,24 @@
 #'     \code{rHMM}) or time-dependent array (\code{dHMMo} and
 #'     \code{rHMMo}) of observation probabilities.
 #'     First two dimensions of \code{probObs} are of size x (number of possible
-#'     system states) x (number of possible observation classes). \code{dHMMo} and
-#'     \code{rHMMo}
-#'     expects an additional third dimension of size (number of observation times).
+#'     system states) x (number of possible observation classes). \code{dDHMMo}
+#'     and \code{rDHMMo} expects an additional third dimension of size (number of
+#'     observation times). probObs[i, j (,t)] is the probability that an
+#'     individual in the ith latent state is recorded as being in the jth detection state
+#'     (at time t). See Details for more information.
 #' @param probTrans time-independent matrix of state transition
-#'     probabilities.
+#'     probabilities. probTrans[i,j] is the probability that an individual
+#'     in latent state i transitions to latent state j at the next timestep.
+#'     See Details for more information.
 #' @param len length of \code{x} (see below).
+#' @param checkRowSums should validity of \code{probObs} and
+#'   \code{probTrans} be checked?  Both of these are required to have
+#'   each set of probabilities sum to 1 (over each row, or second
+#'   dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
+#'   these conditions will be checked within a tolerance of 1e-6.  If
+#'   it is 0 (or \code{FALSE}), they will not be checked. Not checking
+#'   should result in faster execution, but whether that is appreciable
+#'   will be case-specific.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to
 #'     return probability.
 #' @param n number of random draws, each returning a vector of length
@@ -52,15 +64,14 @@
 #' an individual in state \code{i} is observed in state \code{j}.
 #'
 #' \code{probTrans} has dimension S x S. \code{probTrans}[i, j] is the
-#' tune-independent probability that an individual in state \code{i} at
+#' time-independent probability that an individual in state \code{i} at
 #' time \code{t} transitions to state \code{j} time \code{t+1}.
 #'
-#' \code{initStates} has length S. \code{initStates[i]} is the
+#' \code{init} has length S. \code{init[i]} is the
 #' probability of being in state \code{i} at the first observation time.
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent
 #' state and a separate scalar datum for each observation time, use of
@@ -81,7 +92,7 @@
 #'
 #' \code{observedStates[i, 1:T] ~ dHMM(initStates[1:S],
 #' observationProbs[1:S, 1:O],
-#' transitionProbs[1:S, 1:S], T)}
+#' transitionProbs[1:S, 1:S], 1, T)}
 #'
 #' declares that the \code{observedStates[i, 1:T]} (observation
 #' history for individual \code{i}, for example) vector follows a
@@ -95,7 +106,7 @@
 #'
 #' \code{dHMM(observedStates[1:T], initStates[1:S],
 #' observationProbs[1:S, 1:O],
-#' transitionProbs[1:S, 1:S], T, log = TRUE)}
+#' transitionProbs[1:S, 1:S], 1, T, log = TRUE)}
 #'
 #' If an algorithm using a \code{nimble} model with this declaration
 #' needs to generate a random draw for \code{observedStates[1:T]}, it
@@ -103,8 +114,8 @@
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:O, 1:S, 1:T],
-#' transitionProbs[1:S, 1:S], T)}
+#' \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
+#' transitionProbs[1:S, 1:S], 1, T)}
 #'
 #' @return
 #' For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or log
@@ -121,7 +132,6 @@
 #' 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' len <- 5 # length of dataset
 #' dat <- c(1,2,1,1,2) # A vector of observations
@@ -138,7 +148,7 @@
 #' # Define code for a nimbleModel
 #'  nc <- nimbleCode({
 #'    x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-#'                  probTrans = probTrans[1:3, 1:3], len = 5)
+#'                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 1)
 #'
 #'    for (i in 1:3) {
 #'      for (j in 1:3) {
@@ -159,7 +169,7 @@
 #' # Calculate log probability of data from the model
 #' HMM_model$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
+
 
 NULL
 
@@ -171,21 +181,49 @@ dHMM <- nimbleFunction(
                  probObs = double(2),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in probObs must equal number of cols in probTrans.")
-    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("probTrans must be a square matrix.")
-    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+    if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
+    if (sum(init) != 1) stop("In dHMM: Initial probabilities must sum to 1.")
+
+    if (checkRowSums) {
+      transCheckPasses <- TRUE
+      for (i in 1:dim(probTrans)[1]) {
+        thisCheckSum <- sum(probTrans[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          ## Compilation doesn't support more than a simple string for stop()
+          ## so we provide more detail using a print().
+          print("In dHMM: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          transCheckPasses <- FALSE
+        }
+      }
+      obsCheckPasses <- TRUE
+      for (i in 1:dim(probObs)[1]) {
+        thisCheckSum <- sum(probObs[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In dHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
+      }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In dHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In dHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In dHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[2]
+    nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMM: Invalid value of x[t].")
       Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -201,25 +239,55 @@ dHMMo <- nimbleFunction(
                  probObs = double(3),
                  probTrans = double(2),
                  len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = double(0, default = 1),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("Argument len must be length of x or 0.")
-    if (dim(probObs)[1] != dim(probTrans)[1]) stop("Number of cols in Z must equal number of cols in T.")
-    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("T must be a square matrix.")
+    if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
+    if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
+    if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMMo: probTrans must be a square matrix.")
     if (dim(probObs)[3] != len) {
-      if (dim(probObs)[3] == 1) stop("Time dimension of Z must match length of data. Did you mean dHMM?")
-      stop("Length of time dimension of Z must match length of data.")
+      if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of probObs must match length of data. Did you mean dHMM?")
+      stop("In dHMMo: Length of time dimension of probObs must match length of data.")
     }
-    if (sum(init) != 1) stop("Initial probabilities must sum to 1.")
+    if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
+
+    if (checkRowSums) {
+      transCheckPasses <- TRUE
+      for (i in 1:dim(probTrans)[1]) {
+        thisCheckSum <- sum(probTrans[i,])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          ## Compilation doesn't support more than a simple string for stop()
+          ## so we provide more detail using a print().
+          print("In dHMMo: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+          transCheckPasses <- FALSE
+        }
+      }
+      obsCheckPasses <- TRUE
+      for (i in 1:dim(probObs)[1]) {
+        for (k in 1:dim(probObs)[3]) {
+          thisCheckSum <- sum(probObs[i,,k])
+          if (abs(thisCheckSum - 1) > 1e-6) {
+            print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = " , k, ". The sum should be 1 but is ", thisCheckSum)
+            obsCheckPasses <- FALSE
+          }
+        }
+      }
+      if(!(transCheckPasses | obsCheckPasses))
+        stop("In dHMMo: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!transCheckPasses)
+        stop("In dHMMo: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+      if(!obsCheckPasses)
+        stop("In dHMMo: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+    }
 
     pi <- init # State probabilities at time t=1
     logL <- 0
-    nStates <- dim(probObs)[2]
+    nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nStates) stop("Invalid value of x[t] in dDHMM.")
+      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMMo: Invalid value of x[t].")
       Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
-      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- (probTrans[,] %*% asCol(Zpi) / sumZpi)[ ,1] # State probabilities at t+1
+      logL <- logL + log(sumZpi)  # Accumulate log probabilities through timeÍ
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
     }
     returnType(double())
     if (log) return(logL)
@@ -234,8 +302,39 @@ rHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0)) {
+                 len = double(0, default = 0),
+                 checkRowSums = double(0, default = 1)) {
   returnType(double(1))
+  if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMM: Number of cols in probObs must equal number of cols in probTrans.")
+  if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMM: probTrans must be a square matrix.")
+  if (sum(init) != 1) stop("In rHMM: Initial probabilities must sum to 1.")
+  if (checkRowSums) {
+    transCheckPasses <- TRUE
+    for (i in 1:dim(probTrans)[1]) {
+      thisCheckSum <- sum(probTrans[i,])
+      if (abs(thisCheckSum - 1) > 1e-6) {
+        ## Compilation doesn't support more than a simple string for stop()
+        ## so we provide more detail using a print().
+        print("In rHMM: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+        transCheckPasses <- FALSE
+      }
+    }
+    obsCheckPasses <- TRUE
+    for (i in 1:dim(probObs)[1]) {
+      thisCheckSum <- sum(probObs[i,])
+      if (abs(thisCheckSum - 1) > 1e-6) {
+        print("In rHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+        obsCheckPasses <- FALSE
+      }
+    }
+    if(!(transCheckPasses | obsCheckPasses))
+      stop("In rHMM: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!transCheckPasses)
+      stop("In rHMM: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!obsCheckPasses)
+      stop("In rHMM: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+  }
+
   ans <- numeric(len)
 
   probInit <- init
@@ -273,8 +372,46 @@ rHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0)) {
+                 len = double(0, default = 0),
+                 checkRowSums = double(0, default = 1)) {
   returnType(double(1))
+  if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMMo: Number of cols in probObs must equal number of cols in probTrans.")
+  if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMMo: probTrans must be a square matrix.")
+  if (dim(probObs)[3] != len) {
+    if (dim(probObs)[3] == 1) stop("In rHMMo: Time dimension of probObs must match length of data. Did you mean rHMM?")
+    stop("In rHMMo: Length of time dimension of probObs must match length of data.")
+  }
+  if (sum(init) != 1) stop("In rHMMo: Initial probabilities must sum to 1.")
+
+  if (checkRowSums) {
+    transCheckPasses <- TRUE
+    for (i in 1:dim(probTrans)[1]) {
+      thisCheckSum <- sum(probTrans[i,])
+      if (abs(thisCheckSum - 1) > 1e-6) {
+        ## Compilation doesn't support more than a simple string for stop()
+        ## so we provide more detail using a print().
+        print("In rHMMo: Problem with sum(probTrans[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
+        transCheckPasses <- FALSE
+      }
+    }
+    obsCheckPasses <- TRUE
+    for (i in 1:dim(probObs)[1]) {
+      for (k in 1:dim(probObs)[3]) {
+        thisCheckSum <- sum(probObs[i,,k])
+        if (abs(thisCheckSum - 1) > 1e-6) {
+          print("In rHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
+          obsCheckPasses <- FALSE
+        }
+      }
+    }
+    if(!(transCheckPasses | obsCheckPasses))
+      stop("In rHMMo: probTrans and probObs were not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!transCheckPasses)
+      stop("In rHMMo: probTrans was not specified correctly.  Probabilities in each row (second dimension) must sum to 1.")
+    if(!obsCheckPasses)
+      stop("In rHMMo: probObs was not specified correctly. Probabilities in each row must sum to 1.")
+  }
+
   ans <- numeric(len)
 
   probInit <- init

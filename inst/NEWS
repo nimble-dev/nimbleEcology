@@ -1,0 +1,24 @@
+Release notes for each version of nimbleEcologyy
+
+0.3.0
+
+-- Fixed an internal problem with dHMM and dDHMM resulting in a mismatch between documentation and internal behavior
+-- Reworked roxygen documentation
+-- Fixed issue with vignette installation
+-- Added CITATION file
+
+0.2.2
+
+-- Adjusted internal calculation of dNmixture to avoid Inf overflow at large values of lambda, small values of p
+
+0.2.1
+
+-- Addressed typos in documentation examples
+
+0.2.0
+
+-- Added N-mixture models, dNmixture_*.
+
+0.1.0
+
+-- Initial release of nimbleEcology.

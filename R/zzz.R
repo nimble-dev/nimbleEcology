@@ -1,8 +1,10 @@
 # This file registers all distributions when the package is loaded.
 .onAttach <- function(libname, pkgname) {
 
-  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions: ",
-                        "\ndOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture")
+  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions:\n ",
+                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n",
+                        "Please note that prior to nimbleEcology version 0.3.0, dHMM and dDHMM\n",
+                        "contained a bug that gave incorrect results.")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -231,55 +233,59 @@
       )
   registerDistributions(list(
     dHMM = list(
-      BUGSdist = "dHMM(init, probObs, probTrans, len)",
-      Rdist = "dHMM(init, probObs, probTrans, len = 0)",
+      BUGSdist = "dHMM(init, probObs, probTrans, len, checkRowSums)",
+      Rdist = "dHMM(init, probObs, probTrans, len = 0, checkRowSums = 1)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(2)',
-                'len = double(0)'),
+                'len = double(0)',
+                'checkRowSums = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
     dHMMo = list(
-      BUGSdist = "dHMMo(init, probObs, probTrans, len)",
-      Rdist = "dHMMo(init, probObs, probTrans, len = 0)",
+      BUGSdist = "dHMMo(init, probObs, probTrans, len, checkRowSums)",
+      Rdist = "dHMMo(init, probObs, probTrans, len = 0, checkRowSums = 1)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(2)',
-                'len = double(0)'),
+                'len = double(0)',
+                'checkRowSums = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
   registerDistributions(list(
     dDHMM = list(
-      BUGSdist = "dDHMM(init, probObs, probTrans, len)",
-      Rdist = "dDHMM(init, probObs, probTrans, len)",
+      BUGSdist = "dDHMM(init, probObs, probTrans, len, checkRowSums)",
+      Rdist = "dDHMM(init, probObs, probTrans, len, checkRowSums)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(3)',
-                'len = double()'),
+                'len = double()',
+                'checkRowSums = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
 
   registerDistributions(list(
     dDHMMo = list(
-      BUGSdist = "dDHMMo(init, probObs, probTrans, len)",
-      Rdist = "dDHMMo(init, probObs, probTrans, len)",
+      BUGSdist = "dDHMMo(init, probObs, probTrans, len, checkRowSums)",
+      Rdist = "dDHMMo(init, probObs, probTrans, len, checkRowSums)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(3)',
-                'len = double()'),
+                'len = double()',
+                'checkRowSums = double(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )

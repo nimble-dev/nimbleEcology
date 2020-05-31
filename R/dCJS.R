@@ -8,7 +8,7 @@
 #'
 #' @name dCJS
 #'
-#' @param x capture-history vector of 0s (not captured) and 1s (captured).
+#' @param x capture history vector of 0s (not captured) and 1s (captured).
 #' Include the initial capture, so \code{x[1]} should equal 1.
 #' @param probSurvive survival probability, either a time-independent scalar
 #' (for dCJS_s*) or a time-dependent vector (for dCJS_v*) with length
@@ -50,9 +50,8 @@
 #' \code{nimble} model code (via \code{nimbleCode}), \code{len} must be provided
 #' (even though it may seem redundant).
 #'
-#' For more explanation, see
-#' \href{../doc/Introduction_to_nimbleEcology.html}{package vignette} (or
-#' \code{vignette("Introduction_to_nimbleEcology")}).
+#' For more explanation, see package vignette
+#' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete latent state for
 #' true alive/dead status at each time and a separate scalar datum for each
@@ -108,7 +107,6 @@
 #' @importFrom stats rbinom runif dbinom
 #'
 #' @examples
-#' \donttest{
 #' # Set up constants and initial values for defining the model
 #' dat <- c(1,1,0,0,0) # A vector of observations
 #' probSurvive <- c(0.6, 0.3, 0.3, 0.1)
@@ -130,7 +128,6 @@
 #' # Calculate log probability of data from the model
 #' CJS_model$calculate()
 #' # Use the model for a variety of other purposes...
-#' }
 
 
 NULL
