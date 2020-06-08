@@ -208,7 +208,8 @@ dNmixture_v <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }, enableDerivs = TRUE
+)
 
 NULL
 #' @rdname dNmixture
@@ -269,7 +270,8 @@ dNmixture_s <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }, enableDerivs = TRUE
+)
 
 NULL
 #' @rdname dNmixture

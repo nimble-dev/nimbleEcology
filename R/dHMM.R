@@ -228,7 +228,7 @@ dHMM <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }
+  }, enableDerivs = TRUE
 )
 
 #' @export
@@ -292,7 +292,7 @@ dHMMo <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }
+  }, enableDerivs = TRUE
 )
 
 #' @export

@@ -174,7 +174,7 @@ dCJS_ss <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double(0))
-  }
+  }, enableDerivs = TRUE
 )
 
 #' @rdname dCJS
@@ -220,7 +220,7 @@ dCJS_sv <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }
+  }, enableDerivs = TRUE
 )
 
 
@@ -268,7 +268,7 @@ dCJS_vs <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }
+  }, enableDerivs = TRUE
 )
 
 
@@ -322,7 +322,7 @@ dCJS_vv <- nimbleFunction(
     }
     return(exp(logProbData))
     returnType(double())
-  }
+  }, enableDerivs = TRUE
 )
 
 #' @rdname dCJS
