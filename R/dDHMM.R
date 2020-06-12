@@ -177,8 +177,8 @@ dDHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(3),
-                 len = double(),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("In dDHMM: Length of init does not match nrow of probObs in dDHMM.")
     if (length(init) != dim(probTrans)[1]) stop("In dDHMM: Length of init does not match dim(probTrans)[1] in dDHMM.")
@@ -240,8 +240,8 @@ dDHMMo <- nimbleFunction(
                  init = double(1),##
                  probObs = double(3),
                  probTrans = double(3),
-                 len = double(),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(init) != dim(probObs)[1]) stop("In dDHMMo: Length of init does not match ncol of probObs in dDHMMo.")
     if (length(init) != dim(probTrans)[1]) stop("In dDHMMo: Length of init does not match dim(probTrans)[1] in dDHMMo.")
@@ -306,8 +306,8 @@ rDHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(3),
-                 len = double(),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(),
+                 checkRowSums = integer(0, default = 1)) {
     nStates <- length(init)
     if (nStates != dim(probObs)[1]) stop("In rDHMM: Length of init does not match nrow of probObs in dDHMM.")
     if (nStates != dim(probTrans)[1]) stop("In rDHMM: Length of init does not match dim(probTrans)[1] in dDHMM.")
@@ -385,8 +385,8 @@ rDHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(3),
-                 len = double(),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(),
+                 checkRowSums = integer(0, default = 1)) {
   nStates <- length(init)
   if (nStates != dim(probObs)[1]) stop("In rDHMMo: Length of init does not match nrow of probObs in dDHMM.")
   if (nStates != dim(probTrans)[1]) stop("In rDHMMo: Length of init does not match dim(probTrans)[1] in dDHMM.")

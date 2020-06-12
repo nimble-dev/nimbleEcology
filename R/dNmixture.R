@@ -155,9 +155,9 @@ dNmixture_v <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(1),
-                   Nmin = double(0, default = -1),
-                   Nmax = double(0, default = -1),
-                   len = double(),
+                   Nmin = integer(0, default = -1),
+                   Nmax = integer(0, default = -1),
+                   len = integer(),
                    log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
     if (length(prob) != len) stop("in dNmixture_v, len must equal length(prob).")
@@ -218,9 +218,9 @@ dNmixture_s <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(),
-                   Nmin = double(0, default = -1),
-                   Nmax = double(0, default = -1),
-                   len = double(),
+                   Nmin = integer(0, default = -1),
+                   Nmax = integer(0, default = -1),
+                   len = integer(),
                    log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
 
@@ -280,9 +280,9 @@ rNmixture_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(1),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
     trueN <- rpois(1, lambda)
@@ -302,9 +302,9 @@ rNmixture_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     trueN <- rpois(1, lambda)
     ans <- numeric(len)
