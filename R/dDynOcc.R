@@ -200,16 +200,18 @@ dDynOcc_vvm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t, start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (is.na(numObs)) numObs <- 0
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -256,15 +258,17 @@ dDynOcc_vsm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -310,15 +314,17 @@ dDynOcc_svm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -364,16 +370,18 @@ dDynOcc_ssm <- nimbleFunction(
     ll <- 0
     nyears <- dim(x)[1]
     if (nyears >= 1) {
+      istart <- ADbreak(start[t])
+      iend <- ADbreak(end[t])
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -532,14 +540,16 @@ dDynOcc_vvv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        if (iend - istart + 1 > 0) {
+          istart <- ADbreak(start[t])
+          iend <- ADbreak(end[t])
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iendß],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -586,14 +596,16 @@ dDynOcc_vsv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -639,14 +651,16 @@ dDynOcc_svv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -693,14 +707,16 @@ dDynOcc_ssv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -861,14 +877,17 @@ dDynOcc_vvs <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -913,15 +932,17 @@ dDynOcc_vss <- nimbleFunction(
     ll <- 0
     nyears <- dim(x)[1]
     if (nyears >= 1) {
+      istart <- ADbreak(start[t])
+      iend <- ADbreak(end[t])
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t,istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -966,14 +987,16 @@ dDynOcc_svs <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
