@@ -253,8 +253,8 @@ dHMMo <- nimbleFunction(
     }
     if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
 
-    declare(i, integer())
-    declare(k, integer())
+  ##  declare(i, integer())
+  ##  declare(k, integer())
 
     if (checkRowSums) {
       transCheckPasses <- TRUE
@@ -270,8 +270,8 @@ dHMMo <- nimbleFunction(
       }
       obsCheckPasses <- TRUE
 
-      declare(probObs_dim1, integer())
-      declare(probObs_dim3, integer())
+#      declare(probObs_dim1, integer())
+#      declare(probObs_dim3, integer())
 
       probObs_dim1 <- dim(probObs)[1]
       probObs_dim3 <- dim(probObs)[3]
@@ -310,7 +310,7 @@ dHMMo <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', 'k', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export
