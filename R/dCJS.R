@@ -138,7 +138,7 @@ dCJS_ss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
 
@@ -183,7 +183,7 @@ dCJS_sv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(1),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -230,7 +230,7 @@ dCJS_vs <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -282,7 +282,7 @@ dCJS_vv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -331,7 +331,7 @@ rCJS_ss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")
@@ -359,7 +359,7 @@ rCJS_sv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(1),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be non-negative.")
@@ -389,7 +389,7 @@ rCJS_vs <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")
@@ -419,7 +419,7 @@ rCJS_vv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")

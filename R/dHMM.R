@@ -241,8 +241,8 @@ dHMMo <- nimbleFunction(
                  init = double(1),##
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
@@ -305,8 +305,8 @@ rHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(0, default = 0),
+                 checkRowSums = integer(0, default = 1)) {
   returnType(double(1))
   if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMM: Number of cols in probObs must equal number of cols in probTrans.")
   if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMM: probTrans must be a square matrix.")
@@ -375,8 +375,8 @@ rHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(0, default = 0),
+                 checkRowSums = integer(0, default = 1)) {
   returnType(double(1))
   if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMMo: Number of cols in probObs must equal number of cols in probTrans.")
   if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMMo: probTrans must be a square matrix.")

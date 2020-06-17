@@ -15,7 +15,7 @@
       BUGSdist = "dCJS_ss(probSurvive, probCapture, len)",
       Rdist = "dCJS_ss(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
-      types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double()', 'len = double()'),
+      types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double()', 'len = integer()'),
       pqAvail = FALSE)), verbose = F
     )
 
@@ -24,7 +24,7 @@
       BUGSdist = "dCJS_sv(probSurvive, probCapture, len)",
       Rdist = "dCJS_sv(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
-      types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double(1)', 'len = double()'),
+      types = c('value = double(1)', 'probSurvive = double()', 'probCapture = double(1)', 'len = integer()'),
       pqAvail = FALSE)), verbose = F
     )
 
@@ -33,7 +33,7 @@
       BUGSdist = "dCJS_vs(probSurvive, probCapture, len)",
       Rdist = "dCJS_vs(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
-      types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double()', 'len = double()'),
+      types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double()', 'len = integer()'),
       pqAvail = FALSE)), verbose = F
     )
 
@@ -42,7 +42,7 @@
       BUGSdist = "dCJS_vv(probSurvive, probCapture, len)",
       Rdist = "dCJS_vv(probSurvive, probCapture, len = 0)",
       discrete = TRUE,
-      types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = double()'),
+      types = c('value = double(1)', 'probSurvive = double(1)', 'probCapture = double(1)', 'len = integer()'),
       pqAvail = FALSE)), verbose = F
   )
 
@@ -240,8 +240,8 @@
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(2)',
-                'len = double(0)',
-                'checkRowSums = double(0)'),
+                'len = integer(0)',
+                'checkRowSums = integer(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
@@ -255,8 +255,8 @@
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(2)',
-                'len = double(0)',
-                'checkRowSums = double(0)'),
+                'len = integer(0)',
+                'checkRowSums = integer(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
@@ -269,8 +269,8 @@
                 'init = double(1)',
                 'probObs = double(2)',
                 'probTrans = double(3)',
-                'len = double()',
-                'checkRowSums = double(0)'),
+                'len = integer()',
+                'checkRowSums = integer(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
@@ -284,8 +284,8 @@
                 'init = double(1)',
                 'probObs = double(3)',
                 'probTrans = double(3)',
-                'len = double()',
-                'checkRowSums = double(0)'),
+                'len = integer()',
+                'checkRowSums = integer(0)'),
       mixedSizes = TRUE,
       pqAvail = FALSE)), verbose = F
     )
@@ -298,9 +298,9 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double(1)',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
-                'len = double()'
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
+                'len = integer()'
                 ),
       mixedSizes = FALSE,
       pqAvail = FALSE
@@ -315,9 +315,9 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
-                'len = double()'
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
+                'len = integer()'
                 ),
       mixedSizes = FALSE,
       pqAvail = FALSE
