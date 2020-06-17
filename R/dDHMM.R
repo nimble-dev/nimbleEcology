@@ -186,8 +186,8 @@ dDHMM <- nimbleFunction(
     if (length(x) != len) stop("In dDHMM: Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("In dDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
     if (sum(init) != 1) stop("In dDHMM: Initial probabilities must sum to 1.")
-    declare(i, integer())
-    declare(k, integer())
+    # declare(i, integer())
+    # declare(k, integer())
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
@@ -236,7 +236,7 @@ dDHMM <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', 'k', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export
@@ -305,7 +305,7 @@ dDHMMo <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = TRUE
+  },  enableDerivs = list(run = list(noDeriv_vars = c('i', 'k', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export

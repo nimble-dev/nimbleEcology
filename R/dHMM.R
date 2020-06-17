@@ -270,14 +270,14 @@ dHMMo <- nimbleFunction(
       }
       obsCheckPasses <- TRUE
 
-#      declare(probObs_dim1, integer())
-#      declare(probObs_dim3, integer())
+      # declare(probObs_dim1, integer())
+      # declare(probObs_dim3, integer())
 
-      probObs_dim1 <- dim(probObs)[1]
-      probObs_dim3 <- dim(probObs)[3]
+      # probObs_dim1 <- dim(probObs)[1]
+      # probObs_dim3 <- dim(probObs)[3]
 
-      for (i in 1:probObs_dim1) {
-        for (k in 1:probObs_dim3) {
+      for (i in 1:dim(probObs)[1]) {
+        for (k in 1:dim(probObs)[3]) {
           thisCheckSumTemp <- sum(probObs[i,,k])
           thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
