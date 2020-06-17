@@ -253,10 +253,14 @@ dHMMo <- nimbleFunction(
     }
     if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
 
+    declare(i, integer())
+    declare(k, integer())
+
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        thisCheckSum <- sum(probTrans[i,])
+        thisCheckSumTemp <- sum(probTrans[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           ## Compilation doesn't support more than a simple string for stop()
           ## so we provide more detail using a print().
@@ -265,9 +269,17 @@ dHMMo <- nimbleFunction(
         }
       }
       obsCheckPasses <- TRUE
-      for (i in 1:dim(probObs)[1]) {
-        for (k in 1:dim(probObs)[3]) {
-          thisCheckSum <- sum(probObs[i,,k])
+
+      declare(probObs_dim1, integer())
+      declare(probObs_dim3, integer())
+
+      probObs_dim1 <- dim(probObs)[1]
+      probObs_dim3 <- dim(probObs)[3]
+
+      for (i in 1:probObs_dim1) {
+        for (k in 1:probObs_dim3) {
+          thisCheckSumTemp <- sum(probObs[i,,k])
+          thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
             print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = " , k, ". The sum should be 1 but is ", thisCheckSum)
             obsCheckPasses <- FALSE
@@ -285,10 +297,12 @@ dHMMo <- nimbleFunction(
     pi <- init # State probabilities at time t=1
     logL <- 0
     nObsClasses <- dim(probObs)[2]
+    declare(t, integer())
     for (t in 1:len) {
       xt <- ADbreak(x[t])
-      if (xt > nObsClasses | x[t] < 1) stop("In dHMMo: Invalid value of x[t].")
-      Zpi <- probObs[,xt,t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      if (xt > nObsClasses | xt < 1) stop("In dHMMo: Invalid value of x[t].")
+      thisProbObs <- probObs[,xt,]
+      Zpi <- thisProbObs[,t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through timeÍ
       if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1

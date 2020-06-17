@@ -186,11 +186,14 @@ dDHMM <- nimbleFunction(
     if (length(x) != len) stop("In dDHMM: Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("In dDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
     if (sum(init) != 1) stop("In dDHMM: Initial probabilities must sum to 1.")
+    declare(i, integer())
+    declare(k, integer())
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
         for (k in 1:dim(probTrans)[3]) {
-          thisCheckSum <- sum(probTrans[i,,k])
+          thisCheckSumTemp <- sum(probTrans[i,,k])
+          thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
             ## Compilation doesn't support more than a simple string for stop()
             ## so we provide more detail using a print().
@@ -201,7 +204,8 @@ dDHMM <- nimbleFunction(
       }
       obsCheckPasses <- TRUE
       for (i in 1:dim(probObs)[1]) {
-        thisCheckSum <- sum(probObs[i,])
+        thisCheckSumTemp <- sum(probObs[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           print("In dDHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
           obsCheckPasses <- FALSE
@@ -218,14 +222,15 @@ dDHMM <- nimbleFunction(
     pi <- init # State probabilities at time t=1
     logL <- 0
     nObsClasses <- dim(probObs)[2]
-    lengthX <- length(x)
-    for (t in 1:lengthX) {
+    declare(t, integer())
+    for (t in 1:len) {
       xt <- ADbreak(x[t])
+      # probTrans_t <- ADbreak(probTrans[,,t])
       if (xt > nObsClasses | xt < 1) stop("In dDHMM: Invalid value of x[t].")
       Zpi <- probObs[, xt] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != lengthX) pi <- ((Zpi %*% probTrans[,,t])/sumZpi)[1, ] # State probabilities at t+1
+      if (t != len) pi <- ((Zpi %*% probTrans[,,t])/sumZpi)[1, ] # State probabilities at t+1
     }
 
     returnType(double())
@@ -256,7 +261,8 @@ dDHMMo <- nimbleFunction(
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
         for (k in 1:dim(probTrans)[3]) {
-          thisCheckSum <- sum(probTrans[i,,k])
+          thisCheckSumTemp <- sum(probTrans[i,,k])
+          thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
             ## Compilation doesn't support more than a simple string for stop()
             ## so we provide more detail using a print().
@@ -268,7 +274,8 @@ dDHMMo <- nimbleFunction(
       obsCheckPasses <- TRUE
       for (i in 1:dim(probObs)[1]) {
         for (k in 1:dim(probObs)[3]) {
-          thisCheckSum <- sum(probObs[i,,k])
+          thisCheckSumTemp <- sum(probObs[i,,k])
+          thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
             print("In dDHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = ", k, ". The sum should be 1 but is ", thisCheckSum)
             obsCheckPasses <- FALSE
