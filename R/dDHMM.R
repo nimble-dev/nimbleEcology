@@ -220,8 +220,9 @@ dDHMM <- nimbleFunction(
     nObsClasses <- dim(probObs)[2]
     lengthX <- length(x)
     for (t in 1:lengthX) {
-      if (x[t] > nObsClasses | x[t] < 1) stop("In dDHMM: Invalid value of x[t].")
-      Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
+      xt <- ADbreak(x[t])
+      if (xt > nObsClasses | xt < 1) stop("In dDHMM: Invalid value of x[t].")
+      Zpi <- probObs[, xt] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != lengthX) pi <- ((Zpi %*% probTrans[,,t])/sumZpi)[1, ] # State probabilities at t+1
@@ -287,8 +288,9 @@ dDHMMo <- nimbleFunction(
     nObsClasses <- dim(probObs)[2]
     lengthX <- length(x)
     for (t in 1:lengthX) {
-      if (x[t] > nObsClasses | x[t] < 1) stop("In dDHMMo: Invalid value of x[t].")
-      Zpi <- probObs[, x[t], t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      xt <- ADbreak(x[t])
+      if (xt > nObsClasses | xt < 1) stop("In dDHMMo: Invalid value of x[t].")
+      Zpi <- probObs[, xt, t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
       if (t != lengthX) pi <- ((Zpi %*% probTrans[,,t])/sumZpi)[1, ] # State probabilities at t+1
