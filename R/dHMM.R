@@ -180,18 +180,19 @@ dHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
     if (sum(init) != 1) stop("In dHMM: Initial probabilities must sum to 1.")
 
-    if (checkRowSums) {
+    if (checkRowSums) { ## For AD, the checking will only be done in the taping call, once.
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        thisCheckSum <- sum(probTrans[i,])
+        thisCheckSumTemp <- sum(probTrans[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           ## Compilation doesn't support more than a simple string for stop()
           ## so we provide more detail using a print().
@@ -199,9 +200,10 @@ dHMM <- nimbleFunction(
           transCheckPasses <- FALSE
         }
       }
-      obsCheckPasses <- TRUE
+      obsCheckPasses <- TRUE 
       for (i in 1:dim(probObs)[1]) {
-        thisCheckSum <- sum(probObs[i,])
+        thisCheckSumTemp <- sum(probObs[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           print("In dHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
           obsCheckPasses <- FALSE
@@ -219,16 +221,17 @@ dHMM <- nimbleFunction(
     logL <- 0
     nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMM: Invalid value of x[t].")
-      Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
-      sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
-      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
+      xt <- ADbreak(x[t])
+      if (xt > nObsClasses | xt < 1) stop("In dHMM: Invalid value of x[t].")
+      Zpi <- probObs[, xt] * pi
+      sumZpi <- sum(Zpi)    
+      logL <- logL + log(sumZpi)  
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] 
     }
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export

@@ -1007,9 +1007,9 @@ dDynOcc_sss <- nimbleFunction(
                  probPersist = double(),
                  probColonize = double(),
                  p = double(),
-                 start = double(1),
+                 start = double(1), # These end up being a problem
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     ## x is a year by rep matix
     ProbOccNextTime <- init
@@ -1017,14 +1017,16 @@ dDynOcc_sss <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t,istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -1045,9 +1047,8 @@ dDynOcc_sss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
-
 
 #' @rdname dDynOcc
 #' @export
