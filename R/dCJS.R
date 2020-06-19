@@ -158,8 +158,9 @@ dCJS_ss <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture
           probAliveGivenHistory <- 1
@@ -174,7 +175,7 @@ dCJS_ss <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS
@@ -204,8 +205,9 @@ dCJS_sv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture[t]
           probAliveGivenHistory <- 1
@@ -220,7 +222,7 @@ dCJS_sv <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
 )
 
 
@@ -252,8 +254,9 @@ dCJS_vs <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t - 1]
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture
           probAliveGivenHistory <- 1
@@ -268,7 +271,7 @@ dCJS_vs <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
 )
 
 
@@ -304,8 +307,9 @@ dCJS_vv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t - 1]
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture[t]
           probAliveGivenHistory <- 1
@@ -322,7 +326,7 @@ dCJS_vv <- nimbleFunction(
     }
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS

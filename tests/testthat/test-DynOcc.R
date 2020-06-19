@@ -83,7 +83,7 @@ test_that("dDynOcc_vvm works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -228,7 +228,7 @@ test_that("dDynOcc_vsm works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -372,7 +372,7 @@ test_that("dDynOcc_svm works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -512,7 +512,7 @@ test_that("dDynOcc_ssm works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -837,7 +837,7 @@ test_that("dDynOcc_vsv works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -979,7 +979,7 @@ test_that("dDynOcc_svv works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1117,7 +1117,7 @@ test_that("dDynOcc_ssv works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1212,11 +1212,11 @@ test_that("Case errors in compiled dDynOcc_**v work", {
 context("Testing dDynOcc-related functions.")
 
 test_that("dDynOcc_vvs works", {
-  x <- matrix(c(0,0,NA,0,
+  x <- matrix(c(0,0,-1,0,
                 1,1,1,0,
                 0,0,0,0,
                 0,0,1,0,
-                0,0,0,NA), nrow = 4)
+                0,0,0,-1), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
   init <- 0.7
@@ -1301,7 +1301,7 @@ test_that("dDynOcc_vvs works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1440,7 +1440,7 @@ test_that("dDynOcc_vss works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1579,7 +1579,7 @@ test_that("dDynOcc_svs works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1714,7 +1714,7 @@ test_that("dDynOcc_sss works", {
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)

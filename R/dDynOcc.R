@@ -188,7 +188,7 @@ dDynOcc_vvm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -204,7 +204,6 @@ dDynOcc_vvm <- nimbleFunction(
         iend <- ADbreak(end[t])
         if (iend - istart + 1 > 0) {
           numObs <- sum(x[t, istart:iend])
-          if (is.na(numObs)) numObs <- 0
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
@@ -231,7 +230,7 @@ dDynOcc_vvm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -246,7 +245,7 @@ dDynOcc_vsm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -288,7 +287,7 @@ dDynOcc_vsm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -303,7 +302,7 @@ dDynOcc_svm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
@@ -344,7 +343,7 @@ dDynOcc_svm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -359,7 +358,7 @@ dDynOcc_ssm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     # if (length(probColonize) != 1) stop("In dDynOcc_vs probColonize must be scalar")
     # if (length(probPersist) != 1) stop("In dDynOcc_vs probPersist must be scalar")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -370,9 +369,9 @@ dDynOcc_ssm <- nimbleFunction(
     ll <- 0
     nyears <- dim(x)[1]
     if (nyears >= 1) {
-      istart <- ADbreak(start[t])
-      iend <- ADbreak(end[t])
       for (t in 1:nyears) {
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
         if (iend - istart + 1 > 0) {
           numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
@@ -401,7 +400,7 @@ dDynOcc_ssm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -529,7 +528,7 @@ dDynOcc_vvv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -540,16 +539,16 @@ dDynOcc_vvv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
         if (iend - istart + 1 > 0) {
-          istart <- ADbreak(start[t])
-          iend <- ADbreak(end[t])
           numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t, istart:iendß],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -570,7 +569,7 @@ dDynOcc_vvv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -585,7 +584,7 @@ dDynOcc_vsv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -626,7 +625,7 @@ dDynOcc_vsv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -641,7 +640,7 @@ dDynOcc_svv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
@@ -681,7 +680,7 @@ dDynOcc_svv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -696,7 +695,7 @@ dDynOcc_ssv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     # if (length(probColonize) != 1) stop("In dDynOcc_vs probColonize must be scalar")
     # if (length(probPersist) != 1) stop("In dDynOcc_vs probPersist must be scalar")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -737,7 +736,7 @@ dDynOcc_ssv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 
@@ -780,10 +779,10 @@ rDynOcc_vsv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist[t - 1])
       } else {
@@ -808,10 +807,10 @@ rDynOcc_svv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist)
       } else {
@@ -836,10 +835,10 @@ rDynOcc_ssv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist)
       } else {
@@ -867,7 +866,7 @@ dDynOcc_vvs <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
@@ -908,7 +907,7 @@ dDynOcc_vvs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -923,7 +922,7 @@ dDynOcc_vss <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
 
@@ -932,9 +931,9 @@ dDynOcc_vss <- nimbleFunction(
     ll <- 0
     nyears <- dim(x)[1]
     if (nyears >= 1) {
+      for (t in 1:nyears) {
       istart <- ADbreak(start[t])
       iend <- ADbreak(end[t])
-      for (t in 1:nyears) {
         if (iend - istart + 1 > 0) {
           numObs <- sum(x[t,istart:iend])
           if (numObs < 0) {
@@ -963,7 +962,7 @@ dDynOcc_vss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -978,7 +977,7 @@ dDynOcc_svs <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
     ## x is a year by rep matix
@@ -1017,7 +1016,7 @@ dDynOcc_svs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = TRUE
+  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
