@@ -19,6 +19,7 @@ notifications:
     on_failure: change
 
 script:
+  - Rscript ./install_adoak.R
   - R CMD build .
   - R CMD check *tar.gz --as-cran
   - R CMD INSTALL *tar.gz --install-tests
