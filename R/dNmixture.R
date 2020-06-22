@@ -187,7 +187,7 @@ dNmixture_v <- nimbleFunction(
       prods[i - Nmin] <- prod(i/(i - x)) / i
     }
 
-    ff <- log(lambda) + log(1-prob)*len + log(prods)
+    ff <- log(lambda) + sum(log(1-prob)) + log(prods)
     i <- 1
     sum_ff_g1 <- 0
     while(i < numN & ff[i] > 0) {
@@ -205,7 +205,7 @@ dNmixture_v <- nimbleFunction(
 
     for (i in 1:max_index) {
       # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      terms[i] <- 1 / exp(sum(sumff))
+      terms[i] <- 1 / exp(sumff)
       sumff <- sumff - ff[i]
     }
 
@@ -213,7 +213,7 @@ dNmixture_v <- nimbleFunction(
     for (i in (max_index + 1):numN) {
       # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
       sumff <- sumff + ff[i]
-      terms[i + 1] <- exp(sum(sumff))
+      terms[i + 1] <- exp(sumff)
     }
 
     log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
@@ -280,7 +280,7 @@ dNmixture_s <- nimbleFunction(
 
     for (i in 1:max_index) {
       # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      terms[i] <- 1 / exp(sum(sumff))
+      terms[i] <- 1 / exp(sumff)
       sumff <- sumff - ff[i]
     }
 
@@ -288,7 +288,7 @@ dNmixture_s <- nimbleFunction(
     for (i in (max_index + 1):numN) {
       # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
       sumff <- sumff + ff[i]
-      terms[i + 1] <- exp(sum(sumff))
+      terms[i + 1] <- exp(sumff)
     }
 
     log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
