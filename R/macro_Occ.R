@@ -42,20 +42,7 @@ fit_Occ <- function(y, formula_occ, formula_det,
   occ_data <- model.matrix(formula_occ, data = data)
   det_data <- model.matrix(formula_det, data = data)
 
-  occ_code <- switch(
-    method,
-    "MLE" = nimbleCode({
-      for (i in 1:nSite) {
-        logit(psi[i]) <- inprod(occ_dat[i, 1:nOccCovs], beta[1:nOccCovs])
-        for (j in 1:nVisit[i]) {
-
-        }
-      }
-    }),
-    "MCMC" = nimbleCode({
-
-    })
-  )
+  occ_code <- getNCodeBlock(method = method)
 
 }
 
