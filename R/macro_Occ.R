@@ -44,6 +44,8 @@ fit_Occ <- function(y, formula_occ, formula_det,
 
   occ_code <- getNCodeBlock(method = method)
 
+
+
 }
 
 
