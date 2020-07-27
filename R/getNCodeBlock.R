@@ -1,0 +1,3 @@
+
+
+getNCodeBlock <- function(method, use)
