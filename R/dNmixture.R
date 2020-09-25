@@ -159,56 +159,70 @@ dNmixture_v <- nimbleFunction(
                    Nmax = double(0, default = -1),
                    len = double(),
                    log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
-    if (length(prob) != len) stop("in dNmixture_v, len must equal length(prob).")
+  if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+  if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
 
-    # Lambda cannot be negative
-    if (lambda < 0) {
-        if (log) return(-Inf)
-        else return(0)
+  # Lambda cannot be negative
+  if (lambda < 0) {
+    if (log) return(-Inf)
+    else return(0)
+  }
+
+  ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+  ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+  if (Nmin == -1) {
+    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+  }
+  if (Nmax == -1) {
+    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  }
+  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+
+  logProb <- -Inf
+
+  if (Nmax > Nmin) {
+    numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+    prods <- rep(0, numN)
+    for (i in (Nmin + 1):Nmax) {
+      prods[i - Nmin] <- prod(i/(i - x)) / i
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+    ff <- log(lambda) + sum(log(1-prob)) + log(prods)
+    i <- 1
+    sum_ff_g1 <- 0
+    while(i < numN & ff[i] > 0) {
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+      i <- i+1
     }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    max_index <- i-1
+    if(ff[i] > 0) max_index <- i
+    if(max_index == 0) max_index <- 1 # not sure this is relevant. it's defensive.
+
+    terms <- numeric(numN + 1)
+    terms[max_index + 1] <- 1
+
+    sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+    for (i in 1:max_index) {
+      # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+      terms[i] <- 1 / exp(sumff)
+      sumff <- sumff - ff[i]
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-      for (i in (Nmin + 1):Nmax) {
-        prods[i - Nmin] <- prod(i/(i - x)) / i
-      }
-
-      ff <- log(lambda) + log(prod(1-prob)) + log(prods)
-      ff_g1 <- ff[ff > 0] # largest element is the length(ff_g1)th product
-      max_index <- length(ff_g1)
-
-      terms <- rep(0, numN + 1)
-      terms[max_index + 1] <- 1
-
-      for (i in 1:max_index) {
-        terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      }
-      for (i in (max_index + 1):numN) {
-        terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-      }
-
-      log_fac <- sum(ff_g1) + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)
-
-      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+    sumff <- 0
+    for (i in (max_index + 1):numN) {
+      # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+      sumff <- sumff + ff[i]
+      terms[i + 1] <- exp(sumff)
     }
-    if (log) return(logProb)
-    else return(exp(logProb))
-    returnType(double())
-  })
+
+    log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+  }
+  if (log) return(logProb)
+  else return(exp(logProb))
+  returnType(double())
+})
 
 NULL
 #' @rdname dNmixture
@@ -221,55 +235,69 @@ dNmixture_s <- nimbleFunction(
                    Nmax = double(0, default = -1),
                    len = double(),
                    log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
+  if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
 
-    # Lambda cannot be negative
-    if (lambda < 0) {
-        if (log) return(-Inf)
-        else return(0)
+  # Lambda cannot be negative
+  if (lambda < 0) {
+    if (log) return(-Inf)
+    else return(0)
+  }
+
+  ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+  ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+  if (Nmin == -1) {
+    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+  }
+  if (Nmax == -1) {
+    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  }
+  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+
+  logProb <- -Inf
+
+  if (Nmax > Nmin) {
+    numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+    prods <- rep(0, numN)
+    for (i in (Nmin + 1):Nmax) {
+      prods[i - Nmin] <- prod(i/(i - x)) / i
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+    ff <- log(lambda) + log(1-prob)*len + log(prods)
+    i <- 1
+    sum_ff_g1 <- 0
+    while(i < numN & ff[i] > 0) {
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+      i <- i+1
     }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    max_index <- i-1
+    if(ff[i] > 0) max_index <- i
+    if(max_index == 0) max_index <- 1 # not sure this is relevant. it's defensive.
+
+    terms <- numeric(numN + 1)
+    terms[max_index + 1] <- 1
+
+    sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+    for (i in 1:max_index) {
+      # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+      terms[i] <- 1 / exp(sumff)
+      sumff <- sumff - ff[i]
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-      for (i in (Nmin + 1):Nmax) {
-        prods[i - Nmin] <- prod(i/(i - x)) / i
-      }
-
-      ff <- log(lambda) + log(1-prob)*len + log(prods)
-      ff_g1 <- ff[ff > 0] # largest element is the length(ff_g1)th product
-      max_index <- length(ff_g1)
-
-      terms <- rep(0, numN + 1)
-      terms[max_index + 1] <- 1
-
-      for (i in 1:max_index) {
-        terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      }
-      for (i in (max_index + 1):numN) {
-        terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-      }
-
-      log_fac <- sum(ff_g1) + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)
-
-      logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+    sumff <- 0
+    for (i in (max_index + 1):numN) {
+      # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+      sumff <- sumff + ff[i]
+      terms[i + 1] <- exp(sumff)
     }
-    if (log) return(logProb)
-    else return(exp(logProb))
-    returnType(double())
-  })
+
+    log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+  }
+  if (log) return(logProb)
+  else return(exp(logProb))
+  returnType(double())
+})
 
 NULL
 #' @rdname dNmixture
