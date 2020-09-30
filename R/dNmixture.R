@@ -195,8 +195,18 @@ dNmixture_v <- nimbleFunction(
       i <- i+1
     }
     max_index <- i-1
-    if(ff[i] > 0) max_index <- i
-    if(max_index == 0) max_index <- 1 # not sure this is relevant. it's defensive.
+    if (ff[i] > 0) {
+      max_index <- i
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+    }
+    if(max_index == 0) {
+      max_index <- 1 # not sure this is relevant. it's defensive.
+      sum_ff_g1 <- ff[1]
+    }
+    if(max_index == numN) {
+      max_index <- numN - 1
+      sum_ff_g1 <- sum_ff_g1 - ff[numN]
+    }
 
     terms <- numeric(numN + 1)
     terms[max_index + 1] <- 1
@@ -270,8 +280,14 @@ dNmixture_s <- nimbleFunction(
       i <- i+1
     }
     max_index <- i-1
-    if(ff[i] > 0) max_index <- i
-    if(max_index == 0) max_index <- 1 # not sure this is relevant. it's defensive.
+    if (ff[i] > 0 & numN != max_index + 1) {
+      max_index <- i
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+    }
+    if(max_index == 0) {
+      max_index <- 1 # not sure this is relevant. it's defensive.
+      sum_ff_g1 <- ff[1]
+    }
 
     terms <- numeric(numN + 1)
     terms[max_index + 1] <- 1
