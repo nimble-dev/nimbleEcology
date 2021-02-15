@@ -148,6 +148,8 @@
 #' # Use the model for a variety of other purposes...
 
 
+
+##### Regular N-mixture #####
 NULL
 #' @rdname dNmixture
 #' @export
@@ -176,7 +178,7 @@ dNmixture_v <- nimbleFunction(
   if (Nmax == -1) {
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
   }
-  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+  Nmin <- max( max(x), Nmin, na.rm = T ) ## set Nmin to at least the largest x
 
   logProb <- -Inf
 
@@ -357,3 +359,810 @@ rNmixture_s <- nimbleFunction(
     return(ans)
     returnType(double(1))
 })
+
+
+
+##### Beta binomial support functions #####
+B <- nimbleFunction(
+  run = function(a = double(0),
+                 b = double(0),
+                 log = logical(0)) {
+    if (log) return(lgamma(a) + lgamma(b) - lgamma(a + b))
+    else return(exp(lgamma(a) + lgamma(b) - lgamma(a + b)))
+    returnType(double(0))
+  })
+
+dBetaBinom <- nimbleFunction(
+  run = function(x = double(1),
+                 N = double(0),
+                 alpha = double(1),
+                 beta = double(1),
+                 log = integer(0, default = 0)) {
+    logprob <- 0
+    for (i in 1:length(x)) {
+      logprob <- logprob +
+        B(a = x[i] + alpha[i], b = N - x[i] + beta[i], log = TRUE) -
+        B(a = alpha[i], b = beta[ i], log = TRUE) +
+        lfactorial(N) - (lfactorial(x[i]) + lfactorial(N - x[i]))
+    }
+
+    if (log) return(logprob)
+    return(exp(logprob))
+    returnType(double(0))
+  }
+)
+
+rBetaBinom <- nimbleFunction(
+  run = function(n = double(0),
+                 N = double(0),
+                 alpha = double(1),
+                 beta = double(1)) {
+    p <- numeric(length(alpha))
+    for (i in 1:length(alpha)) {
+      p[i] <- rbeta(1, alpha[i], beta[i])
+    }
+
+    x <- rbinom(length(alpha), N, p)
+    return(x)
+    returnType(double(1))
+  })
+
+rBetaBinom_One <- nimbleFunction(
+  run = function(n = double(0),
+                 N = double(0),
+                 alpha = double(0),
+                 beta = double(0)) {
+
+    p <- rbeta(1, alpha, beta)
+    x <- rbinom(1, N, p)
+    return(x)
+    returnType(double())
+  })
+
+
+dBetaBinom_One <- nimbleFunction(
+  run = function(x = double(0),
+                 N = double(0),
+                 alpha = double(0),
+                 beta = double(0),
+                 log = integer(0, default = 0)) {
+    logprob <- 0
+    logprob <- logprob +
+      B(a = x + alpha, b = N - x + beta, log = TRUE) -
+      B(a = alpha, b = beta, log = TRUE) +
+      lfactorial(N) - (lfactorial(x) + lfactorial(N - x))
+
+    if (log) return(logprob)
+    return(exp(logprob))
+    returnType(double(0))
+  }
+)
+
+##### N-mixture extensions #####
+##### dNmixture_BNB_v #####
+dNmixture_BNB_v <- nimbleFunction(
+  run = function(x = double(1),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(1),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+
+    if (theta <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    r <- 1 / theta
+    pNB <- 1 / (1 + theta * lambda)
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+    }
+    if (Nmax == -1) {
+      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    }
+    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+      for (i in (Nmin + 1):Nmax) {
+        prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
+      }
+
+      ff <- log(1 - pNB) + sum(log(1-prob)) + log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+
+      max_index <- i-1
+      if(ff[i] > 0) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+      if(max_index == numN) {
+        max_index <- numN - 1
+        sum_ff_g1 <- sum_ff_g1 - ff[numN]
+      }
+
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+        sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+##### dNmixture_BNB_s #####
+dNmixture_BNB_s <- nimbleFunction(
+  run = function(x = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+    if (theta <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    r <- 1 / theta
+    pNB <- 1 / (1 + theta * lambda)
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
+    }
+    if (Nmax == -1) {
+      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+    }
+    Nmin <- max(c(x, Nmin)) ## set Nmin to at least the largest x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+      for (i in (Nmin + 1):Nmax) {
+        prods[i - Nmin] <- (i + r - 1) / (i - x)
+      }
+
+      ff <- log(1 - pNB) + log(1-prob) + log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+      max_index <- i-1
+      if (ff[i] > 0 & numN != max_index + 1) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+        dbinom(x, size = Nmin, prob = prob, log = TRUE) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+##### dNmixture_BBP_v #####
+dNmixture_BBP_v <- nimbleFunction(
+  run = function(x = double(1),
+                 lambda = double(),
+                 prob = double(1),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+
+    if (s <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+    }
+    if (Nmax == -1) {
+      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    }
+    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+
+      for (i in (Nmin + 1):Nmax) {
+        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
+        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) * (lambda / i)
+      }
+
+
+      ff <- log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+
+      max_index <- i-1
+      if (ff[i] > 0 & numN != max_index + 1) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dpois(Nmin, lambda, log = TRUE) +
+        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+##### dNmixture_BBP_s #####
+dNmixture_BBP_s <- nimbleFunction(
+  run = function(x = double(),
+                 lambda = double(),
+                 prob = double(),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+    if (s <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
+    }
+    if (Nmax == -1) {
+      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+    }
+    Nmin <- x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+
+      for (i in (Nmin + 1):Nmax) {
+        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
+        prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) * (lambda / i)
+      }
+
+
+      ff <- log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+      max_index <- i-1
+      if (ff[i] > 0 & numN != max_index + 1) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dpois(Nmin, lambda, log = TRUE) +
+        dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+
+##### dNmixture_BBNB_v #####
+dNmixture_BBNB_v <- nimbleFunction(
+  run = function(x = double(1),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(1),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+
+    if (s <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+    if (theta <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    r <- 1 / theta
+    pNB <- 1 / (1 + theta * lambda)
+
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+    }
+    if (Nmax == -1) {
+      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    }
+    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+
+      for (i in (Nmin + 1):Nmax) {
+        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
+        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) *
+          ((1 - pNB) * (i + r - 1) / i)
+      }
+
+
+      ff <- log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+      max_index <- i-1
+      if (ff[i] > 0 & numN != max_index + 1) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+
+##### dNmixture_BBNB_oneObs #####
+dNmixture_BBNB_s <- nimbleFunction(
+  run = function(x = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double(),
+                 log = integer(0, default = 0)) {
+
+    if (s <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+    if (theta <= 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    r <- 1 / theta
+    pNB <- 1 / (1 + theta * lambda)
+
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    # Lambda cannot be negative
+    if (lambda < 0) {
+      if (log) return(-Inf)
+      else return(0)
+    }
+
+    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (Nmin == -1) {
+      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
+    }
+    if (Nmax == -1) {
+      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+    }
+    Nmin <- x
+
+    logProb <- -Inf
+
+    if (Nmax > Nmin) {
+      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
+      prods <- rep(0, numN)
+
+      for (i in (Nmin + 1):Nmax) {
+        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
+        prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) *
+          ((1 - pNB) * (i + r - 1) / i)
+      }
+
+
+      ff <- log(prods)
+      i <- 1
+      sum_ff_g1 <- 0
+      hit_pos <- FALSE
+      while(i < numN & (ff[i] > 0 | !hit_pos)) {
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+        i <- i+1
+        if (ff[i] > 0) {
+          hit_pos <- TRUE
+        }
+      }
+      max_index <- i-1
+      if (ff[i] > 0 & numN != max_index + 1) {
+        max_index <- i
+        sum_ff_g1 <- sum_ff_g1 + ff[i]
+      }
+      if(max_index == 0 | !hit_pos) {
+        max_index <- 1 # not sure this is relevant. it's defensive.
+        sum_ff_g1 <- ff[1]
+      }
+
+      terms <- numeric(numN + 1)
+      terms[max_index + 1] <- 1
+
+      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+      for (i in 1:max_index) {
+        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+        terms[i] <- 1 / exp(sumff)
+        sumff <- sumff - ff[i]
+      }
+
+      sumff <- 0
+      for (i in (max_index + 1):numN) {
+        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+        sumff <- sumff + ff[i]
+        terms[i + 1] <- exp(sumff)
+      }
+
+      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+        dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
+        log_fac
+    }
+    if (log) return(logProb)
+    else return(exp(logProb))
+    returnType(double())
+  })
+
+##### rNmixture extensions #####
+
+rNmixture_BNB_v <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(1),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+
+    if (n != 1) stop("rNmixture_v only works for n = 1")
+    if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
+
+    r <- 1 / theta
+    p <- 1 / (1 + theta * lambda)
+
+    trueN <- rnbinom(1, size = r, prob = p)
+    ans <- numeric(len)
+    for (i in 1:len) {
+      ans[i] <- rbinom(n = 1, size = trueN, prob = prob[i])
+    }
+
+    return(ans)
+    returnType(double(1))
+  })
+rNmixture_BNB_s <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+    if (n != 1) stop("rNmixture_v only works for n = 1")
+
+    r <- 1 / theta
+    p <- 1 / (1 + theta * lambda)
+    trueN <- rnbinom(1, size = r, prob = p)
+
+    ans <- rbinom(n = 1, size = trueN, prob = prob)
+
+    return(ans)
+    returnType(double())
+  })
+
+
+rNmixture_BBP_v <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 prob = double(1),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+    if (n != 1) stop("rNmixture_v only works for n = 1")
+    if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
+
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    trueN <- rpois(1, lambda = lambda)
+    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+
+    return(ans)
+    returnType(double(1))
+  })
+
+rNmixture_BBP_s <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 prob = double(),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+    alpha <- prob * s
+    beta <- s - prob * s
+
+    trueN <- rpois(1, lambda = lambda)
+    ans <- rBetaBinom_One(n = 1, N = trueN, alpha = alpha, beta = beta)
+
+    return(ans)
+    returnType(double())
+  })
+
+rNmixture_BBNB_v <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(1),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+    alpha <- prob * s
+    beta <- s - prob * s
+    r <- 1 / theta
+    p <- 1 / (1 + theta * lambda)
+
+    trueN <- rnbinom(1, size = r, prob = p)
+    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+
+    return(ans)
+    returnType(double(1))
+  })
+
+rNmixture_BBNB_s <- nimbleFunction(
+  run = function(n = double(),
+                 lambda = double(),
+                 theta = double(),
+                 prob = double(),
+                 s = double(),
+                 Nmin = double(0, default = -1),
+                 Nmax = double(0, default = -1),
+                 len = double()) {
+    alpha <- prob * s
+    beta <- s - prob * s
+    r <- 1 / theta
+    p <- 1 / (1 + theta * lambda)
+
+    trueN <- rnbinom(1, size = r, prob = p)
+    ans <- rBetaBinom_One(n = 1, N = trueN, alpha = alpha, beta = beta)
+    return(ans)
+    returnType(double())
+  })
