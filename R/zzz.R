@@ -1,10 +1,8 @@
 # This file registers all distributions when the package is loaded.
 .onAttach <- function(libname, pkgname) {
 
-  packageStartupMessage("Loading nimbleEcology. \nRegistering the following user-defined functions:\n ",
-                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n",
-                        "Please note that prior to nimbleEcology version 0.3.0, dHMM and dDHMM\n",
-                        "contained a bug that gave incorrect results.")
+  packageStartupMessage("Loading nimbleEcology. \nRegistering the following distributions:\n ",
+                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -312,13 +310,123 @@
       BUGSdist = "dNmixture_s(lambda, prob, Nmin, Nmax, len)",
       Rdist = "dNmixture_s(lambda, prob, Nmin, Nmax, len)",
       discrete = TRUE,
-      types = c('value = double(1)',
+      types = c('value = double()',
                 'lambda = double()',
                 'prob = double()',
                 'Nmin = double(0, default = -1)',
                 'Nmax = double(0, default = -1)',
                 'len = double()'
                 ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+  registerDistributions(list(
+    dNmixture_BNB_v = list(
+      BUGSdist = "dNmixture_BNB_v(lambda, theta, prob, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BNB_v(lambda, theta, prob, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'theta = double()',
+                'prob = double(1)',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+  registerDistributions(list(
+    dNmixture_BNB_s = list(
+      BUGSdist = "dNmixture_BNB_s(lambda, theta, prob, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BNB_s(lambda, theta, prob, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double()',
+                'lambda = double()',
+                'theta = double()',
+                'prob = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+  registerDistributions(list(
+    dNmixture_BBP_v = list(
+      BUGSdist = "dNmixture_BBP_v(lambda, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBP_v(lambda, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double(1)',
+                's = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+  registerDistributions(list(
+    dNmixture_BBP_s = list(
+      BUGSdist = "dNmixture_BBP_s(lambda, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBP_s(lambda, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double()',
+                'lambda = double()',
+                'prob = double()',
+                's = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+
+
+
+  registerDistributions(list(
+    dNmixture_BBNB_v = list(
+      BUGSdist = "dNmixture_BBNB_v(lambda, theta, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBNB_v(lambda, theta, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double(1)',
+                's = double()',
+                'theta = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+  registerDistributions(list(
+    dNmixture_BBNB_s = list(
+      BUGSdist = "dNmixture_BBNB_s(lambda, theta, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBNB_s(lambda, theta, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double()',
+                'lambda = double()',
+                'thetaa = double()',
+                'prob = double()',
+                's = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
       mixedSizes = FALSE,
       pqAvail = FALSE
     )), verbose = F
