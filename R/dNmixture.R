@@ -178,7 +178,7 @@ dNmixture_v <- nimbleFunction(
   if (Nmax == -1) {
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
   }
-  Nmin <- max( max(x), Nmin, na.rm = T ) ## set Nmin to at least the largest x
+  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
   logProb <- -Inf
 
@@ -449,8 +449,8 @@ dNmixture_BNB_v <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
-    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+    if (length(x) != len) stop("in dNmixture_BNB_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_BNB_v, len must equal length(prob).")
 
     if (theta <= 0) {
       if (log) return(-Inf)
@@ -540,8 +540,8 @@ dNmixture_BNB_v <- nimbleFunction(
     returnType(double())
   })
 
-##### dNmixture_BNB_s #####
-dNmixture_BNB_s <- nimbleFunction(
+##### dNmixture_BNB_oneObs #####
+dNmixture_BNB_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
                  theta = double(),
@@ -642,8 +642,8 @@ dNmixture_BBP_v <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
-    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+    if (length(x) != len) stop("in dNmixture_BBP_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_BBP_v, len must equal length(prob).")
 
     if (s <= 0) {
       if (log) return(-Inf)
@@ -731,8 +731,8 @@ dNmixture_BBP_v <- nimbleFunction(
     returnType(double())
   })
 
-##### dNmixture_BBP_s #####
-dNmixture_BBP_s <- nimbleFunction(
+##### dNmixture_BBP_oneObs #####
+dNmixture_BBP_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
                  prob = double(),
@@ -838,8 +838,8 @@ dNmixture_BBNB_v <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
-    if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
+    if (length(x) != len) stop("in dNmixture_BBNB_v, len must equal length(x).")
+    if (len != length(prob)) stop("in dNmixture_BBNB_v, len must equal length(prob).")
 
     if (s <= 0) {
       if (log) return(-Inf)
@@ -936,7 +936,7 @@ dNmixture_BBNB_v <- nimbleFunction(
 
 
 ##### dNmixture_BBNB_oneObs #####
-dNmixture_BBNB_s <- nimbleFunction(
+dNmixture_BBNB_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
                  theta = double(),
@@ -1051,8 +1051,8 @@ rNmixture_BNB_v <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double()) {
 
-    if (n != 1) stop("rNmixture_v only works for n = 1")
-    if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
+    if (n != 1) stop("rNmixture* only works for n = 1")
+    if (length(prob) != len) stop("In rNmixture*, len must equal length(prob).")
 
     r <- 1 / theta
     p <- 1 / (1 + theta * lambda)
@@ -1066,7 +1066,7 @@ rNmixture_BNB_v <- nimbleFunction(
     return(ans)
     returnType(double(1))
   })
-rNmixture_BNB_s <- nimbleFunction(
+rNmixture_BNB_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  theta = double(),
@@ -1074,7 +1074,7 @@ rNmixture_BNB_s <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
-    if (n != 1) stop("rNmixture_v only works for n = 1")
+    if (n != 1) stop("rNmixture* only works for n = 1")
 
     r <- 1 / theta
     p <- 1 / (1 + theta * lambda)
@@ -1095,8 +1095,8 @@ rNmixture_BBP_v <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
-    if (n != 1) stop("rNmixture_v only works for n = 1")
-    if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
+    if (n != 1) stop("rNmixture* only works for n = 1")
+    if (length(prob) != len) stop("In rNmixture*, len must equal length(prob).")
 
     alpha <- prob * s
     beta <- s - prob * s
@@ -1108,7 +1108,7 @@ rNmixture_BBP_v <- nimbleFunction(
     returnType(double(1))
   })
 
-rNmixture_BBP_s <- nimbleFunction(
+rNmixture_BBP_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(),
@@ -1147,7 +1147,7 @@ rNmixture_BBNB_v <- nimbleFunction(
     returnType(double(1))
   })
 
-rNmixture_BBNB_s <- nimbleFunction(
+rNmixture_BBNB_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  theta = double(),

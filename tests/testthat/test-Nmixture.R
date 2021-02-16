@@ -122,7 +122,7 @@ test_that("dNmixture_v works",
 test_that("dNmixture_s works",
           {
       # Uncompiled calculation
-          x <- c(1, 0, 1, 3, 0)
+          x <- c(1, 0, 1, 3, 2)
           lambda <- 8
           prob <- 0.4
           Nmin <- 0
@@ -154,7 +154,7 @@ test_that("dNmixture_s works",
       # Use in Nimble model
           nc <- nimbleCode({
             x[1:5] ~ dNmixture_s(lambda = lambda, prob = prob,
-                                 Nmin = Nmin, Nmax = Nmax, len = len)
+                            Nmin = Nmin, Nmax = Nmax, len = len)
 
           })
 
@@ -350,8 +350,8 @@ test_that("dNmixture_BNB_v works",
           })
 
 # -----------------------------------------------------------------------------
-#### 4. Test dNmixture_BNB_s ####
-test_that("dNmixture_BNB_s works",
+#### 4. Test dNmixture_BNB_oneObs ####
+test_that("dNmixture_BNB_oneObs works",
           {
             # Uncompiled calculation
             x <- c(1)
@@ -362,7 +362,7 @@ test_that("dNmixture_BNB_s works",
             Nmax <- 250
             len <- 5
 
-            probX <- dNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len)
+            probX <- dNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len)
 
             # Manually calculate the correct answer
             r <- 1 / theta
@@ -376,21 +376,21 @@ test_that("dNmixture_BNB_s works",
             expect_equal(probX, correctProbX)
 
             # Uncompiled log probability
-            lProbX <- dNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
+            lProbX <- dNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
             # Compilation and compiled calculations
-            CdNmixture_BNB_s <- compileNimble(dNmixture_BNB_s)
-            CprobX <- CdNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len)
+            CdNmixture_BNB_oneObs <- compileNimble(dNmixture_BNB_oneObs)
+            CprobX <- CdNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len)
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
+            ClProbX <- CdNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
             # Use in Nimble model
             nc <- nimbleCode({
-              x ~ dNmixture_BNB_s(lambda = lambda, prob = prob,
+              x ~ dNmixture_BNB_oneObs(lambda = lambda, prob = prob,
                                        theta = theta,
                                        Nmin = Nmin, Nmax = Nmax, len = len)
 
@@ -439,14 +439,14 @@ test_that("dNmixture_BNB_s works",
             xSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              xSim[i] <- rNmixture_BNB_s(1, lambda, theta, prob, Nmin, Nmax, len)
+              xSim[i] <- rNmixture_BNB_oneObs(1, lambda, theta, prob, Nmin, Nmax, len)
             }
 
-            CrNmixture_BNB_s <- compileNimble(rNmixture_BNB_s)
+            CrNmixture_BNB_oneObs <- compileNimble(rNmixture_BNB_oneObs)
             CxSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              CxSim[i] <- CrNmixture_BNB_s(1, lambda, theta, prob, Nmin, Nmax, len)
+              CxSim[i] <- CrNmixture_BNB_oneObs(1, lambda, theta, prob, Nmin, Nmax, len)
             }
             expect_identical(xSim, CxSim)
 
@@ -592,8 +592,8 @@ test_that("dNmixture_BBP_v works",
 
 
 # -----------------------------------------------------------------------------
-#### 6. Test dNmixture_BBP_s ####
-test_that("dNmixture_BBP_s works",
+#### 6. Test dNmixture_BBP_oneObs ####
+test_that("dNmixture_BBP_oneObs works",
           {
             # Uncompiled calculation
             x <- c(1)
@@ -604,7 +604,7 @@ test_that("dNmixture_BBP_s works",
             Nmax <- 250
             len <- 5
 
-            probX <- dNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len)
+            probX <- dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax, len)
 
             # Manually calculate the correct answer
             alpha <- prob * s
@@ -618,21 +618,21 @@ test_that("dNmixture_BBP_s works",
             expect_equal(probX, correctProbX)
 
             # Uncompiled log probability
-            lProbX <- dNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
+            lProbX <- dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
             # Compilation and compiled calculations
-            CdNmixture_BBP_s <- compileNimble(dNmixture_BBP_s)
-            CprobX <- CdNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len)
+            CdNmixture_BBP_oneObs <- compileNimble(dNmixture_BBP_oneObs)
+            CprobX <- CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax, len)
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
+            ClProbX <- CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
             # Use in Nimble model
             nc <- nimbleCode({
-              x ~ dNmixture_BBP_s(lambda = lambda, prob = prob,
+              x ~ dNmixture_BBP_oneObs(lambda = lambda, prob = prob,
                                   s = s,
                                   Nmin = Nmin, Nmax = Nmax, len = len)
 
@@ -681,14 +681,14 @@ test_that("dNmixture_BBP_s works",
             xSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              xSim[i] <- rNmixture_BBP_s(1, lambda, prob, s, Nmin, Nmax, len)
+              xSim[i] <- rNmixture_BBP_oneObs(1, lambda, prob, s, Nmin, Nmax, len)
             }
 
-            CrNmixture_BBP_s <- compileNimble(rNmixture_BBP_s)
+            CrNmixture_BBP_oneObs <- compileNimble(rNmixture_BBP_oneObs)
             CxSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              CxSim[i] <- CrNmixture_BBP_s(1, lambda, prob, s, Nmin, Nmax, len)
+              CxSim[i] <- CrNmixture_BBP_oneObs(1, lambda, prob, s, Nmin, Nmax, len)
             }
             expect_identical(xSim, CxSim)
 
@@ -838,8 +838,8 @@ test_that("dNmixture_BBNB_v works",
 
 
 # -----------------------------------------------------------------------------
-#### 8. Test dNmixture_BBNB_s ####
-test_that("dNmixture_BBNB_s works",
+#### 8. Test dNmixture_BBNB_oneObs ####
+test_that("dNmixture_BBNB_oneObs works",
           {
             # Uncompiled calculation
             x <- c(1)
@@ -851,7 +851,7 @@ test_that("dNmixture_BBNB_s works",
             Nmax <- 250
             len <- 5
 
-            probX <- dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            probX <- dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len)
 
             # Manually calculate the correct answer
             alpha <- prob * s
@@ -867,21 +867,21 @@ test_that("dNmixture_BBNB_s works",
             expect_equal(probX, correctProbX)
 
             # Uncompiled log probability
-            lProbX <- dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            lProbX <- dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
             # Compilation and compiled calculations
-            CdNmixture_BBNB_s <- compileNimble(dNmixture_BBNB_s)
-            CprobX <- CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            CdNmixture_BBNB_oneObs <- compileNimble(dNmixture_BBNB_oneObs)
+            CprobX <- CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len)
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            ClProbX <- CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
             # Use in Nimble model
             nc <- nimbleCode({
-              x ~ dNmixture_BBNB_s(lambda = lambda, prob = prob,
+              x ~ dNmixture_BBNB_oneObs(lambda = lambda, prob = prob,
                                   s = s, theta = theta,
                                   Nmin = Nmin, Nmax = Nmax, len = len)
 
@@ -931,14 +931,14 @@ test_that("dNmixture_BBNB_s works",
             xSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              xSim[i] <- rNmixture_BBNB_s(1, lambda, theta, prob, s, Nmin, Nmax, len)
+              xSim[i] <- rNmixture_BBNB_oneObs(1, lambda, theta, prob, s, Nmin, Nmax, len)
             }
 
-            CrNmixture_BBNB_s <- compileNimble(rNmixture_BBNB_s)
+            CrNmixture_BBNB_oneObs <- compileNimble(rNmixture_BBNB_oneObs)
             CxSim <- numeric(nSim)
             set.seed(1)
             for (i in 1:nSim) {
-              CxSim[i] <- CrNmixture_BBNB_s(1, lambda, theta, prob, s, Nmin, Nmax, len)
+              CxSim[i] <- CrNmixture_BBNB_oneObs(1, lambda, theta, prob, s, Nmin, Nmax, len)
             }
             expect_identical(xSim, CxSim)
 
