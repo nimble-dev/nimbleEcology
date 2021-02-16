@@ -340,6 +340,23 @@
     )), verbose = F
   )
   registerDistributions(list(
+    dNmixture_BNB_s = list(
+      BUGSdist = "dNmixture_BNB_s(lambda, theta, prob, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BNB_s(lambda, theta, prob, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'theta = double()',
+                'prob = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+  registerDistributions(list(
     dNmixture_BNB_oneObs = list(
       BUGSdist = "dNmixture_BNB_oneObs(lambda, theta, prob, Nmin, Nmax, len)",
       Rdist = "dNmixture_BNB_oneObs(lambda, theta, prob, Nmin, Nmax, len)",
@@ -374,6 +391,25 @@
       pqAvail = FALSE
     )), verbose = F
   )
+
+  registerDistributions(list(
+    dNmixture_BBP_s = list(
+      BUGSdist = "dNmixture_BBP_s(lambda, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBP_s(lambda, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double()',
+                's = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
   registerDistributions(list(
     dNmixture_BBP_oneObs = list(
       BUGSdist = "dNmixture_BBP_oneObs(lambda, prob, s, Nmin, Nmax, len)",
@@ -413,7 +449,27 @@
       pqAvail = FALSE
     )), verbose = F
   )
+
   registerDistributions(list(
+    dNmixture_BBNB_s = list(
+      BUGSdist = "dNmixture_BBNB_s(lambda, theta, prob, s, Nmin, Nmax, len)",
+      Rdist = "dNmixture_BBNB_s(lambda, theta, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'prob = double()',
+                's = double()',
+                'theta = double()',
+                'Nmin = double(0, default = -1)',
+                'Nmax = double(0, default = -1)',
+                'len = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+    registerDistributions(list(
     dNmixture_BBNB_oneObs = list(
       BUGSdist = "dNmixture_BBNB_oneObs(lambda, theta, prob, s, Nmin, Nmax, len)",
       Rdist = "dNmixture_BBNB_oneObs(lambda, theta, prob, s, Nmin, Nmax, len)",
