@@ -50,49 +50,84 @@ These nimbleFunctions provide distributions that can be
     \code{\link[nimble]{nimbleCode}} and
     \code{\link[nimble]{nimbleModel}}).
 
-An N-mixture model defines a distribution for multiple counts
-(typically of animals, typically made at a sequence of visits to
-the same site).  The latent number of animals available to be
-counted, N, follows a Poisson distribution with mean \code{lambda}.
-Each count, \code{x[i]} for visit \code{i}, #' follows a binomial
-distribution with size (number of trials) N and probability of
-success (being counted) \code{prob[i]}.
+An N-mixture model defines a distribution for multiple counts (typically of
+animals, typically made at a sequence of visits to the same site).  The
+latent number of animals available to be counted, N, follows a Poisson
+distribution with mean \code{lambda}. Each count, \code{x[i]} for visit
+\code{i}, #' follows a binomial distribution with size (number of trials) N
+and probability of success (being counted) \code{prob[i]}.
 
-The distribution has two forms, \code{dNmixture_s} and
-\code{dNmixture_v}. With \code{dNmixture_s}, detection probability
-is a scalar, independent of visit, so \code{prob[i]} should be
-replaced with \code{prob} above.  With \code{dNmixture_v},
-detection probability is a vector, with one element for each visit,
-as written above.
+The traditional N-mixture is available in two forms, \code{dNmixture_s} and
+\code{dNmixture_v}. With \code{dNmixture_s}, detection probability is a
+scalar, independent of visit, so \code{prob[i]} should be replaced with
+\code{prob} above.  With \code{dNmixture_v}, detection probability is a
+vector, with one element for each visit, as written above.
+
+We also provide three important variations on the traditional N-mixture
+model: \code{dNmixture_BNB}, \code{dNmixture_BBP}, and \code{dNmixture_BBNB}.
+These distributions allow you to replace the Poisson (P) abundance
+distribution with the negative binomial (NB) and the binomial (B) detection
+distribution with the beta binomial (BB).
+
+First, BNB N-mixture models use a binomial distribution for detection and a
+negative binomial distribution for abundance with scaler overdispersion
+parameter \code{theta} (0-Inf). We parameterize such that the variance of the
+negative binomial is \code{lambda^2 * theta + lambda}, so large \code{theta}
+indicates a large amount of overdisperison in abundance. The BNB is available
+in three suffixed forms: \code{dNmixture_BNB_v} is used if \code{prob} varies
+between observations, \code{dNmixture_BNB_s} is used if \code{prob} is scalar
+(constant across observations), and \code{dNmixture_BNB_oneObs} is used if
+only one observation is available at the site (so both x and prob are
+scalar).
+
+Second, the BBP N-mixture uses a beta binomial distribution for detection
+probabilities and a Poisson distribution for abundance. The beta binomial
+distribution has overdispersion parameter s (0-Inf). We parameterize such
+that the variance of the beta binomial is \code{N \* prob \* (1-prob) \* (N +
+s) / (s + 1)}, with greater s indicating less variance (greater-than-binomial
+relatedness between observations at the site) and s -> 0 indicating the
+binomial. The BBP is available in three suffixed forms:
+\code{dNmixture_BBP_v} is used if \code{prob} varies between observations,
+\code{dNmixture_BBP_s} is used if \code{prob} is scalar (constant across
+observations), and \code{dNmixture_BBP_oneObs} is used if only one
+observation is available at the site (so both x and prob are scalar).
+
+Third, the variation dNmixture_BBNB is available using a negative binomial
+abundance distribuion and a beta binomial detection distribution.
+\code{dNmixture_BBNB} is available with \code{_s}, \code{_v}, and
+\code{_oneObs} suffixes as above and requires both arguments \code{s} and
+\code{theta} as parameterized above.
+
+The distribution dNmixture_oneObs is not provided as the probability given
+by the traditional N-mixture distribution for \code{length(x) = 1} is
+equivalent to \code{dpois(prob * lambda)}.
 
 For more explanation, see package vignette
 (\code{vignette("Introduction_to_nimbleEcology")}).
 
-Compared to writing \code{nimble} models with a discrete latent
-state of abundance N and a separate scalar datum for each count,
-use of these distributions allows one to directly sum (marginalize)
-over the discrete latent state N and calculate the probability of
-all observations for a site jointly.
+Compared to writing \code{nimble} models with a discrete latent state of
+abundance N and a separate scalar datum for each count, use of these
+distributions allows one to directly sum (marginalize) over the discrete
+latent state N and calculate the probability of all observations for a site
+jointly.
 
-If one knows a reasonable range for summation over possible values
-of N, the start and end of the range can be provided as \code{Nmin}
-and \code{Nmax}.  Otherwise one can set both to -1, in which case
-values for \code{Nmin} and \code{Nmax} will be chosen based on the
-0.0001 and 0.9999 quantiles of the marginal distributions of each
-count, using the minimum over counts of the former and the maximum
-over counts of the latter.
+If one knows a reasonable range for summation over possible values of N, the
+start and end of the range can be provided as \code{Nmin} and \code{Nmax}.
+Otherwise one can set both to -1, in which case values for \code{Nmin} and
+\code{Nmax} will be chosen based on the 0.0001 and 0.9999 quantiles of the
+marginal distributions of each count, using the minimum over counts of the
+former and the maximum over counts of the latter.
 
-The summation over N uses the efficient method given by Meehan et
-al. (2017).
+The summation over N uses the efficient method given by Meehan et al. (2017).
 
-These are \code{nimbleFunction}s written in the format of
-user-defined distributions for NIMBLE's extension of the BUGS model
-language. More information can be found in the NIMBLE User Manual
-at \href{https://r-nimble.org}{https://r-nimble.org}.
+These are \code{nimbleFunction}s written in the format of user-defined
+distributions for NIMBLE's extension of the BUGS model language. More
+information can be found in the NIMBLE User Manual at
+\href{https://r-nimble.org}{https://r-nimble.org}.
 
-When using these distributions in a \code{nimble} model, the
-left-hand side will be used as \code{x}, and the user should not
-provide the \code{log} argument.
+When using these distributions in a \code{nimble} model, the left-hand side
+will be used as \code{x}, and the user should not provide the \code{log}
+argument.
 
 For example, in \code{nimble} model code,
 
