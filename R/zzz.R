@@ -1,7 +1,7 @@
 # This file registers all distributions when the package is loaded.
 .onAttach <- function(libname, pkgname) {
 
-  packageStartupMessage("Loading nimbleEcology. \nRegistering the following distributions:\n ",
+  packageStartupMessage("Loading nimbleEcology. Registering the following distributions:\n ",
                         "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n")
 
 # Register the distributions explicitly for two reasons:

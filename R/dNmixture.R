@@ -620,7 +620,7 @@ dNmixture_BNB_s <- nimbleFunction(
         prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
       }
 
-      ff <- log(1 - pNB) + log(1-prob) + log(prods)
+      ff <- log(1 - pNB) + len * log(1-prob) + log(prods)
       i <- 1
       sum_ff_g1 <- 0
       hit_pos <- FALSE
@@ -956,7 +956,7 @@ dNmixture_BBP_s <- nimbleFunction(
 
       log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
       logProb <- dpois(Nmin, lambda, log = TRUE) +
-        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
+        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
@@ -1178,8 +1178,7 @@ dNmixture_BBNB_s <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
-    if (length(x) != len) stop("in dNmixture_BBNB_v, len must equal length(x).")
-    if (len != length(prob)) stop("in dNmixture_BBNB_v, len must equal length(prob).")
+    if (length(x) != len) stop("in dNmixture_BBNB_s, len must equal length(x).")
 
     if (s <= 0) {
       if (log) return(-Inf)
@@ -1266,7 +1265,7 @@ dNmixture_BBNB_s <- nimbleFunction(
 
       log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
+        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
@@ -1417,7 +1416,6 @@ rNmixture_BNB_s <- nimbleFunction(
                  len = double()) {
 
     if (n != 1) stop("rNmixture* only works for n = 1")
-    if (length(prob) != len) stop("In rNmixture*, len must equal length(prob).")
 
     r <- 1 / theta
     p <- 1 / (1 + theta * lambda)
@@ -1425,7 +1423,7 @@ rNmixture_BNB_s <- nimbleFunction(
     trueN <- rnbinom(1, size = r, prob = p)
     ans <- numeric(len)
     for (i in 1:len) {
-      ans[i] <- rbinom(n = 1, size = trueN, prob = prob[i])
+      ans[i] <- rbinom(n = 1, size = trueN, prob = prob)
     }
 
     return(ans)
@@ -1484,13 +1482,13 @@ rNmixture_BBP_s <- nimbleFunction(
                  Nmax = double(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
-    if (length(prob) != len) stop("In rNmixture*, len must equal length(prob).")
 
     alpha <- prob * s
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom(n = 1, N = trueN,
+                      alpha = rep(alpha, len), beta = rep(beta, len))
 
     return(ans)
     returnType(double(1))
@@ -1504,6 +1502,8 @@ rNmixture_BBP_oneObs <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
+    if (n != 1) stop("rNmixture* only works for n = 1")
+
     alpha <- prob * s
     beta <- s - prob * s
 
@@ -1523,6 +1523,8 @@ rNmixture_BBNB_v <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
+    if (n != 1) stop("rNmixture* only works for n = 1")
+
     alpha <- prob * s
     beta <- s - prob * s
     r <- 1 / theta
@@ -1544,13 +1546,16 @@ rNmixture_BBNB_s <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
+    if (n != 1) stop("rNmixture* only works for n = 1")
+
     alpha <- prob * s
     beta <- s - prob * s
     r <- 1 / theta
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom(n = 1, N = trueN,
+                      alpha = rep(alpha, len), beta = rep(beta, len))
 
     return(ans)
     returnType(double(1))
@@ -1565,6 +1570,8 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
                  len = double()) {
+    if (n != 1) stop("rNmixture* only works for n = 1")
+
     alpha <- prob * s
     beta <- s - prob * s
     r <- 1 / theta
