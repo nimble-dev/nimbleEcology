@@ -1,10 +1,15 @@
 # dNmixture
 #' N-mixture distribution for use in \code{nimble} models
 #'
-#' \code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble}a models.
+#' \code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble} models. Overdispersion alternatives are also provided.
 #'
 #' @name dNmixture
-#' @aliases dNmixture_s dNmixture_v rNmixture_s rNmixture_v
+#' @aliases dNmixture_s dNmixture_v rNmixture_s rNmixture_v dNmixture_BNB_v
+#'   dNmixture_BNB_s dNmixture_BNB_oneObs dNmixture_BBP_v dNmixture_BBP_s
+#'   dNmixture_BBP_oneObs dNmixture_BBNB_v dNmixture_BBNB_s
+#'   rNmixture_BBNB_oneObs rNmixture_BNB_v rNmixture_BNB_s rNmixture_BNB_oneObs
+#'   rNmixture_BBP_v rNmixture_BBP_s rNmixture_BBP_oneObs rNmixture_BBNB_v
+#'   rNmixture_BBNB_s rNmixture_BBNB_oneObs
 #'
 #' @author Ben Goldstein, Lauren Ponisio, and Perry de Valpine
 #'
@@ -475,6 +480,9 @@ dBetaBinom_One <- nimbleFunction(
 
 ##### N-mixture extensions #####
 ##### dNmixture_BNB_v #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BNB_v <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -576,6 +584,9 @@ dNmixture_BNB_v <- nimbleFunction(
   })
 
 ##### dNmixture_BNB_s #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BNB_s <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -676,6 +687,9 @@ dNmixture_BNB_s <- nimbleFunction(
   })
 
 ##### dNmixture_BNB_oneObs #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BNB_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
@@ -768,6 +782,9 @@ dNmixture_BNB_oneObs <- nimbleFunction(
   })
 
 ##### dNmixture_BBP_v #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBP_v <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -867,6 +884,9 @@ dNmixture_BBP_v <- nimbleFunction(
   })
 
 ##### dNmixture_BBP_s #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBP_s <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -965,6 +985,9 @@ dNmixture_BBP_s <- nimbleFunction(
   })
 
 ##### dNmixture_BBP_oneObs #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBP_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
@@ -1061,6 +1084,9 @@ dNmixture_BBP_oneObs <- nimbleFunction(
 
 
 ##### dNmixture_BBNB_v #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBNB_v <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -1168,6 +1194,9 @@ dNmixture_BBNB_v <- nimbleFunction(
   })
 
 ##### dNmixture_BBNB_s #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBNB_s <- nimbleFunction(
   run = function(x = double(1),
                  lambda = double(),
@@ -1275,6 +1304,9 @@ dNmixture_BBNB_s <- nimbleFunction(
 
 
 ##### dNmixture_BBNB_oneObs #####
+NULL
+#' @rdname dNmixture
+#' @export
 dNmixture_BBNB_oneObs <- nimbleFunction(
   run = function(x = double(),
                  lambda = double(),
@@ -1380,6 +1412,9 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
   })
 
 ##### rNmixture extensions #####
+NULL
+#' @rdname dNmixture
+#' @export
 
 rNmixture_BNB_v <- nimbleFunction(
   run = function(n = double(),
@@ -1405,6 +1440,9 @@ rNmixture_BNB_v <- nimbleFunction(
     return(ans)
     returnType(double(1))
   })
+NULL
+#' @rdname dNmixture
+#' @export
 
 rNmixture_BNB_s <- nimbleFunction(
   run = function(n = double(),
@@ -1431,6 +1469,9 @@ rNmixture_BNB_s <- nimbleFunction(
   })
 
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BNB_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1452,6 +1493,9 @@ rNmixture_BNB_oneObs <- nimbleFunction(
   })
 
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBP_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1473,6 +1517,9 @@ rNmixture_BBP_v <- nimbleFunction(
     returnType(double(1))
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBP_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1494,6 +1541,9 @@ rNmixture_BBP_s <- nimbleFunction(
     returnType(double(1))
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBP_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1514,6 +1564,9 @@ rNmixture_BBP_oneObs <- nimbleFunction(
     returnType(double())
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBNB_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1537,6 +1590,9 @@ rNmixture_BBNB_v <- nimbleFunction(
     returnType(double(1))
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBNB_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -1561,6 +1617,9 @@ rNmixture_BBNB_s <- nimbleFunction(
     returnType(double(1))
   })
 
+NULL
+#' @rdname dNmixture
+#' @export
 rNmixture_BBNB_oneObs <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),

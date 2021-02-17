@@ -6,6 +6,24 @@
 \alias{dNmixture_v}
 \alias{rNmixture_s}
 \alias{rNmixture_v}
+\alias{dNmixture_BNB_v}
+\alias{dNmixture_BNB_s}
+\alias{dNmixture_BNB_oneObs}
+\alias{dNmixture_BBP_v}
+\alias{dNmixture_BBP_s}
+\alias{dNmixture_BBP_oneObs}
+\alias{dNmixture_BBNB_v}
+\alias{dNmixture_BBNB_s}
+\alias{rNmixture_BBNB_oneObs}
+\alias{rNmixture_BNB_v}
+\alias{rNmixture_BNB_s}
+\alias{rNmixture_BNB_oneObs}
+\alias{rNmixture_BBP_v}
+\alias{rNmixture_BBP_s}
+\alias{rNmixture_BBP_oneObs}
+\alias{rNmixture_BBNB_v}
+\alias{rNmixture_BBNB_s}
+\alias{dNmixture_BBNB_oneObs}
 \title{N-mixture distribution for use in \code{nimble} models}
 \usage{
 dNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
@@ -15,6 +33,61 @@ dNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
 rNmixture_v(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 
 rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
+
+dNmixture_BNB_v(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BNB_s(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BNB_oneObs(
+  x,
+  lambda,
+  theta,
+  prob,
+  Nmin = -1,
+  Nmax = -1,
+  len,
+  log = 0
+)
+
+dNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_oneObs(
+  x,
+  lambda,
+  theta,
+  prob,
+  s,
+  Nmin = -1,
+  Nmax = -1,
+  len,
+  log = 0
+)
+
+rNmixture_BNB_v(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BNB_s(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BNB_oneObs(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_v(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_s(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_oneObs(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_v(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_s(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_oneObs(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
 }
 \arguments{
 \item{x}{vector of integer counts from a series of sampling occasions.}
@@ -42,7 +115,7 @@ probability of observation vector \code{x}.
 For \code{rNmixture_s} and \code{rNmixture_v}: a simulated detection history, \code{x}.
 }
 \description{
-\code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble}a models.
+\code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble} models. Overdispersion alternatives are also provided.
 }
 \details{
 These nimbleFunctions provide distributions that can be

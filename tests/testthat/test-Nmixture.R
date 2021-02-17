@@ -350,7 +350,7 @@ test_that("dNmixture_BNB_v works",
           })
 
 # -----------------------------------------------------------------------------
-#### 3. Test dNmixture_BNB_s ####
+#### 4. Test dNmixture_BNB_s ####
 test_that("dNmixture_BNB_s works",
           {
             # Uncompiled calculation
@@ -470,7 +470,7 @@ test_that("dNmixture_BNB_s works",
           })
 
 # -----------------------------------------------------------------------------
-#### 4. Test dNmixture_BNB_oneObs ####
+#### 5. Test dNmixture_BNB_oneObs ####
 test_that("dNmixture_BNB_oneObs works",
           {
             # Uncompiled calculation
@@ -590,7 +590,7 @@ test_that("dNmixture_BNB_oneObs works",
 
 
 # -----------------------------------------------------------------------------
-#### 5. Test dNmixture_BBP_v ####
+#### 6. Test dNmixture_BBP_v ####
 test_that("dNmixture_BBP_v works",
           {
             # Uncompiled calculation
@@ -710,7 +710,7 @@ test_that("dNmixture_BBP_v works",
           })
 
 # -----------------------------------------------------------------------------
-#### 5. Test dNmixture_BBP_s ####
+#### 7. Test dNmixture_BBP_s ####
 test_that("dNmixture_BBP_s works",
           {
             # Uncompiled calculation
@@ -832,7 +832,7 @@ test_that("dNmixture_BBP_s works",
 
 
 # -----------------------------------------------------------------------------
-#### 6. Test dNmixture_BBP_oneObs ####
+#### 8. Test dNmixture_BBP_oneObs ####
 test_that("dNmixture_BBP_oneObs works",
           {
             # Uncompiled calculation
@@ -954,7 +954,7 @@ test_that("dNmixture_BBP_oneObs works",
 
 
 # -----------------------------------------------------------------------------
-#### 7. Test dNmixture_BBNB_v ####
+#### 9. Test dNmixture_BBNB_v ####
 test_that("dNmixture_BBNB_v works",
           {
             # Uncompiled calculation
@@ -1077,7 +1077,7 @@ test_that("dNmixture_BBNB_v works",
           })
 
 # -----------------------------------------------------------------------------
-#### 7. Test dNmixture_BBNB_s ####
+#### 10. Test dNmixture_BBNB_s ####
 test_that("dNmixture_BBNB_s works",
           {
             # Uncompiled calculation
@@ -1201,7 +1201,7 @@ test_that("dNmixture_BBNB_s works",
 
 
 # -----------------------------------------------------------------------------
-#### 8. Test dNmixture_BBNB_oneObs ####
+#### 11. Test dNmixture_BBNB_oneObs ####
 test_that("dNmixture_BBNB_oneObs works",
           {
             # Uncompiled calculation
