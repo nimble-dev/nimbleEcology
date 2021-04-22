@@ -48,6 +48,12 @@
 #' distribution with the negative binomial (NB) and the binomial (B) detection
 #' distribution with the beta binomial (BB).
 #'
+#' \strong{NOTE: These three variations are considered to be in development.
+#' Their function names, parameter names, and implementations are subject to
+#' change. Use with caution while this message is present. Please contact the
+#' authors on the nimble-users listserv if you have any questions. dNmixture_v
+#' and dNmixture_s are \emph{not} considered to be in development.}
+#'
 #' First, BNB N-mixture models use a binomial distribution for detection and a
 #' negative binomial distribution for abundance with scaler overdispersion
 #' parameter \code{theta} (0-Inf). We parameterize such that the variance of the
