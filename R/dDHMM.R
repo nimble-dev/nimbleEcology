@@ -185,7 +185,7 @@ dDHMM <- nimbleFunction(
     if (length(init) != dim(probTrans)[2]) stop("In dDHMM: Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (length(x) != len) stop("In dDHMM: Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("In dDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    if (sum(init) != 1) stop("In dDHMM: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dDHMM: Initial probabilities must sum to 1.")
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
@@ -249,7 +249,7 @@ dDHMMo <- nimbleFunction(
     if (length(x) != len) stop("In dDHMMo: Length of x does not match len in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("In dDHMMo: dim(probTrans)[3] does not match len - 1 in dDHMMo.")
     if (len != dim(probObs)[3]) stop("In dDHMMo: dim(probObs)[3] does not match len in dDHMMo.")
-    if (sum(init) != 1) stop("In dDHMMo: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dDHMMo: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
       transCheckPasses <- TRUE
@@ -313,7 +313,7 @@ rDHMM <- nimbleFunction(
     if (nStates != dim(probTrans)[1]) stop("In rDHMM: Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (nStates != dim(probTrans)[2]) stop("In rDHMM: Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("In rDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    if (sum(init) != 1) stop("In rDHMM: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In rDHMM: Initial probabilities must sum to 1.")
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
@@ -392,7 +392,7 @@ rDHMMo <- nimbleFunction(
   if (nStates != dim(probTrans)[1]) stop("In rDHMMo: Length of init does not match dim(probTrans)[1] in dDHMM.")
   if (nStates != dim(probTrans)[2]) stop("In rDHMMo: Length of init does not match dim(probTrans)[2] in dDHMM.")
   if (len - 1 > dim(probTrans)[3]) stop("In rDHMMo: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-  if (sum(init) != 1) stop("In rDHMMo: Initial probabilities must sum to 1.")
+  if (abs(sum(init) - 1) > 1e-6) stop("In rDHMMo: Initial probabilities must sum to 1.")
   if (checkRowSums) {
     transCheckPasses <- TRUE
     for (i in 1:dim(probTrans)[1]) {

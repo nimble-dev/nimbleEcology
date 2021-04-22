@@ -186,7 +186,7 @@ dHMM <- nimbleFunction(
     if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
-    if (sum(init) != 1) stop("In dHMM: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dHMM: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
       transCheckPasses <- TRUE
@@ -248,7 +248,7 @@ dHMMo <- nimbleFunction(
       if (dim(probObs)[3] == 1) stop("In dHMMo: Time dimension of probObs must match length of data. Did you mean dHMM?")
       stop("In dHMMo: Length of time dimension of probObs must match length of data.")
     }
-    if (sum(init) != 1) stop("In dHMMo: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dHMMo: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
       transCheckPasses <- TRUE
@@ -307,7 +307,7 @@ rHMM <- nimbleFunction(
   returnType(double(1))
   if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMM: Number of cols in probObs must equal number of cols in probTrans.")
   if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMM: probTrans must be a square matrix.")
-  if (sum(init) != 1) stop("In rHMM: Initial probabilities must sum to 1.")
+  if (abs(sum(init) - 1) > 1e-6) stop("In rHMM: Initial probabilities must sum to 1.")
   if (checkRowSums) {
     transCheckPasses <- TRUE
     for (i in 1:dim(probTrans)[1]) {
@@ -381,7 +381,7 @@ rHMMo <- nimbleFunction(
     if (dim(probObs)[3] == 1) stop("In rHMMo: Time dimension of probObs must match length of data. Did you mean rHMM?")
     stop("In rHMMo: Length of time dimension of probObs must match length of data.")
   }
-  if (sum(init) != 1) stop("In rHMMo: Initial probabilities must sum to 1.")
+  if (abs(sum(init) - 1) > 1e-6) stop("In rHMMo: Initial probabilities must sum to 1.")
 
   if (checkRowSums) {
     transCheckPasses <- TRUE
