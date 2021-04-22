@@ -20,6 +20,7 @@ VignetteBuilder: knitr
 LazyData: true
 URL: https://github.com/nimble-dev/nimbleEcology
 Collate:
+  BetaBinom.R
   dCJS.R
   dDynOcc.R
   dDHMM.R
