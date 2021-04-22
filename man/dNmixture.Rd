@@ -107,6 +107,15 @@ rNmixture_BBNB_oneObs(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the
 argument exists for standardization of "\code{r}" functions.}
+
+\item{theta}{abundance overdispersion parameter required for negative binomial
+(*NB) N-mixture models. theta is parameterized such that variance of
+the negative binomial variable x is}
+
+\item{s}{detection overdispersion parameter required for beta binomial (BB*)
+N-mixture models. s is parameterized such that variance of the beta
+binomial variable x is  \code{V(x) = N \* prob \* (1-prob) \* (N +
+s) / (s + 1)}}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
