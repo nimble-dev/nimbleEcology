@@ -62,8 +62,8 @@ dBetaBinom <- nimbleFunction(
     logprob <- 0
     for (i in 1:length(x)) {
       logprob <- logprob +
-        B(a = x[i] + alpha[i], b = N - x[i] + beta[i], log = TRUE) -
-        B(a = alpha[i], b = beta[ i], log = TRUE) +
+        nimbleEcology::B(a = x[i] + alpha[i], b = N - x[i] + beta[i], log = TRUE) -
+        nimbleEcology::B(a = alpha[i], b = beta[ i], log = TRUE) +
         lfactorial(N) - (lfactorial(x[i]) + lfactorial(N - x[i]))
     }
 
@@ -83,8 +83,8 @@ dBetaBinom_One <- nimbleFunction(
                  log = integer(0, default = 0)) {
     logprob <- 0
     logprob <- logprob +
-      B(a = x + alpha, b = N - x + beta, log = TRUE) -
-      B(a = alpha, b = beta, log = TRUE) +
+      nimbleEcology::B(a = x + alpha, b = N - x + beta, log = TRUE) -
+      nimbleEcology::B(a = alpha, b = beta, log = TRUE) +
       lfactorial(N) - (lfactorial(x) + lfactorial(N - x))
 
     if (log) return(logprob)
