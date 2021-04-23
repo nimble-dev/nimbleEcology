@@ -1577,3 +1577,88 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     returnType(double())
   })
 
+##### Beta binomial support functions #####
+#' @rdname dBetaBinom
+#' @export
+dBetaBinom <- nimbleFunction(
+  run = function(x = double(1),
+                 N = double(0),
+                 alpha = double(1),
+                 beta = double(1),
+                 log = integer(0, default = 0)) {
+    logprob <- 0
+    for (i in 1:length(x)) {
+      logprob <- logprob +
+        nimbleEcology::B(a = x[i] + alpha[i], b = N - x[i] + beta[i], log = TRUE) -
+        nimbleEcology::B(a = alpha[i], b = beta[ i], log = TRUE) +
+        lfactorial(N) - (lfactorial(x[i]) + lfactorial(N - x[i]))
+    }
+
+    if (log) return(logprob)
+    return(exp(logprob))
+    returnType(double(0))
+  }
+)
+
+#' @rdname dBetaBinom
+#' @export
+dBetaBinom_One <- nimbleFunction(
+  run = function(x = double(0),
+                 N = double(0),
+                 alpha = double(0),
+                 beta = double(0),
+                 log = integer(0, default = 0)) {
+    logprob <- 0
+    logprob <- logprob +
+      nimbleEcology::B(a = x + alpha, b = N - x + beta, log = TRUE) -
+      nimbleEcology::B(a = alpha, b = beta, log = TRUE) +
+      lfactorial(N) - (lfactorial(x) + lfactorial(N - x))
+
+    if (log) return(logprob)
+    return(exp(logprob))
+    returnType(double(0))
+  }
+)
+
+
+#' @rdname dBetaBinom
+#' @export
+rBetaBinom <- nimbleFunction(
+  run = function(n = double(0),
+                 N = double(0),
+                 alpha = double(1),
+                 beta = double(1)) {
+    p <- numeric(length(alpha))
+    for (i in 1:length(alpha)) {
+      p[i] <- rbeta(1, alpha[i], beta[i])
+    }
+
+    x <- rbinom(length(alpha), N, p)
+    return(x)
+    returnType(double(1))
+  })
+
+#' @rdname dBetaBinom
+#' @export
+rBetaBinom_One <- nimbleFunction(
+  run = function(n = double(0),
+                 N = double(0),
+                 alpha = double(0),
+                 beta = double(0)) {
+
+    p <- rbeta(1, alpha, beta)
+    x <- rbinom(1, N, p)
+    return(x)
+    returnType(double())
+  })
+
+#' @rdname dBetaBinom
+#' @export
+B <- nimbleFunction(
+  run = function(a = double(0),
+                 b = double(0),
+                 log = logical(0)) {
+    if (log) return(lgamma(a) + lgamma(b) - lgamma(a + b))
+    else return(exp(lgamma(a) + lgamma(b) - lgamma(a + b)))
+    returnType(double(0))
+  })
