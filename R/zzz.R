@@ -476,7 +476,7 @@
       discrete = TRUE,
       types = c('value = double()',
                 'lambda = double()',
-                'thetaa = double()',
+                'theta = double()',
                 'prob = double()',
                 's = double()',
                 'Nmin = double(0, default = -1)',
@@ -487,5 +487,38 @@
       pqAvail = FALSE
     )), verbose = F
   )
+
+  registerDistributions(list(
+    dBetaBinom = list(
+      BUGSdist = "dBetaBinom(lambda, theta, prob, s, Nmin, Nmax, len)",
+      Rdist = "dBetaBinom(lambda, theta, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'N = double()',
+                'alpha = double(1)',
+                'beta = double(1)',
+                'log = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
+  registerDistributions(list(
+    dBetaBinom_One = list(
+      BUGSdist = "dBetaBinom_One(lambda, theta, prob, s, Nmin, Nmax, len)",
+      Rdist = "dBetaBinom_One(lambda, theta, prob, s, Nmin, Nmax, len)",
+      discrete = TRUE,
+      types = c('value = double()',
+                'N = double()',
+                'alpha = double()',
+                'beta = double()',
+                'log = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = F
+  )
+
 
 })}
