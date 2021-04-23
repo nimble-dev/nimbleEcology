@@ -202,7 +202,7 @@
 #' @export
 NULL
 
-nimbleOptions(checkNimbleFunction = F)
+nimbleOptions(checkNimbleFunction = FALSE)
 
 ##### Regular N-mixture #####
 NULL
@@ -1579,4 +1579,4 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     returnType(double())
   })
 
-nimbleOptions(checkNimbleFunction = T)
+nimbleOptions(checkNimbleFunction = TRUE)
