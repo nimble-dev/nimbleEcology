@@ -95,6 +95,8 @@ jobs:
 
       - name: Run tests
         run: |
+          R CMD build .
+          R CMD INSTALL *tar.gz --install-tests
           Rscript run_tests.R
 
       - name: Show testthat output
