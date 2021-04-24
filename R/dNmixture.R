@@ -17,12 +17,12 @@
 #' @param lambda expected value of the Poisson distribution of true abundance
 #' @param theta abundance overdispersion parameter required for negative binomial
 #'        (*NB) N-mixture models. theta is parameterized such that variance of
-#'        the negative binomial variable x is
+#'        the negative binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
+#'        s) / (s + 1)}
 #' @param prob detection probability (scalar for \code{dNmixture_s}, vector for \code{dNmixture_v}).
 #' @param s detection overdispersion parameter required for beta binomial (BB*)
 #'        N-mixture models. s is parameterized such that variance of the beta
-#'        binomial variable x is  \code{V(x) = N \* prob \* (1-prob) \* (N +
-#'        s) / (s + 1)}
+#'        binomial variable x is  \code{lambda^2 * theta + lambda}
 #' @param Nmin minimum abundance to sum over for the mixture probability. Set to -1 to select automatically.
 #' @param Nmax maximum abundance to sum over for the mixture probability. Set to -1 to select automatically.
 #' @param len The length of the x vector

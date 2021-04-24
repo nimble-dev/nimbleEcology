@@ -110,12 +110,12 @@ argument exists for standardization of "\code{r}" functions.}
 
 \item{theta}{abundance overdispersion parameter required for negative binomial
 (*NB) N-mixture models. theta is parameterized such that variance of
-the negative binomial variable x is}
+the negative binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
+s) / (s + 1)}}
 
 \item{s}{detection overdispersion parameter required for beta binomial (BB*)
 N-mixture models. s is parameterized such that variance of the beta
-binomial variable x is  \code{V(x) = N \* prob \* (1-prob) \* (N +
-s) / (s + 1)}}
+binomial variable x is  \code{lambda^2 * theta + lambda}}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
