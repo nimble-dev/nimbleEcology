@@ -45,6 +45,10 @@
 #' @seealso For beta binomial N-mixture models, see \code{\link{dNmixture}}.
 #'   For documentation on the beta function, use \code{?stats::dbeta}
 #'
+#' @examples
+#' # Calculate a beta binomial probability
+#' dBetaBinom(x = c(4, 0, 0, 3), N = 10, shape1 = 0.5, shape2 = 0.5)
+#'
 #' @export
 
 NULL

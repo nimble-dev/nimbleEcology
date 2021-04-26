@@ -64,6 +64,11 @@ in which case the parameters \code{alpha} and \code{beta} must also be vectors.
 When \code{x} is scalar, \code{dBetaBinom_One} and \code{rBetaBinom_One} are
 used.
 }
+\examples{
+# Calculate a beta binomial probability
+dBetaBinom(x = c(4, 0, 0, 3), N = 10, shape1 = 0.5, shape2 = 0.5)
+
+}
 \seealso{
 For beta binomial N-mixture models, see \code{\link{dNmixture}}.
   For documentation on the beta function, use \code{?stats::dbeta}
