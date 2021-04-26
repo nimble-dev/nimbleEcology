@@ -16,3 +16,11 @@ vector of units calculated partway through the fast N-mixture algorithm.}
 \description{
 Helper function for fast N-mixture calculation
 }
+\details{
+This is a helper function for the fast N-mixture calculation. It
+  runs an iterative calculation present in all N-mixture varieties. It
+  doesn't have an interpretation outside of that context.
+}
+\seealso{
+\code{\link{dNmixture}}
+}
