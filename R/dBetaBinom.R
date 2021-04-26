@@ -50,7 +50,7 @@
 #' dBetaBinom(x = c(4, 0, 0, 3), N = 10,
 #'   shape1 = c(0.5, 0.5, 0.3, 0.5), shape2 = c(0.2, 0.4, 1, 1.2))
 #' # Same for case with one observation
-#' dBetaBinom_One(x = 3, N = 10, shape1 = 0.5, shape2 = 0.5, log = T)
+#' dBetaBinom_One(x = 3, N = 10, shape1 = 0.5, shape2 = 0.5, log = TRUE)
 #' @export
 
 NULL
