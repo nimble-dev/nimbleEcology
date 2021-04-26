@@ -17,12 +17,12 @@
 #' @param lambda expected value of the Poisson distribution of true abundance
 #' @param theta abundance overdispersion parameter required for negative binomial
 #'        (*NB) N-mixture models. theta is parameterized such that variance of
-#'        the negative binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
-#'        s) / (s + 1)}
+#'        the negative binomial variable x is \code{lambda^2 * theta + lambda}
 #' @param prob detection probability (scalar for \code{dNmixture_s}, vector for \code{dNmixture_v}).
 #' @param s detection overdispersion parameter required for beta binomial (BB*)
 #'        N-mixture models. s is parameterized such that variance of the beta
-#'        binomial variable x is  \code{lambda^2 * theta + lambda}
+#'        binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
+#'        s) / (s + 1)}
 #' @param Nmin minimum abundance to sum over for the mixture probability. Set to -1 to select automatically.
 #' @param Nmax maximum abundance to sum over for the mixture probability. Set to -1 to select automatically.
 #' @param len The length of the x vector
@@ -38,16 +38,20 @@
 #'
 #' An N-mixture model defines a distribution for multiple counts (typically of
 #' animals, typically made at a sequence of visits to the same site).  The
-#' latent number of animals available to be counted, N, follows a Poisson
-#' distribution with mean \code{lambda}. Each count, \code{x[i]} for visit
-#' \code{i}, #' follows a binomial distribution with size (number of trials) N
-#' and probability of success (being counted) \code{prob[i]}.
+#' latent number of animals available to be counted, N, follows a Poisson or
+#' negative binomial distribution. Each count, \code{x[i]} for visit \code{i},
+#' follows a binomial or beta-binomial distribution. The N-mixture distributions
+#' calculate the marginal probability of observed counts by summing over the
+#' range of latent abundance values.
 #'
-#' The traditional N-mixture is available in two forms, \code{dNmixture_s} and
-#' \code{dNmixture_v}. With \code{dNmixture_s}, detection probability is a
-#' scalar, independent of visit, so \code{prob[i]} should be replaced with
-#' \code{prob} above.  With \code{dNmixture_v}, detection probability is a
-#' vector, with one element for each visit, as written above.
+#' The basic N-mixture model uses Poisson latent abundance with mean
+#' \code{lambda} and binomial observed counts  with size (number of trials) N
+#' and probability of success (being counted) \code{prob[i]}. This distribution
+#' is available in two forms, \code{dNmixture_s} and \code{dNmixture_v}. With
+#' \code{dNmixture_s}, detection probability is a scalar, independent of visit,
+#' so \code{prob[i]} should be replaced with \code{prob} above.  With
+#' \code{dNmixture_v}, detection probability is a vector, with one element for
+#' each visit, as written above.
 #'
 #' We also provide three important variations on the traditional N-mixture
 #' model: \code{dNmixture_BNB}, \code{dNmixture_BBP}, and \code{dNmixture_BBNB}.
@@ -55,37 +59,37 @@
 #' distribution with the negative binomial (NB) and the binomial (B) detection
 #' distribution with the beta binomial (BB).
 #'
-#' \strong{NOTE: These three variations are considered to be in development.
+#' \strong{NOTE: These variants should work but are considered to be in development.
 #' Their function names, parameter names, and implementations are subject to
 #' change. Use with caution while this message is present. Please contact the
 #' authors on the nimble-users listserv if you have any questions. dNmixture_v
 #' and dNmixture_s are \emph{not} considered to be in development.}
 #'
-#' First, BNB N-mixture models use a binomial distribution for detection and a
-#' negative binomial distribution for abundance with scaler overdispersion
-#' parameter \code{theta} (0-Inf). We parameterize such that the variance of the
-#' negative binomial is \code{lambda^2 * theta + lambda}, so large \code{theta}
-#' indicates a large amount of overdisperison in abundance. The BNB is available
-#' in three suffixed forms: \code{dNmixture_BNB_v} is used if \code{prob} varies
-#' between observations, \code{dNmixture_BNB_s} is used if \code{prob} is scalar
-#' (constant across observations), and \code{dNmixture_BNB_oneObs} is used if
-#' only one observation is available at the site (so both x and prob are
-#' scalar).
+#' Binomial-negative binomial: BNB N-mixture models use a binomial distribution
+#' for detection and a negative binomial distribution for abundance with scalar
+#' overdispersion parameter \code{theta} (0-Inf). We parameterize such that the
+#' variance of the negative binomial is \code{lambda^2 * theta + lambda}, so
+#' large \code{theta} indicates a large amount of overdisperison in abundance.
+#' The BNB is available in three suffixed forms: \code{dNmixture_BNB_v} is used
+#' if \code{prob} varies between observations, \code{dNmixture_BNB_s} is used if
+#' \code{prob} is scalar (constant across observations), and
+#' \code{dNmixture_BNB_oneObs} is used if only one observation is available at
+#' the site (so both x and prob are scalar).
 #'
-#' Second, the BBP N-mixture uses a beta binomial distribution for detection
-#' probabilities and a Poisson distribution for abundance. The beta binomial
-#' distribution has overdispersion parameter s (0-Inf). We parameterize such
-#' that the variance of the beta binomial is \code{N \* prob \* (1-prob) \* (N +
-#' s) / (s + 1)}, with greater s indicating less variance (greater-than-binomial
-#' relatedness between observations at the site) and s -> 0 indicating the
-#' binomial. The BBP is available in three suffixed forms:
+#' Beta-binomial-Poisson: BBP N-mixture uses a beta binomial distribution for
+#' detection probabilities and a Poisson distribution for abundance. The beta
+#' binomial distribution has scalar overdispersion parameter s (0-Inf). We
+#' parameterize such that the variance of the beta binomial is \code{N \* prob
+#' \* (1-prob) \* (N + s) / (s + 1)}, with greater s indicating less variance
+#' (greater-than-binomial relatedness between observations at the site) and s ->
+#' 0 indicating the binomial. The BBP is available in three suffixed forms:
 #' \code{dNmixture_BBP_v} is used if \code{prob} varies between observations,
 #' \code{dNmixture_BBP_s} is used if \code{prob} is scalar (constant across
 #' observations), and \code{dNmixture_BBP_oneObs} is used if only one
 #' observation is available at the site (so both x and prob are scalar).
 #'
-#' Third, the variation dNmixture_BBNB is available using a negative binomial
-#' abundance distribuion and a beta binomial detection distribution.
+#' Beta-binomial-negative-binomial: dNmixture_BBNB is available using a negative
+#' binomial abundance distribution and a beta binomial detection distribution.
 #' \code{dNmixture_BBNB} is available with \code{_s}, \code{_v}, and
 #' \code{_oneObs} suffixes as above and requires both arguments \code{s} and
 #' \code{theta} as parameterized above.
@@ -201,6 +205,52 @@
 #' # Use the model for a variety of other purposes...
 #' @export
 NULL
+##### nimNmixPois_logFac #####
+nimNmixPois_logFac <- nimbleFunction(
+  run = function(numN = double(0),
+                 ff = double(1)) {
+    i <- 1
+    sum_ff_g1 <- 0
+    hit_pos <- FALSE
+    while(i < numN & (ff[i] > 0 | !hit_pos)) {
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+      i <- i+1
+      if (ff[i] > 0) {
+        hit_pos <- TRUE
+      }
+    }
+    max_index <- i-1
+    if (ff[i] > 0 & numN != max_index + 1) {
+      max_index <- i
+      sum_ff_g1 <- sum_ff_g1 + ff[i]
+    }
+    if(max_index == 0 | !hit_pos) {
+      max_index <- 1 # not sure this is relevant. it's defensive.
+      sum_ff_g1 <- ff[1]
+    }
+
+    terms <- numeric(numN + 1)
+    terms[max_index + 1] <- 1
+
+    sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
+
+    for (i in 1:max_index) {
+      # terms[i] <- 1 / exp(sum(ff[i:max_index]))
+      terms[i] <- 1 / exp(sumff)
+      sumff <- sumff - ff[i]
+    }
+
+    sumff <- 0
+    for (i in (max_index + 1):numN) {
+      # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
+      sumff <- sumff + ff[i]
+      terms[i + 1] <- exp(sumff)
+    }
+    log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+    return(log_fac)
+    returnType(double())
+  })
+
 
 nimbleOptions(checkNimbleFunction = FALSE)
 
@@ -245,45 +295,7 @@ dNmixture_v <- nimbleFunction(
     }
 
     ff <- log(lambda) + sum(log(1-prob)) + log(prods)
-    i <- 1
-    sum_ff_g1 <- 0
-    while(i < numN & ff[i] > 0) {
-      sum_ff_g1 <- sum_ff_g1 + ff[i]
-      i <- i+1
-    }
-    max_index <- i-1
-    if (ff[i] > 0) {
-      max_index <- i
-      sum_ff_g1 <- sum_ff_g1 + ff[i]
-    }
-    if(max_index == 0) {
-      max_index <- 1 # not sure this is relevant. it's defensive.
-      sum_ff_g1 <- ff[1]
-    }
-    if(max_index == numN) {
-      max_index <- numN - 1
-      sum_ff_g1 <- sum_ff_g1 - ff[numN]
-    }
-
-    terms <- numeric(numN + 1)
-    terms[max_index + 1] <- 1
-
-    sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-    for (i in 1:max_index) {
-      # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      terms[i] <- 1 / exp(sumff)
-      sumff <- sumff - ff[i]
-    }
-
-    sumff <- 0
-    for (i in (max_index + 1):numN) {
-      # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-      sumff <- sumff + ff[i]
-      terms[i + 1] <- exp(sumff)
-    }
-
-    log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+    log_fac <- nimNmixPois_logFac(numN, ff)
     logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
   }
   if (log) return(logProb)
@@ -330,41 +342,7 @@ dNmixture_s <- nimbleFunction(
     }
 
     ff <- log(lambda) + log(1-prob)*len + log(prods)
-    i <- 1
-    sum_ff_g1 <- 0
-    while(i < numN & ff[i] > 0) {
-      sum_ff_g1 <- sum_ff_g1 + ff[i]
-      i <- i+1
-    }
-    max_index <- i-1
-    if (ff[i] > 0 & numN != max_index + 1) {
-      max_index <- i
-      sum_ff_g1 <- sum_ff_g1 + ff[i]
-    }
-    if(max_index == 0) {
-      max_index <- 1 # not sure this is relevant. it's defensive.
-      sum_ff_g1 <- ff[1]
-    }
-
-    terms <- numeric(numN + 1)
-    terms[max_index + 1] <- 1
-
-    sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-    for (i in 1:max_index) {
-      # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-      terms[i] <- 1 / exp(sumff)
-      sumff <- sumff - ff[i]
-    }
-
-    sumff <- 0
-    for (i in (max_index + 1):numN) {
-      # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-      sumff <- sumff + ff[i]
-      terms[i + 1] <- exp(sumff)
-    }
-
-    log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+    log_fac <- nimNmixPois_logFac(numN, ff)
     logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
   }
   if (log) return(logProb)
@@ -466,51 +444,7 @@ dNmixture_BNB_v <- nimbleFunction(
       }
 
       ff <- log(1 - pNB) + sum(log(1-prob)) + log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-
-      max_index <- i-1
-      if(ff[i] > 0) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-      if(max_index == numN) {
-        max_index <- numN - 1
-        sum_ff_g1 <- sum_ff_g1 - ff[numN]
-      }
-
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
         log_fac
@@ -569,51 +503,7 @@ dNmixture_BNB_s <- nimbleFunction(
       }
 
       ff <- log(1 - pNB) + len * log(1-prob) + log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-
-      max_index <- i-1
-      if(ff[i] > 0) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-      if(max_index == numN) {
-        max_index <- numN - 1
-        sum_ff_g1 <- sum_ff_g1 - ff[numN]
-      }
-
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
         log_fac
@@ -670,45 +560,7 @@ dNmixture_BNB_oneObs <- nimbleFunction(
       }
 
       ff <- log(1 - pNB) + log(1-prob) + log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         dbinom(x, size = Nmin, prob = prob, log = TRUE) +
         log_fac
@@ -771,46 +623,7 @@ dNmixture_BBP_v <- nimbleFunction(
 
 
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dpois(Nmin, lambda, log = TRUE) +
         dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
@@ -872,46 +685,7 @@ dNmixture_BBP_s <- nimbleFunction(
 
 
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dpois(Nmin, lambda, log = TRUE) +
         dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
         log_fac
@@ -971,45 +745,7 @@ dNmixture_BBP_oneObs <- nimbleFunction(
 
 
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dpois(Nmin, lambda, log = TRUE) +
         dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
@@ -1082,45 +818,7 @@ dNmixture_BBNB_v <- nimbleFunction(
 
 
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
-
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
@@ -1189,47 +887,9 @@ dNmixture_BBNB_s <- nimbleFunction(
           ((1 - pNB) * (i + r - 1) / i)
       }
 
-
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
 
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
-
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
+      log_fac <- nimNmixPois_logFac(numN, ff)
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
         log_fac
@@ -1238,7 +898,6 @@ dNmixture_BBNB_s <- nimbleFunction(
     else return(exp(logProb))
     returnType(double())
   })
-
 
 ##### dNmixture_BBNB_oneObs #####
 NULL
@@ -1284,7 +943,7 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
     if (Nmax == -1) {
       Nmax <- x + qpois(0.99999, lambda * (1 - prob))
     }
-    Nmin <- x
+    if (Nmin < x) Nmin <- x
 
     logProb <- -Inf
 
@@ -1297,48 +956,10 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
         prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) *
           ((1 - pNB) * (i + r - 1) / i)
       }
-
-
       ff <- log(prods)
-      i <- 1
-      sum_ff_g1 <- 0
-      hit_pos <- FALSE
-      while(i < numN & (ff[i] > 0 | !hit_pos)) {
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-        i <- i+1
-        if (ff[i] > 0) {
-          hit_pos <- TRUE
-        }
-      }
-      max_index <- i-1
-      if (ff[i] > 0 & numN != max_index + 1) {
-        max_index <- i
-        sum_ff_g1 <- sum_ff_g1 + ff[i]
-      }
-      if(max_index == 0 | !hit_pos) {
-        max_index <- 1 # not sure this is relevant. it's defensive.
-        sum_ff_g1 <- ff[1]
-      }
 
-      terms <- numeric(numN + 1)
-      terms[max_index + 1] <- 1
+      log_fac <- nimNmixPois_logFac(numN, ff)
 
-      sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
-      for (i in 1:max_index) {
-        # terms[i] <- 1 / exp(sum(ff[i:max_index]))
-        terms[i] <- 1 / exp(sumff)
-        sumff <- sumff - ff[i]
-      }
-
-      sumff <- 0
-      for (i in (max_index + 1):numN) {
-        # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
-        sumff <- sumff + ff[i]
-        terms[i + 1] <- exp(sumff)
-      }
-
-      log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
       logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
         dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
@@ -1448,7 +1069,7 @@ rNmixture_BBP_v <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
 
     return(ans)
     returnType(double(1))
@@ -1472,7 +1093,7 @@ rNmixture_BBP_s <- nimbleFunction(
 
     trueN <- rpois(1, lambda = lambda)
     ans <- rBetaBinom(n = 1, N = trueN,
-                      alpha = rep(alpha, len), beta = rep(beta, len))
+                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
 
     return(ans)
     returnType(double(1))
@@ -1495,7 +1116,7 @@ rNmixture_BBP_oneObs <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom_One(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
 
     return(ans)
     returnType(double())
@@ -1521,7 +1142,7 @@ rNmixture_BBNB_v <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
 
     return(ans)
     returnType(double(1))
@@ -1548,7 +1169,7 @@ rNmixture_BBNB_s <- nimbleFunction(
 
     trueN <- rnbinom(1, size = r, prob = p)
     ans <- rBetaBinom(n = 1, N = trueN,
-                      alpha = rep(alpha, len), beta = rep(beta, len))
+                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
 
     return(ans)
     returnType(double(1))
@@ -1574,7 +1195,7 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom_One(n = 1, N = trueN, alpha = alpha, beta = beta)
+    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
     return(ans)
     returnType(double())
   })

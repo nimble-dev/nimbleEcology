@@ -611,7 +611,7 @@ test_that("dNmixture_BBP_v works",
             correctProbX <- 0
             for (N in Nmin:Nmax) {
               correctProbX <- correctProbX + dpois(N, lambda) *
-                prod(dBetaBinom(x, N, alpha = alpha, beta = beta))
+                prod(dBetaBinom(x, N, shape1 = alpha, shape2 = beta))
             }
 
             expect_equal(probX, correctProbX)
@@ -732,7 +732,7 @@ test_that("dNmixture_BBP_s works",
             for (N in Nmin:Nmax) {
               correctProbX <- correctProbX + dpois(N, lambda) *
                 prod(dBetaBinom(x, N,
-                                alpha = rep(alpha, len), beta = rep(beta, len)))
+                                shape1 = rep(alpha, len), shape2 = rep(beta, len)))
             }
 
             expect_equal(probX, correctProbX)
@@ -978,7 +978,7 @@ test_that("dNmixture_BBNB_v works",
             correctProbX <- 0
             for (N in Nmin:Nmax) {
               correctProbX <- correctProbX + dnbinom(N, size = r, prob = pNB) *
-                prod(dBetaBinom(x, N, alpha = alpha, beta = beta))
+                prod(dBetaBinom(x, N, shape1 = alpha, shape2 = beta))
             }
 
             expect_equal(probX, correctProbX)
@@ -1101,7 +1101,7 @@ test_that("dNmixture_BBNB_s works",
             correctProbX <- 0
             for (N in Nmin:Nmax) {
               correctProbX <- correctProbX + dnbinom(N, size = r, prob = pNB) *
-                prod(dBetaBinom(x, N, alpha = rep(alpha, len), beta = rep(beta, len)))
+                prod(dBetaBinom(x, N, shape1 = rep(alpha, len), shape2 = rep(beta, len)))
             }
 
             expect_equal(probX, correctProbX)
@@ -1212,7 +1212,7 @@ test_that("dNmixture_BBNB_oneObs works",
             prob <- c(0.5)
             Nmin <- max(x)
             Nmax <- 250
-            len <- 5
+            len <- 1
 
             probX <- dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len)
 

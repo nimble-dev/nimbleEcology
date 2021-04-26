@@ -1,31 +1,27 @@
 # dBetaBinom
-#' A beta binomial distribution and its helper functions for use in N-mixture
-#' extensions
+#' A beta binomial distribution and beta function for use in \code{nimble} models
 #'
 #' \code{dBetaBinom} and \code{dBetaBinom_One} provide a beta binomial
-#' distribution nimbleFunction. \code{B} is the beta function. These were written
-#' to support the dNmixture beta binomial variations.
+#' distribution that can be used directly from R or in \code{nimble}
+#' models. These are also used by beta binomial variations of dNmixture distributions.
+#' \code{nimBetaFun} is the beta function.
 #'
 #' @name dBetaBinom
 #' @aliases B dBetaBinom dBetaBinom_One rBetaBinom rBetaBinom_One
 #'
-#' @author Ben Goldstein, Lauren Ponisio, and Perry de Valpine
+#' @author Ben Goldstein and Perry de Valpine
 #'
 #' @param x vector of integer counts.
 #' @param N number of trials, sometimes called "size".
-#' @param alpha the first non-negative parameter of the beta distribution for
-#'   the binomial probability.
-#' @param beta the second non-negative parameter of the beta distribution for
-#'   the binomial probability.
+#' @param shape1 shape1 parameter of the beta-binomial distribution.
+#' @param shape2 shape2 parameter of the beta-binomial distribution.
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return
 #'   probability.
 #' @param n number of random draws, each returning a vector of length
 #'   \code{len}. Currently only \code{n = 1} is supported, but the argument
 #'   exists for standardization of "\code{r}" functions.
-#' @param a First non-negative parameter of the beta distribution (called shape1
-#'   in base-R)
-#' @param b Second non-negative parameter of the beta distribution (called
-#'   shape2 in base-R)
+#' @param a shape1 argument of the beta function.
+#' @param b shape2 argument of the beta function.
 #'
 #' @details These nimbleFunctions provide distributions that can be
 #'     used directly in R or in \code{nimble} hierarchical models (via
@@ -37,8 +33,8 @@
 #' probability is itself a beta distributed random variable.
 #'
 #' The probability mass function of the beta binomial is
-#' \code{choose(N, x) * B(x + alpha, N - x + beta) /
-#' B(alpha, beta)}.
+#' \code{choose(N, x) * B(x + shape1, N - x + shape2) /
+#' B(shape1, shape2)}, where \code{B(shape1, shape2)} is the beta function.
 #'
 #' The beta binomial distribution is provided in two forms. \code{dBetaBinom} and
 #' \code{rBetaBinom} are used when \code{x} is a vector (i.e. \code{length(x) > 1}),
@@ -57,7 +53,7 @@ nimbleOptions(checkNimbleFunction = FALSE)
 ##### Beta binomial support functions #####
 #' @rdname dBetaBinom
 #' @export
-B <- nimbleFunction(
+nimBetaFun <- nimbleFunction(
   run = function(a = double(0),
                  b = double(0),
                  log = logical(0)) {
@@ -71,15 +67,15 @@ B <- nimbleFunction(
 dBetaBinom <- nimbleFunction(
   run = function(x = double(1),
                  N = double(0),
-                 alpha = double(1),
-                 beta = double(1),
+                 shape1 = double(1),
+                 shape2 = double(1),
                  log = integer(0, default = 0)) {
     logprob <- 0
     for (i in 1:length(x)) {
       logprob <- logprob +
-        B(a = x[i] + alpha[i], b = N - x[i] + beta[i], log = TRUE) -
-        B(a = alpha[i], b = beta[ i], log = TRUE) +
-        lfactorial(N) - (lfactorial(x[i]) + lfactorial(N - x[i]))
+        nimBetaFun(a = x[i] + shape1[i], b = N - x[i] + shape2[i], log = TRUE) -
+        nimBetaFun(a = shape1[i], b = shape2[ i], log = TRUE) +
+        lgamma(N+1) - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
     }
 
     if (log) return(logprob)
@@ -93,14 +89,14 @@ dBetaBinom <- nimbleFunction(
 dBetaBinom_One <- nimbleFunction(
   run = function(x = double(0),
                  N = double(0),
-                 alpha = double(0),
-                 beta = double(0),
+                 shape1 = double(0),
+                 shape2 = double(0),
                  log = integer(0, default = 0)) {
     logprob <- 0
     logprob <- logprob +
-      B(a = x + alpha, b = N - x + beta, log = TRUE) -
-      B(a = alpha, b = beta, log = TRUE) +
-      lfactorial(N) - (lfactorial(x) + lfactorial(N - x))
+      nimBetaFun(a = x + shape1, b = N - x + shape2, log = TRUE) -
+      nimBetaFun(a = shape1, b = shape2, log = TRUE) +
+      lgamma(N+1) - (lgamma(x+1) + lgamma(N - x + 1))
 
     if (log) return(logprob)
     return(exp(logprob))
@@ -114,14 +110,13 @@ dBetaBinom_One <- nimbleFunction(
 rBetaBinom <- nimbleFunction(
   run = function(n = double(0),
                  N = double(0),
-                 alpha = double(1),
-                 beta = double(1)) {
-    p <- numeric(length(alpha))
-    for (i in 1:length(alpha)) {
-      p[i] <- rbeta(1, alpha[i], beta[i])
+                 shape1 = double(1),
+                 shape2 = double(1)) {
+    p <- numeric(length(shape1))
+    for (i in 1:length(shape1)) {
+      p[i] <- rbeta(1, shape1[i], shape2[i])
     }
-
-    x <- rbinom(length(alpha), N, p)
+    x <- rbinom(length(shape1), N, p)
     return(x)
     returnType(double(1))
   })
@@ -131,10 +126,9 @@ rBetaBinom <- nimbleFunction(
 rBetaBinom_One <- nimbleFunction(
   run = function(n = double(0),
                  N = double(0),
-                 alpha = double(0),
-                 beta = double(0)) {
-
-    p <- rbeta(1, alpha, beta)
+                 shape1 = double(0),
+                 shape2 = double(0)) {
+    p <- rbeta(1, shape1, shape2)
     x <- rbinom(1, N, p)
     return(x)
     returnType(double())
