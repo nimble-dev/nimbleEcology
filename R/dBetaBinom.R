@@ -7,7 +7,7 @@
 #' \code{nimBetaFun} is the beta function.
 #'
 #' @name dBetaBinom
-#' @aliases B dBetaBinom dBetaBinom_One rBetaBinom rBetaBinom_One
+#' @aliases nimBetaFun dBetaBinom dBetaBinom_One rBetaBinom rBetaBinom_One
 #'
 #' @author Ben Goldstein and Perry de Valpine
 #'
@@ -20,8 +20,8 @@
 #' @param n number of random draws, each returning a vector of length
 #'   \code{len}. Currently only \code{n = 1} is supported, but the argument
 #'   exists for standardization of "\code{r}" functions.
-#' @param a shape1 argument of the beta function.
-#' @param b shape2 argument of the beta function.
+#' @param a shape1 argument of the beta function nimBetaFun.
+#' @param b shape2 argument of the beta function nimBetaFun.
 #'
 #' @details These nimbleFunctions provide distributions that can be
 #'     used directly in R or in \code{nimble} hierarchical models (via

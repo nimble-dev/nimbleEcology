@@ -110,12 +110,12 @@ argument exists for standardization of "\code{r}" functions.}
 
 \item{theta}{abundance overdispersion parameter required for negative binomial
 (*NB) N-mixture models. theta is parameterized such that variance of
-the negative binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
-s) / (s + 1)}}
+the negative binomial variable x is \code{lambda^2 * theta + lambda}}
 
 \item{s}{detection overdispersion parameter required for beta binomial (BB*)
 N-mixture models. s is parameterized such that variance of the beta
-binomial variable x is  \code{lambda^2 * theta + lambda}}
+binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
+s) / (s + 1)}}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
@@ -134,16 +134,20 @@ These nimbleFunctions provide distributions that can be
 
 An N-mixture model defines a distribution for multiple counts (typically of
 animals, typically made at a sequence of visits to the same site).  The
-latent number of animals available to be counted, N, follows a Poisson
-distribution with mean \code{lambda}. Each count, \code{x[i]} for visit
-\code{i}, #' follows a binomial distribution with size (number of trials) N
-and probability of success (being counted) \code{prob[i]}.
+latent number of animals available to be counted, N, follows a Poisson or
+negative binomial distribution. Each count, \code{x[i]} for visit \code{i},
+follows a binomial or beta-binomial distribution. The N-mixture distributions
+calculate the marginal probability of observed counts by summing over the
+range of latent abundance values.
 
-The traditional N-mixture is available in two forms, \code{dNmixture_s} and
-\code{dNmixture_v}. With \code{dNmixture_s}, detection probability is a
-scalar, independent of visit, so \code{prob[i]} should be replaced with
-\code{prob} above.  With \code{dNmixture_v}, detection probability is a
-vector, with one element for each visit, as written above.
+The basic N-mixture model uses Poisson latent abundance with mean
+\code{lambda} and binomial observed counts  with size (number of trials) N
+and probability of success (being counted) \code{prob[i]}. This distribution
+is available in two forms, \code{dNmixture_s} and \code{dNmixture_v}. With
+\code{dNmixture_s}, detection probability is a scalar, independent of visit,
+so \code{prob[i]} should be replaced with \code{prob} above.  With
+\code{dNmixture_v}, detection probability is a vector, with one element for
+each visit, as written above.
 
 We also provide three important variations on the traditional N-mixture
 model: \code{dNmixture_BNB}, \code{dNmixture_BBP}, and \code{dNmixture_BBNB}.
@@ -151,37 +155,37 @@ These distributions allow you to replace the Poisson (P) abundance
 distribution with the negative binomial (NB) and the binomial (B) detection
 distribution with the beta binomial (BB).
 
-\strong{NOTE: These three variations are considered to be in development.
+\strong{NOTE: These variants should work but are considered to be in development.
 Their function names, parameter names, and implementations are subject to
 change. Use with caution while this message is present. Please contact the
 authors on the nimble-users listserv if you have any questions. dNmixture_v
 and dNmixture_s are \emph{not} considered to be in development.}
 
-First, BNB N-mixture models use a binomial distribution for detection and a
-negative binomial distribution for abundance with scaler overdispersion
-parameter \code{theta} (0-Inf). We parameterize such that the variance of the
-negative binomial is \code{lambda^2 * theta + lambda}, so large \code{theta}
-indicates a large amount of overdisperison in abundance. The BNB is available
-in three suffixed forms: \code{dNmixture_BNB_v} is used if \code{prob} varies
-between observations, \code{dNmixture_BNB_s} is used if \code{prob} is scalar
-(constant across observations), and \code{dNmixture_BNB_oneObs} is used if
-only one observation is available at the site (so both x and prob are
-scalar).
+Binomial-negative binomial: BNB N-mixture models use a binomial distribution
+for detection and a negative binomial distribution for abundance with scalar
+overdispersion parameter \code{theta} (0-Inf). We parameterize such that the
+variance of the negative binomial is \code{lambda^2 * theta + lambda}, so
+large \code{theta} indicates a large amount of overdisperison in abundance.
+The BNB is available in three suffixed forms: \code{dNmixture_BNB_v} is used
+if \code{prob} varies between observations, \code{dNmixture_BNB_s} is used if
+\code{prob} is scalar (constant across observations), and
+\code{dNmixture_BNB_oneObs} is used if only one observation is available at
+the site (so both x and prob are scalar).
 
-Second, the BBP N-mixture uses a beta binomial distribution for detection
-probabilities and a Poisson distribution for abundance. The beta binomial
-distribution has overdispersion parameter s (0-Inf). We parameterize such
-that the variance of the beta binomial is \code{N \* prob \* (1-prob) \* (N +
-s) / (s + 1)}, with greater s indicating less variance (greater-than-binomial
-relatedness between observations at the site) and s -> 0 indicating the
-binomial. The BBP is available in three suffixed forms:
+Beta-binomial-Poisson: BBP N-mixture uses a beta binomial distribution for
+detection probabilities and a Poisson distribution for abundance. The beta
+binomial distribution has scalar overdispersion parameter s (0-Inf). We
+parameterize such that the variance of the beta binomial is \code{N \* prob
+\* (1-prob) \* (N + s) / (s + 1)}, with greater s indicating less variance
+(greater-than-binomial relatedness between observations at the site) and s ->
+0 indicating the binomial. The BBP is available in three suffixed forms:
 \code{dNmixture_BBP_v} is used if \code{prob} varies between observations,
 \code{dNmixture_BBP_s} is used if \code{prob} is scalar (constant across
 observations), and \code{dNmixture_BBP_oneObs} is used if only one
 observation is available at the site (so both x and prob are scalar).
 
-Third, the variation dNmixture_BBNB is available using a negative binomial
-abundance distribuion and a beta binomial detection distribution.
+Beta-binomial-negative-binomial: dNmixture_BBNB is available using a negative
+binomial abundance distribution and a beta binomial detection distribution.
 \code{dNmixture_BBNB} is available with \code{_s}, \code{_v}, and
 \code{_oneObs} suffixes as above and requires both arguments \code{s} and
 \code{theta} as parameterized above.
