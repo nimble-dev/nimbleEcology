@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/nimble-dev/nimbleEcology.svg?branch=master)](https://travis-ci.org/nimble-dev/nimbleEcology)
+[![Build Status](https://github.com/nimble-dev/nimbleEcology/actions/workflows/check.yaml/badge.svg)](https://github.com/nimble-dev/nimbleEcology/actions)
 
 # Distributions for Ecological Models in 'nimble'
 
