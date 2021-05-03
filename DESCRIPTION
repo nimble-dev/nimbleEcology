@@ -1,7 +1,7 @@
 Package: nimbleEcology
 Type: Package
 Title: Distributions for Ecological Models in 'nimble'
-Version: 0.3.2
+Version: 0.4.0
 Maintainer: Benjamin R. Goldstein <ben.goldstein@berkeley.edu>
 Authors@R: c(person("Benjamin R.", "Goldstein", role = c("aut", "cre"),
                      email = "ben.goldstein@berkeley.edu"),
@@ -20,6 +20,8 @@ VignetteBuilder: knitr
 LazyData: true
 URL: https://github.com/nimble-dev/nimbleEcology
 Collate:
+  utils.R
+  dBetaBinom.R
   dCJS.R
   dDynOcc.R
   dDHMM.R

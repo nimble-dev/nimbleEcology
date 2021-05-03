@@ -4,4 +4,6 @@
 \.travis\.yml
 \.RDataTmp
 run_tests\.R
+build_install_windows\.R
 ^\.travis\.yml$
+\.github$

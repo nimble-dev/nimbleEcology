@@ -8,75 +8,72 @@
 #' @author Perry de Valpine, Daniel Turek, and Ben Goldstein
 #' @export
 #'
-#' @param x vector of observations, each one a positive integer
-#'   corresponding to an observation state (one value of which could
-#'   can correspond to "not observed", and another value of which can
-#'   correspond to "dead" or "removed from system").
+#' @param x vector of observations, each one a positive integer corresponding to
+#'   an observation state (one value of which could can correspond to "not
+#'   observed", and another value of which can correspond to "dead" or "removed
+#'   from system").
 #' @param init vector of initial state probabilities. Must sum to 1
-#' @param probObs time-independent matrix (\code{dDHMM} and
-#'   \code{rDHMM}) or time-dependent 3D array (\code{dDHMMo} and
-#'   \code{rDHMMo}) of observation probabilities.  First two
-#'   dimensions of \code{probObs} are of size x (number of possible
-#'   system states) x (number of possible observation
-#'   classes). \code{dDHMMo} and \code{rDHMMo} expect an additional
-#'   third dimension of size (number of observation times). probObs[i,
-#'   j (,t)] is the probability that an individual in the ith latent
-#'   state is recorded as being in the jth detection state (at time
-#'   t). See Details for more information.
+#' @param probObs time-independent matrix (\code{dDHMM} and \code{rDHMM}) or
+#'   time-dependent 3D array (\code{dDHMMo} and \code{rDHMMo}) of observation
+#'   probabilities.  First two dimensions of \code{probObs} are of size x
+#'   (number of possible system states) x (number of possible observation
+#'   classes). \code{dDHMMo} and \code{rDHMMo} expect an additional third
+#'   dimension of size (number of observation times). probObs[i, j (,t)] is the
+#'   probability that an individual in the ith latent state is recorded as being
+#'   in the jth detection state (at time t). See Details for more information.
 #' @param probTrans time-dependent array of system state transition
-#'   probabilities. Dimension of \code{probTrans} is (number of
-#'   possible system states) x (number of possible system states) x
-#'   (number of observation times). probTrans[i,j,t] is the
-#'   probability that an individual truly in state i at time t will be
-#'   in state j at time t+1.  See Details for more information.
+#'   probabilities. Dimension of \code{probTrans} is (number of possible system
+#'   states) x (number of possible system states) x (number of observation
+#'   times). probTrans[i,j,t] is the probability that an individual truly in
+#'   state i at time t will be in state j at time t+1.  See Details for more
+#'   information.
 #' @param len length of observations (needed for rDHMM)
-#' @param checkRowSums should validity of \code{probObs} and
-#'   \code{probTrans} be checked?  Both of these are required to have
-#'   each set of probabilities sum to 1 (over each row, or second
-#'   dimension). If \code{checkRowSums} is non-zero (or \code{TRUE}),
-#'   these conditions will be checked within a tolerance of 1e-6.  If
-#'   it is 0 (or \code{FALSE}), they will not be checked. Not checking
-#'   should result in faster execution, but whether that is appreciable
-#'   will be case-specific.
-#' @param log \code{TRUE} or 1 to return log probability. \code{FALSE}
-#'   or 0 to return probability
+#' @param checkRowSums should validity of \code{probObs} and \code{probTrans} be
+#'   checked?  Both of these are required to have each set of probabilities sum
+#'   to 1 (over each row, or second dimension). If \code{checkRowSums} is
+#'   non-zero (or \code{TRUE}), these conditions will be checked within a
+#'   tolerance of 1e-6.  If it is 0 (or \code{FALSE}), they will not be checked.
+#'   Not checking should result in faster execution, but whether that is
+#'   appreciable will be case-specific.
+#' @param log \code{TRUE} or 1 to return log probability. \code{FALSE} or 0 to
+#'   return probability
 #' @param n number of random draws, each returning a vector of length
-#'   \code{len}. Currently only \code{n = 1} is supported, but the
-#'   argument exists for standardization of "\code{r}" functions
+#'   \code{len}. Currently only \code{n = 1} is supported, but the argument
+#'   exists for standardization of "\code{r}" functions
 #'
-#' @details
-#' These nimbleFunctions provide distributions that can be used directly in R or
-#' in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}}
-#' and \code{\link[nimble]{nimbleModel}}).
+#' @details These nimbleFunctions provide distributions that can be used
+#' directly in R or in \code{nimble} hierarchical models (via
+#' \code{\link[nimble]{nimbleCode}} and \code{\link[nimble]{nimbleModel}}).
 #'
-#' The probability (or likelihood) of observation \code{x[t, o]} depends on
-#' the previous true latent state, the time-dependent probability of
-#' transitioning to a new state \code{probTrans}, and the probability of
-#' observation states given the true latent state \code{probObs}.
+#' The probability (or likelihood) of observation \code{x[t, o]} depends on the
+#' previous true latent state, the time-dependent probability of transitioning
+#' to a new state \code{probTrans}, and the probability of observation states
+#' given the true latent state \code{probObs}.
 #'
 #' The distribution has two forms, \code{dDHMM} and \code{dDHMMo}. \code{dDHMM}
-#' takes a time-independent observation probability matrix with dimension
-#' S x O, while \code{dDHMMo} expects a three-dimensional array of time-dependent
+#' takes a time-independent observation probability matrix with dimension S x O,
+#' while \code{dDHMMo} expects a three-dimensional array of time-dependent
 #' observation probabilities with dimension S x O x T, where O is the number of
 #' possible occupancy states, S is the number of true latent states, and T is
 #' the number of time intervals.
 #'
 #' \code{probTrans} has dimension S x S x (T - 1). \code{probTrans}[i, j, t] is
-#' the probability that an individual in state \code{i} at time \code{t} takes on
-#' state \code{j} at time \code{t+1}. The length of the third dimension may be greater
-#' than (T - 1) but all values indexed greater than T - 1 will be ignored.
+#' the probability that an individual in state \code{i} at time \code{t} takes
+#' on state \code{j} at time \code{t+1}. The length of the third dimension may
+#' be greater than (T - 1) but all values indexed greater than T - 1 will be
+#' ignored.
 #'
-#' \code{init} has length S. \code{init[i]} is the
-#' probability of being in state \code{i} at the first observation time.
+#' \code{init} has length S. \code{init[i]} is the probability of being in state
+#' \code{i} at the first observation time. That means that the first
+#' observations arise from the initial state probabilities.
 #'
 #' For more explanation, see package vignette
 #' (\code{vignette("Introduction_to_nimbleEcology")}).
 #'
 #' Compared to writing \code{nimble} models with a discrete true latent state
-#' and a separate scalar datum for each observation, use
-#' of these distributions allows one to directly sum (marginalize) over the
-#' discrete latent state and calculate the probability of all observations from
-#' one site jointly.
+#' and a separate scalar datum for each observation, use of these distributions
+#' allows one to directly sum (marginalize) over the discrete latent state and
+#' calculate the probability of all observations from one site jointly.
 #'
 #' These are \code{nimbleFunction}s written in the format of user-defined
 #' distributions for NIMBLE's extension of the BUGS model language. More
@@ -89,36 +86,32 @@
 #'
 #' For example, in a NIMBLE model,
 #'
-#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S],
-#' observationProbs[1:S, 1:O],
-#' transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
+#' \code{observedStates[1:T] ~ dDHMM(initStates[1:S], observationProbs[1:S,
+#' 1:O], transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 #'
 #' declares that the \code{observedStates[1:T]} vector follows a dynamic hidden
 #' Markov model distribution with parameters as indicated, assuming all the
 #' parameters have been declared elsewhere in the model. In this case, \code{S}
 #' is the number of system states, \code{O} is the number of observation
-#' classes, and \code{T} is the number of observation occasions.This
-#' will invoke (something like) the following call to \code{dDHMM} when
-#' \code{nimble} uses the model such as for MCMC:
+#' classes, and \code{T} is the number of observation occasions.This will invoke
+#' (something like) the following call to \code{dDHMM} when \code{nimble} uses
+#' the model such as for MCMC:
 #'
-#' \code{rDHMM(observedStates[1:T], initStates[1:S],
-#' observationProbs[1:S, 1:O],
+#' \code{rDHMM(observedStates[1:T], initStates[1:S], observationProbs[1:S, 1:O],
 #' transitionProbs[1:S, 1:S, 1:(T-1)], 1, T, log = TRUE)}
 #'
-#' If an algorithm using a \code{nimble} model with this declaration
-#' needs to generate a random draw for \code{observedStates[1:T]}, it
-#' will make a similar invocation of \code{rDHMM}, with \code{n = 1}.
+#' If an algorithm using a \code{nimble} model with this declaration needs to
+#' generate a random draw for \code{observedStates[1:T]}, it will make a similar
+#' invocation of \code{rDHMM}, with \code{n = 1}.
 #'
 #' If the observation probabilities are time-dependent, one would use:
 #'
-#' \code{observedStates[1:T] ~
-#' dDHMMo(initStates[1:S], observationProbs[1:S, 1:O, 1:T],
-#' transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
+#' \code{observedStates[1:T] ~ dDHMMo(initStates[1:S], observationProbs[1:S,
+#' 1:O, 1:T], transitionProbs[1:S, 1:S, 1:(T-1)], 1, T)}
 #'
-#' @return
-#' For \code{dDHMM} and \code{dDHMMo}: the probability (or likelihood) or log
-#' probability of observation vector \code{x}.
-#' For \code{rDHMM} and \code{rDHMMo}: a simulated detection history, \code{x}.
+#' @return For \code{dDHMM} and \code{dDHMMo}: the probability (or likelihood)
+#' or log probability of observation vector \code{x}. For \code{rDHMM} and
+#' \code{rDHMMo}: a simulated detection history, \code{x}.
 
 #' @seealso For hidden Markov models with time-independent transitions,
 #' see \link{dHMM} and \link{dHMMo}.
@@ -185,7 +178,7 @@ dDHMM <- nimbleFunction(
     if (length(init) != dim(probTrans)[2]) stop("In dDHMM: Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (length(x) != len) stop("In dDHMM: Length of x does not match len in dDHMM.")
     if (len - 1 != dim(probTrans)[3]) stop("In dDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    if (sum(init) != 1) stop("In dDHMM: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dDHMM: Initial probabilities must sum to 1.")
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
@@ -249,7 +242,7 @@ dDHMMo <- nimbleFunction(
     if (length(x) != len) stop("In dDHMMo: Length of x does not match len in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("In dDHMMo: dim(probTrans)[3] does not match len - 1 in dDHMMo.")
     if (len != dim(probObs)[3]) stop("In dDHMMo: dim(probObs)[3] does not match len in dDHMMo.")
-    if (sum(init) != 1) stop("In dDHMMo: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In dDHMMo: Initial probabilities must sum to 1.")
 
     if (checkRowSums) {
       transCheckPasses <- TRUE
@@ -313,7 +306,7 @@ rDHMM <- nimbleFunction(
     if (nStates != dim(probTrans)[1]) stop("In rDHMM: Length of init does not match dim(probTrans)[1] in dDHMM.")
     if (nStates != dim(probTrans)[2]) stop("In rDHMM: Length of init does not match dim(probTrans)[2] in dDHMM.")
     if (len - 1 > dim(probTrans)[3]) stop("In rDHMM: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-    if (sum(init) != 1) stop("In rDHMM: Initial probabilities must sum to 1.")
+    if (abs(sum(init) - 1) > 1e-6) stop("In rDHMM: Initial probabilities must sum to 1.")
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
@@ -392,7 +385,7 @@ rDHMMo <- nimbleFunction(
   if (nStates != dim(probTrans)[1]) stop("In rDHMMo: Length of init does not match dim(probTrans)[1] in dDHMM.")
   if (nStates != dim(probTrans)[2]) stop("In rDHMMo: Length of init does not match dim(probTrans)[2] in dDHMM.")
   if (len - 1 > dim(probTrans)[3]) stop("In rDHMMo: len - 1 does not match dim(probTrans)[3] in dDHMM.")
-  if (sum(init) != 1) stop("In rDHMMo: Initial probabilities must sum to 1.")
+  if (abs(sum(init) - 1) > 1e-6) stop("In rDHMMo: Initial probabilities must sum to 1.")
   if (checkRowSums) {
     transCheckPasses <- TRUE
     for (i in 1:dim(probTrans)[1]) {

@@ -6,6 +6,24 @@
 \alias{dNmixture_v}
 \alias{rNmixture_s}
 \alias{rNmixture_v}
+\alias{dNmixture_BNB_v}
+\alias{dNmixture_BNB_s}
+\alias{dNmixture_BNB_oneObs}
+\alias{dNmixture_BBP_v}
+\alias{dNmixture_BBP_s}
+\alias{dNmixture_BBP_oneObs}
+\alias{dNmixture_BBNB_v}
+\alias{dNmixture_BBNB_s}
+\alias{rNmixture_BBNB_oneObs}
+\alias{rNmixture_BNB_v}
+\alias{rNmixture_BNB_s}
+\alias{rNmixture_BNB_oneObs}
+\alias{rNmixture_BBP_v}
+\alias{rNmixture_BBP_s}
+\alias{rNmixture_BBP_oneObs}
+\alias{rNmixture_BBNB_v}
+\alias{rNmixture_BBNB_s}
+\alias{dNmixture_BBNB_oneObs}
 \title{N-mixture distribution for use in \code{nimble} models}
 \usage{
 dNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
@@ -15,6 +33,61 @@ dNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
 rNmixture_v(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 
 rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
+
+dNmixture_BNB_v(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BNB_s(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BNB_oneObs(
+  x,
+  lambda,
+  theta,
+  prob,
+  Nmin = -1,
+  Nmax = -1,
+  len,
+  log = 0
+)
+
+dNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
+
+dNmixture_BBNB_oneObs(
+  x,
+  lambda,
+  theta,
+  prob,
+  s,
+  Nmin = -1,
+  Nmax = -1,
+  len,
+  log = 0
+)
+
+rNmixture_BNB_v(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BNB_s(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BNB_oneObs(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_v(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_s(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBP_oneObs(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_v(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_s(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+
+rNmixture_BBNB_oneObs(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
 }
 \arguments{
 \item{x}{vector of integer counts from a series of sampling occasions.}
@@ -23,9 +96,13 @@ rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 
 \item{prob}{detection probability (scalar for \code{dNmixture_s}, vector for \code{dNmixture_v}).}
 
-\item{Nmin}{minimum abundance to sum over for the mixture probability. Set to -1 to select automatically.}
+\item{Nmin}{minimum abundance to sum over for the mixture probability. Set to
+-1 to select automatically (not available for beta binomial variations; see
+Details).}
 
-\item{Nmax}{maximum abundance to sum over for the mixture probability. Set to -1 to select automatically.}
+\item{Nmax}{maximum abundance to sum over for the mixture probability. Set to
+-1 to select automatically (not available for beta binomial variations; see
+Details).}
 
 \item{len}{The length of the x vector}
 
@@ -34,6 +111,15 @@ rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the
 argument exists for standardization of "\code{r}" functions.}
+
+\item{theta}{abundance overdispersion parameter required for negative binomial
+(*NB) N-mixture models. theta is parameterized such that variance of
+the negative binomial variable x is \code{lambda^2 * theta + lambda}}
+
+\item{s}{detection overdispersion parameter required for beta binomial (BB*)
+N-mixture models. s is parameterized such that variance of the beta
+binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
+s) / (s + 1)}}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
@@ -42,7 +128,7 @@ probability of observation vector \code{x}.
 For \code{rNmixture_s} and \code{rNmixture_v}: a simulated detection history, \code{x}.
 }
 \description{
-\code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble}a models.
+\code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble} models. Overdispersion alternatives are also provided.
 }
 \details{
 These nimbleFunctions provide distributions that can be
@@ -50,49 +136,94 @@ These nimbleFunctions provide distributions that can be
     \code{\link[nimble]{nimbleCode}} and
     \code{\link[nimble]{nimbleModel}}).
 
-An N-mixture model defines a distribution for multiple counts
-(typically of animals, typically made at a sequence of visits to
-the same site).  The latent number of animals available to be
-counted, N, follows a Poisson distribution with mean \code{lambda}.
-Each count, \code{x[i]} for visit \code{i}, #' follows a binomial
-distribution with size (number of trials) N and probability of
-success (being counted) \code{prob[i]}.
+An N-mixture model defines a distribution for multiple counts (typically of
+animals, typically made at a sequence of visits to the same site).  The
+latent number of animals available to be counted, N, follows a Poisson or
+negative binomial distribution. Each count, \code{x[i]} for visit \code{i},
+follows a binomial or beta-binomial distribution. The N-mixture distributions
+calculate the marginal probability of observed counts by summing over the
+range of latent abundance values.
 
-The distribution has two forms, \code{dNmixture_s} and
-\code{dNmixture_v}. With \code{dNmixture_s}, detection probability
-is a scalar, independent of visit, so \code{prob[i]} should be
-replaced with \code{prob} above.  With \code{dNmixture_v},
-detection probability is a vector, with one element for each visit,
-as written above.
+The basic N-mixture model uses Poisson latent abundance with mean
+\code{lambda} and binomial observed counts  with size (number of trials) N
+and probability of success (being counted) \code{prob[i]}. This distribution
+is available in two forms, \code{dNmixture_s} and \code{dNmixture_v}. With
+\code{dNmixture_s}, detection probability is a scalar, independent of visit,
+so \code{prob[i]} should be replaced with \code{prob} above.  With
+\code{dNmixture_v}, detection probability is a vector, with one element for
+each visit, as written above.
+
+We also provide three important variations on the traditional N-mixture
+model: \code{dNmixture_BNB}, \code{dNmixture_BBP}, and \code{dNmixture_BBNB}.
+These distributions allow you to replace the Poisson (P) abundance
+distribution with the negative binomial (NB) and the binomial (B) detection
+distribution with the beta binomial (BB).
+
+\strong{NOTE: These variants should work but are considered to be in development.
+Their function names, parameter names, and implementations are subject to
+change. Use with caution while this message is present. Please contact the
+authors on the nimble-users listserv if you have any questions. dNmixture_v
+and dNmixture_s are \emph{not} considered to be in development.}
+
+Binomial-negative binomial: BNB N-mixture models use a binomial distribution
+for detection and a negative binomial distribution for abundance with scalar
+overdispersion parameter \code{theta} (0-Inf). We parameterize such that the
+variance of the negative binomial is \code{lambda^2 * theta + lambda}, so
+large \code{theta} indicates a large amount of overdisperison in abundance.
+The BNB is available in three suffixed forms: \code{dNmixture_BNB_v} is used
+if \code{prob} varies between observations, \code{dNmixture_BNB_s} is used if
+\code{prob} is scalar (constant across observations), and
+\code{dNmixture_BNB_oneObs} is used if only one observation is available at
+the site (so both x and prob are scalar).
+
+Beta-binomial-Poisson: BBP N-mixture uses a beta binomial distribution for
+detection probabilities and a Poisson distribution for abundance. The beta
+binomial distribution has scalar overdispersion parameter s (0-Inf). We
+parameterize such that the variance of the beta binomial is \code{N \* prob
+\* (1-prob) \* (N + s) / (s + 1)}, with greater s indicating less variance
+(greater-than-binomial relatedness between observations at the site) and s ->
+0 indicating the binomial. The BBP is available in three suffixed forms:
+\code{dNmixture_BBP_v} is used if \code{prob} varies between observations,
+\code{dNmixture_BBP_s} is used if \code{prob} is scalar (constant across
+observations), and \code{dNmixture_BBP_oneObs} is used if only one
+observation is available at the site (so both x and prob are scalar).
+
+Beta-binomial-negative-binomial: dNmixture_BBNB is available using a negative
+binomial abundance distribution and a beta binomial detection distribution.
+\code{dNmixture_BBNB} is available with \code{_s}, \code{_v}, and
+\code{_oneObs} suffixes as above and requires both arguments \code{s} and
+\code{theta} as parameterized above.
+
+The distribution dNmixture_oneObs is not provided as the probability given
+by the traditional N-mixture distribution for \code{length(x) = 1} is
+equivalent to \code{dpois(prob * lambda)}.
 
 For more explanation, see package vignette
 (\code{vignette("Introduction_to_nimbleEcology")}).
 
-Compared to writing \code{nimble} models with a discrete latent
-state of abundance N and a separate scalar datum for each count,
-use of these distributions allows one to directly sum (marginalize)
-over the discrete latent state N and calculate the probability of
-all observations for a site jointly.
+Compared to writing \code{nimble} models with a discrete latent state of
+abundance N and a separate scalar datum for each count, use of these
+distributions allows one to directly sum (marginalize) over the discrete
+latent state N and calculate the probability of all observations for a site
+jointly.
 
-If one knows a reasonable range for summation over possible values
-of N, the start and end of the range can be provided as \code{Nmin}
-and \code{Nmax}.  Otherwise one can set both to -1, in which case
-values for \code{Nmin} and \code{Nmax} will be chosen based on the
-0.0001 and 0.9999 quantiles of the marginal distributions of each
-count, using the minimum over counts of the former and the maximum
-over counts of the latter.
+If one knows a reasonable range for summation over possible values of N, the
+start and end of the range can be provided as \code{Nmin} and \code{Nmax}.
+Otherwise one can set both to -1, in which case values for \code{Nmin} and
+\code{Nmax} will be chosen based on the 0.0001 and 0.9999 quantiles of the
+marginal distributions of each count, using the minimum over counts of the
+former and the maximum over counts of the latter.
 
-The summation over N uses the efficient method given by Meehan et
-al. (2017).
+The summation over N uses the efficient method given by Meehan et al. (2017).
 
-These are \code{nimbleFunction}s written in the format of
-user-defined distributions for NIMBLE's extension of the BUGS model
-language. More information can be found in the NIMBLE User Manual
-at \href{https://r-nimble.org}{https://r-nimble.org}.
+These are \code{nimbleFunction}s written in the format of user-defined
+distributions for NIMBLE's extension of the BUGS model language. More
+information can be found in the NIMBLE User Manual at
+\href{https://r-nimble.org}{https://r-nimble.org}.
 
-When using these distributions in a \code{nimble} model, the
-left-hand side will be used as \code{x}, and the user should not
-provide the \code{log} argument.
+When using these distributions in a \code{nimble} model, the left-hand side
+will be used as \code{x}, and the user should not provide the \code{log}
+argument.
 
 For example, in \code{nimble} model code,
 
