@@ -23,13 +23,22 @@ test_that("dNmixture_v works",
           for (N in Nmin:Nmax) {
             correctProbX <- correctProbX + dpois(N, lambda) * prod(dbinom(x, N, prob))
           }
-
           expect_equal(probX, correctProbX)
 
       # Uncompiled log probability
           lProbX <- dNmixture_v(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
+
+      # Dynamic Nmin / Nmax
+          dynProbX <- dNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len)
+          dNmin <- 0; dNmax <- 21
+          dynCorrectProbX <- 0
+          for (N in dNmin:dNmax) {
+            dynCorrectProbX <- dynCorrectProbX + dpois(N, lambda) * prod(dbinom(x, N, prob))
+          }
+          expect_equal(dynProbX, dynCorrectProbX)
+
 
       # Compilation and compiled calculations
           CdNmixture_v <- compileNimble(dNmixture_v)
@@ -38,6 +47,9 @@ test_that("dNmixture_v works",
 
           ClProbX <- CdNmixture_v(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           expect_equal(ClProbX, lProbX)
+
+          CdynProbX <- CdNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len)
+          expect_equal(CdynProbX, dynCorrectProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
@@ -143,6 +155,15 @@ test_that("dNmixture_s works",
           lCorrectProbX <- log(correctProbX)
           expect_equal(lProbX, lCorrectProbX)
 
+      # Dynamic Nmin / Nmax
+          dynProbX <- dNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len)
+          dNmin <- 0; dNmax <- 20
+          dynCorrectProbX <- 0
+          for (N in dNmin:dNmax) {
+            dynCorrectProbX <- dynCorrectProbX + dpois(N, lambda) * prod(dbinom(x, N, prob))
+          }
+          expect_equal(dynProbX, dynCorrectProbX)
+
       # Compilation and compiled calculations
           CdNmixture_s <- compileNimble(dNmixture_s)
           CprobX <- CdNmixture_s(x, lambda, prob, Nmin, Nmax, len)
@@ -150,6 +171,9 @@ test_that("dNmixture_s works",
 
           ClProbX <- CdNmixture_s(x, lambda, prob, Nmin, Nmax, len, log = TRUE)
           expect_equal(ClProbX, lProbX)
+
+          CdynProbX <- CdNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len)
+          expect_equal(CdynProbX, dynCorrectProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
@@ -261,6 +285,17 @@ test_that("dNmixture_BNB_v works",
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
+            # Dynamic Nmin/Nmax
+            dynProbX <- dNmixture_BNB_v(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+            dNmin <- 0; dNmax <- 59
+            dynCorrectProbX <- 0
+            for (N in dNmin:dNmax) {
+              dynCorrectProbX <- dynCorrectProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(x, N, prob))
+            }
+            expect_equal(dynProbX, dynCorrectProbX)
+
+
             # Compilation and compiled calculations
             CdNmixture_BNB_v <- compileNimble(dNmixture_BNB_v)
             CprobX <- CdNmixture_BNB_v(x, lambda, theta, prob, Nmin, Nmax, len)
@@ -268,6 +303,10 @@ test_that("dNmixture_BNB_v works",
 
             ClProbX <- CdNmixture_BNB_v(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            CdynProbX <- CdNmixture_BNB_v(x, lambda, theta, prob, Nmin = -1,
+                                          Nmax = -1, len)
+            expect_equal(CdynProbX, dynCorrectProbX)
 
             # Use in Nimble model
             nc <- nimbleCode({
@@ -381,6 +420,16 @@ test_that("dNmixture_BNB_s works",
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
+            # Dynamic Nmin/Nmax
+            dynProbX <- dNmixture_BNB_s(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+            dNmin <- 0; dNmax <- 59
+            dynCorrectProbX <- 0
+            for (N in dNmin:dNmax) {
+              dynCorrectProbX <- dynCorrectProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(x, N, prob))
+            }
+            expect_equal(dynProbX, dynCorrectProbX)
+
             # Compilation and compiled calculations
             CdNmixture_BNB_s <- compileNimble(dNmixture_BNB_s)
             CprobX <- CdNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len)
@@ -388,6 +437,10 @@ test_that("dNmixture_BNB_s works",
 
             ClProbX <- CdNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            CdynProbX <- CdNmixture_BNB_s(x, lambda, theta, prob, Nmin = -1,
+                                          Nmax = -1, len)
+            expect_equal(CdynProbX, dynCorrectProbX)
 
             # Use in Nimble model
             nc <- nimbleCode({
@@ -422,7 +475,6 @@ test_that("dNmixture_BNB_s works",
                                             prob = prob),
                                constants = list(Nmin = Nmin, Nmax = Nmax,
                                                 len = len))
-
 
             mNAConf <- configureMCMC(mNA)
             mNAConf$addMonitors('x')
@@ -500,6 +552,20 @@ test_that("dNmixture_BNB_oneObs works",
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
+            # Dynamic Nmin/Nmax
+            dynProbX <- dNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+            dNmin <- 1; dNmax <- 17
+            dynCorrectProbX <- 0
+            for (N in dNmin:dNmax) {
+              dynCorrectProbX <- dynCorrectProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(x, N, prob))
+            }
+            expect_equal(dynProbX, dynCorrectProbX)
+
+            CdynProbX <- dNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin = -1,
+                                              Nmax = -1, len)
+            expect_equal(CdynProbX, dynCorrectProbX)
+
             # Compilation and compiled calculations
             CdNmixture_BNB_oneObs <- compileNimble(dNmixture_BNB_oneObs)
             CprobX <- CdNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len)
@@ -507,6 +573,10 @@ test_that("dNmixture_BNB_oneObs works",
 
             ClProbX <- CdNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            CdynProbX <- CdNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+            expect_equal(CdynProbX, dynCorrectProbX)
+
 
             # Use in Nimble model
             nc <- nimbleCode({
@@ -621,6 +691,8 @@ test_that("dNmixture_BBP_v works",
             lCorrectProbX <- log(correctProbX)
             expect_equal(lProbX, lCorrectProbX)
 
+
+
             # Compilation and compiled calculations
             CdNmixture_BBP_v <- compileNimble(dNmixture_BBP_v)
             CprobX <- CdNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax, len)
@@ -628,6 +700,27 @@ test_that("dNmixture_BBP_v works",
 
             ClProbX <- CdNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              dNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
+
 
             # Use in Nimble model
             nc <- nimbleCode({
@@ -750,6 +843,28 @@ test_that("dNmixture_BBP_s works",
             ClProbX <- CdNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
+
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              dNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_s(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
+
+
             # Use in Nimble model
             nc <- nimbleCode({
               x[1:5] ~ dNmixture_BBP_s(lambda = lambda, prob = prob,
@@ -869,6 +984,26 @@ test_that("dNmixture_BBP_oneObs works",
 
             ClProbX <- CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              dNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBP_oneObs(x, lambda, prob, s, Nmin, Nmax = -1, len)
+            })
 
             # Use in Nimble model
             nc <- nimbleCode({
@@ -996,6 +1131,26 @@ test_that("dNmixture_BBNB_v works",
             ClProbX <- CdNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_v(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
+
             # Use in Nimble model
             nc <- nimbleCode({
               x[1:5] ~ dNmixture_BBNB_v(lambda = lambda, prob = prob[1:5],
@@ -1119,6 +1274,25 @@ test_that("dNmixture_BBNB_s works",
             ClProbX <- CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_s(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
             # Use in Nimble model
             nc <- nimbleCode({
               x[1:5] ~ dNmixture_BBNB_s(lambda = lambda, prob = prob,
@@ -1241,6 +1415,26 @@ test_that("dNmixture_BBNB_oneObs works",
 
             ClProbX <- CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
             expect_equal(ClProbX, lProbX)
+
+            # Dynamic Nmin / Nmax isn't allowed
+            expect_error({
+              dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              dNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax = -1, len)
+            })
+            expect_error({
+              CdNmixture_BBNB_oneObs(x, lambda, theta, prob, s, Nmin = -1, Nmax, len)
+            })
 
             # Use in Nimble model
             nc <- nimbleCode({

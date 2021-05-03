@@ -96,9 +96,13 @@ rNmixture_BBNB_oneObs(n, lambda, theta, prob, s, Nmin = -1, Nmax = -1, len)
 
 \item{prob}{detection probability (scalar for \code{dNmixture_s}, vector for \code{dNmixture_v}).}
 
-\item{Nmin}{minimum abundance to sum over for the mixture probability. Set to -1 to select automatically.}
+\item{Nmin}{minimum abundance to sum over for the mixture probability. Set to
+-1 to select automatically (not available for beta binomial variations; see
+Details).}
 
-\item{Nmax}{maximum abundance to sum over for the mixture probability. Set to -1 to select automatically.}
+\item{Nmax}{maximum abundance to sum over for the mixture probability. Set to
+-1 to select automatically (not available for beta binomial variations; see
+Details).}
 
 \item{len}{The length of the x vector}
 

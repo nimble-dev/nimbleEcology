@@ -23,8 +23,12 @@
 #'        N-mixture models. s is parameterized such that variance of the beta
 #'        binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
 #'        s) / (s + 1)}
-#' @param Nmin minimum abundance to sum over for the mixture probability. Set to -1 to select automatically.
-#' @param Nmax maximum abundance to sum over for the mixture probability. Set to -1 to select automatically.
+#' @param Nmin minimum abundance to sum over for the mixture probability. Set to
+#'   -1 to select automatically (not available for beta binomial variations; see
+#'   Details).
+#' @param Nmax maximum abundance to sum over for the mixture probability. Set to
+#'   -1 to select automatically (not available for beta binomial variations; see
+#'   Details).
 #' @param len The length of the x vector
 #' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
 #' @param n number of random draws, each returning a vector of length
@@ -376,14 +380,23 @@ dNmixture_BNB_v <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## For each x, the conditional distribution of (N - x | x) is
+    ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
+    ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
+    ## omega = (1 - p) * (theta * lambda / (1 + theta * lambda))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    theta_cond <- theta / (1 + x * theta)
+    omega <- (1 - prob) * (theta * lambda / (1 + theta * lambda))
+    lambda_cond <- omega / (theta_cond * (1 - omega))
+    r_cond <- 1 / theta_cond
+    pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
     if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
     }
     if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
     }
+
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
     logProb <- -Inf
@@ -435,13 +448,21 @@ dNmixture_BNB_s <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## For each x, the conditional distribution of (N - x | x) is
+    ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
+    ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
+    ## omega = (1 - p) * (theta * lambda / (1 + theta * lambda))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    theta_cond <- theta / (1 + x * theta)
+    omega <- (1 - prob) * (theta * lambda / (1 + theta * lambda))
+    lambda_cond <- omega / (theta_cond * (1 - omega))
+    r_cond <- 1 / theta_cond
+    pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
     if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
     }
     if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
@@ -492,13 +513,21 @@ dNmixture_BNB_oneObs <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
+    ## For each x, the conditional distribution of (N - x | x) is
+    ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
+    ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
+    ## omega = (1 - p) * (theta * lambda / (1 + theta * lambda))
     ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    theta_cond <- theta / (1 + x * theta)
+    omega <- (1 - prob) * (theta * lambda / (1 + theta * lambda))
+    lambda_cond <- omega / (theta_cond * (1 - omega))
+    r_cond <- 1 / theta_cond
+    pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
     if (Nmin == -1) {
-      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
+      Nmin <- x + qnbinom(0.00001, size = r_cond, prob = pNB_cond)
     }
     if (Nmax == -1) {
-      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+      Nmax <- x + qnbinom(0.99999, size = r_cond, prob = pNB_cond)
     }
     Nmin <- max(c(x, Nmin)) ## set Nmin to at least the largest x
 
@@ -552,13 +581,10 @@ dNmixture_BBP_v <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
@@ -614,13 +640,10 @@ dNmixture_BBP_s <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
@@ -674,13 +697,10 @@ dNmixture_BBP_oneObs <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
-    }
-    if (Nmax == -1) {
-      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- x
 
@@ -746,13 +766,10 @@ dNmixture_BBNB_v <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
@@ -817,13 +834,10 @@ dNmixture_BBNB_s <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
 
@@ -887,13 +901,10 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
       else return(0)
     }
 
-    ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    if (Nmin == -1) {
-      Nmin <- x + qpois(0.00001, lambda * (1 - prob))
-    }
-    if (Nmax == -1) {
-      Nmax <- x + qpois(0.99999, lambda * (1 - prob))
+    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
+    ## x) doesn't have a nice closed-form expression.
+    if (Nmin == -1 | Nmax == -1) {
+      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     if (Nmin < x) Nmin <- x
 
