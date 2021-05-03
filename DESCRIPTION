@@ -17,7 +17,6 @@ Copyright: Copyright (c) 2019, Perry de Valpine, Ben Goldstein, Daniel Turek, La
 Depends: R (>= 3.4.0), nimble
 Encoding: UTF-8
 VignetteBuilder: knitr
-LazyData: true
 URL: https://github.com/nimble-dev/nimbleEcology
 Collate:
   utils.R
