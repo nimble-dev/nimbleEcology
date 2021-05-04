@@ -2,13 +2,9 @@
 title: "Introduction to nimbleEcology"
 author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-description: >
-  An overview of functioning in nimbleEcology.
-vignette: >
-  %\VignetteIndexEntry{Introduction to nimbleEcology}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+output: rmarkdown::html_document
+description: An overview of functioning in nimbleEcology.
+# output_file: Introduction_to_nimbleEcology.html
 ---
 
 ```{r setup, include = FALSE}
@@ -186,12 +182,12 @@ The results of the two versions match closely.
 
 {
 plot(density(as.data.frame(samples)$psi), col = "red", main = "psi")
-points(density(as.data.frame(samples_new)$psi), col = "blue", type = "l", add = TRUE)
+points(density(as.data.frame(samples_new)$psi), col = "blue", type = "l")
 }
 
 {
 plot(density(as.data.frame(samples)$p), col = "red", main = "p")
-points(density(as.data.frame(samples_new)$p), col = "blue", type = "l", add = TRUE)
+points(density(as.data.frame(samples_new)$p), col = "blue", type = "l")
 }
 
 ```
@@ -447,7 +443,7 @@ P(\mathbf{y} | \lambda, \mathbf{p}) = \sum_{N = 1}^\infty \left[ P(N | \lambda)
 \]
 where $P(N | \lambda)$ is a Poisson probability and $P(y_t | N)$ is a binomial probability.  That is, $y_t \sim \mbox{Binomial}(N, p_t)$, and the $y_t$s are independent.
 
-In practice, the summation over $N$ can start at a value greater than 0 and must be truncated at some value $\lt \infty$.  Two options are provided for the range of summation:
+In practice, the summation over $N$ can start at a value greater than 0 and must be truncated at some value less than infinity. Two options are provided for the range of summation:
 
 1. Start the summation at the largest value of $y_t$ (there must be at least this many individuals) and truncate it at a value of $maxN$ provided by the user.
 2. The following heuristic can be used.
@@ -458,7 +454,11 @@ Correspondingly, the summation can begin at smallest of the 0.00001 quantiles of
 
 ### N-mixture models in `nimbleEcology`
 
+<<<<<<< HEAD
 Standard (binomial-Poisson) N-mixture models are available in two distributions in `nimbleEcology`. They differ in whether probability of detection is visit-dependent (vector case, corresponding to `dNmixture_v`) or visit-independent (scalar, `dNmixture_s`).
+=======
+Traditional N-mixture models are available in two distributions in `nimbleEcology`. They differ in whether probability of detection is visit-dependent (vector case, corresponding to `dNmixture_v`) or visit-independent (scalar, `dNmixture_s`).
+>>>>>>> 5263fcf4629288b332de7669569704a67031cd0d
 
 An example is:
 
@@ -471,6 +471,7 @@ An example is:
 - `minN` and `maxN` provide the lower and upper bounds for the sum over Ns (option 1 above). If both are set to `-1`, bounds are chosen dynamically using quantiles of the Poisson distribution (option 2 above).
 
 Three variations of the N-mixture model are also available, in which the Poisson distribution is substituted for a negative binomial, the binomial is substituted for a beta binomial, or both are substituted. These are called `dNmixture_BNB_*`, `dNmixture_BBP_*`, and `dNmixture_BBNB_*`. Each has three suffixes: `_v` and `_s` correspond to the cases provided above, and `_oneObs` distributions are provided for the case where the data are scalar (i.e., only one observation at the site). No `_oneObs` observation is provided for the default `dNmixture` because `dNmixture(x[1:1], lambda, prob[1:1])` is equivalent to `dpois(x[1:1], lambda * prob[1:1])`.
+<<<<<<< HEAD
 
 These combinations lead to the following set of 11 N-mixture distributions:
 
@@ -486,4 +487,6 @@ These combinations lead to the following set of 11 N-mixture distributions:
 - `dNmixture_BBNB_s`
 - `dNmixture_BBNB_oneObs`
 
+=======
+>>>>>>> 5263fcf4629288b332de7669569704a67031cd0d
 
