@@ -7,3 +7,4 @@ run_tests\.R
 build_install_windows\.R
 ^\.travis\.yml$
 \.github$
+vignettes/Introduction_to_nimbleEcology\.Rmd
