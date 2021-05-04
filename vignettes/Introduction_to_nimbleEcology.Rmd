@@ -2,9 +2,13 @@
 title: "Introduction to nimbleEcology"
 author: "Perry de Valpine and Ben Goldstein"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_document
-description: An overview of functioning in nimbleEcology.
-# output_file: Introduction_to_nimbleEcology.html
+output: rmarkdown::html_vignette
+description: >
+  An overview of functioning in nimbleEcology.
+vignette: >
+  %\VignetteIndexEntry{Introduction to nimbleEcology}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include = FALSE}
