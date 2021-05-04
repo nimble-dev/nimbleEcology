@@ -458,7 +458,7 @@ Correspondingly, the summation can begin at smallest of the 0.00001 quantiles of
 
 ### N-mixture models in `nimbleEcology`
 
-N-mixture models are available in two distributions in `nimbleEcology`. They differ in whether probability of detection is visit-dependent (vector case, corresponding to `dNmixture_v`) or visit-independent (scalar, `dNmixture_s`).
+Standard (binomial-Poisson) N-mixture models are available in two distributions in `nimbleEcology`. They differ in whether probability of detection is visit-dependent (vector case, corresponding to `dNmixture_v`) or visit-independent (scalar, `dNmixture_s`).
 
 An example is:
 
@@ -470,5 +470,20 @@ An example is:
 - `len` is $T$.
 - `minN` and `maxN` provide the lower and upper bounds for the sum over Ns (option 1 above). If both are set to `-1`, bounds are chosen dynamically using quantiles of the Poisson distribution (option 2 above).
 
+Three variations of the N-mixture model are also available, in which the Poisson distribution is substituted for a negative binomial, the binomial is substituted for a beta binomial, or both are substituted. These are called `dNmixture_BNB_*`, `dNmixture_BBP_*`, and `dNmixture_BBNB_*`. Each has three suffixes: `_v` and `_s` correspond to the cases provided above, and `_oneObs` distributions are provided for the case where the data are scalar (i.e., only one observation at the site). No `_oneObs` observation is provided for the default `dNmixture` because `dNmixture(x[1:1], lambda, prob[1:1])` is equivalent to `dpois(x[1:1], lambda * prob[1:1])`.
+
+These combinations lead to the following set of 11 N-mixture distributions:
+
+- `dNmixture_v`
+- `dNmixture_s`
+- `dNmixture_BNB_v`
+- `dNmixture_BNB_s`
+- `dNmixture_BNB_oneObs`
+- `dNmixture_BBP_v`
+- `dNmixture_BBP_s`
+- `dNmixture_BBP_oneObs`
+- `dNmixture_BBNB_v`
+- `dNmixture_BBNB_s`
+- `dNmixture_BBNB_oneObs`
 
 
