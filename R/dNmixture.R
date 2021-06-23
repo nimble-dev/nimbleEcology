@@ -208,7 +208,7 @@
 #' nmix$calculate()
 #' # Use the model for a variety of other purposes...
 
-nimbleOptions(checkNimbleFunction = FALSE)
+# nimbleOptions(checkNimbleFunction = FALSE)
 
 ##### Regular N-mixture #####
 NULL
@@ -1163,4 +1163,4 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     returnType(double())
   })
 
-nimbleOptions(checkNimbleFunction = TRUE)
+# nimbleOptions(checkNimbleFunction = TRUE)

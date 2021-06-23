@@ -54,7 +54,7 @@
 #' @export
 
 NULL
-nimbleOptions(checkNimbleFunction = FALSE)
+# nimbleOptions(checkNimbleFunction = FALSE)
 
 ##### Beta binomial support functions #####
 #' @rdname dBetaBinom
@@ -140,5 +140,5 @@ rBetaBinom_One <- nimbleFunction(
     returnType(double())
   })
 
-nimbleOptions(checkNimbleFunction = TRUE)
+# nimbleOptions(checkNimbleFunction = TRUE)
 
