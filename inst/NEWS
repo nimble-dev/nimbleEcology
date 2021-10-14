@@ -1,5 +1,10 @@
 Release notes for each version of nimbleEcologyy
 
+
+0.4.1
+-- Fix a bug in dBetaBinom and dBetaBinom_One distribution registration that prevented
+those from being used directly in a model (but did not cause silent errors)
+
 0.4.0
 -- Implement N-mixture extensions for the beta binomial and negative binomial
 submodel variations.

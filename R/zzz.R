@@ -490,13 +490,13 @@
 
   registerDistributions(list(
     dBetaBinom = list(
-      BUGSdist = "dBetaBinom(lambda, theta, prob, s, Nmin, Nmax, len)",
-      Rdist = "dBetaBinom(lambda, theta, prob, s, Nmin, Nmax, len)",
+      BUGSdist = "dBetaBinom(N, shape1, shape2)",
+      Rdist = "dBetaBinom(N, shape1, shape2)",
       discrete = TRUE,
       types = c('value = double(1)',
                 'N = double()',
-                'alpha = double(1)',
-                'beta = double(1)',
+                'shape1 = double(1)',
+                'shape2 = double(1)',
                 'log = double()'
       ),
       mixedSizes = FALSE,
@@ -506,13 +506,13 @@
 
   registerDistributions(list(
     dBetaBinom_One = list(
-      BUGSdist = "dBetaBinom_One(lambda, theta, prob, s, Nmin, Nmax, len)",
-      Rdist = "dBetaBinom_One(lambda, theta, prob, s, Nmin, Nmax, len)",
+      BUGSdist = "dBetaBinom_One(N, shape1, shape2)",
+      Rdist = "dBetaBinom_One(N, shape1, shape2)",
       discrete = TRUE,
       types = c('value = double()',
                 'N = double()',
-                'alpha = double()',
-                'beta = double()',
+                'shape1 = double()',
+                'shape2 = double()',
                 'log = double()'
       ),
       mixedSizes = FALSE,
