@@ -118,7 +118,8 @@
 #' marginal distributions of each count, using the minimum over counts of the
 #' former and the maximum over counts of the latter.
 #'
-#' The summation over N uses the efficient method given by Meehan et al. (2017).
+#' The summation over N uses the efficient method given by Meehan et al. (2020).
+#' See Appendix B for the algorithm.
 #'
 #' These are \code{nimbleFunction}s written in the format of user-defined
 #' distributions for NIMBLE's extension of the BUGS model language. More
@@ -176,8 +177,9 @@
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and
 #' Ecological Statistics 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
-#' T. Meehan, N. Michel and H. Rue. 2017. Estimating animal abundance with N-mixture
-#' models using the R-INLA package for R. arXiv. arXiv:1705.01581
+#' Meehan, T. D., Michel, N. L., & Rue, H. (2020). Estimating Animal Abundance
+#' with N-Mixture Models Using the R—INLA Package for R. Journal of Statistical
+#' Software, 95(2). https://doi.org/10.18637/jss.v095.i02
 #'
 #'
 #' @examples
