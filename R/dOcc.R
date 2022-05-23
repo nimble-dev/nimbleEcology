@@ -130,7 +130,7 @@ dOcc_s <- nimbleFunction(
     prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
     if (log) return(log(prob_x))
     return(prob_x)
-  }, enableDerivs = TRUE
+  }, buildDerivs = TRUE
 )
 
 #' @export
@@ -149,7 +149,7 @@ dOcc_v <- nimbleFunction(
     prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
     if (log) return(log(prob_x))
     return(prob_x)
-  }, enableDerivs = TRUE
+  }, buildDerivs = TRUE
 )
 
 #' @export

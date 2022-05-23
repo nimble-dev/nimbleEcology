@@ -175,7 +175,7 @@ dCJS_ss <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS
@@ -222,7 +222,7 @@ dCJS_sv <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 
@@ -271,7 +271,7 @@ dCJS_vs <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 
@@ -326,7 +326,7 @@ dCJS_vv <- nimbleFunction(
     }
     return(exp(logProbData))
     returnType(double())
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', "xt", "t")))
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS

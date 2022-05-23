@@ -231,7 +231,7 @@ dHMM <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', 't', 'xt', 'thisCheckSum')))
+  }, buildDerivs = list(run = list(ignore = c('i', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export
@@ -310,7 +310,7 @@ dHMMo <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('i', 'k', 't', 'xt', 'thisCheckSum')))
+  }, buildDerivs = list(run = list(ignore = c('i', 'k', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export

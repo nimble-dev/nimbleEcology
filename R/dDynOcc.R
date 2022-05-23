@@ -230,7 +230,7 @@ dDynOcc_vvm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -287,7 +287,7 @@ dDynOcc_vsm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -343,7 +343,7 @@ dDynOcc_svm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -400,7 +400,7 @@ dDynOcc_ssm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -569,7 +569,7 @@ dDynOcc_vvv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -625,7 +625,7 @@ dDynOcc_vsv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -680,7 +680,7 @@ dDynOcc_svv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -736,7 +736,7 @@ dDynOcc_ssv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 
@@ -907,7 +907,7 @@ dDynOcc_vvs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -962,7 +962,7 @@ dDynOcc_vss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -1016,7 +1016,7 @@ dDynOcc_svs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -1069,7 +1069,7 @@ dDynOcc_sss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }, enableDerivs = list(run = list(noDeriv_vars = c('t', 'istart', 'iend')))
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
