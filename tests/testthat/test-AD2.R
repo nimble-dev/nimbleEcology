@@ -87,7 +87,7 @@ model_calculate_test_case(Rmodel, Cmodel,
 ##########################
 #### dNmixture_s case ####
 
-x <- c(10, 3, 4, 9, 11)
+x <- c(7, 7, 6, 9, 10)
 lambda <- 15
 prob <- 0.7
 
@@ -108,6 +108,7 @@ Rmodel <- nimbleModel(nc, data = list(x = x),
 Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
 
 nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
 v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
@@ -279,12 +280,12 @@ probObs <- t(array(
          c(2, 3)))
 
 probTrans <- t(array(
-          c(0.6, 0.3, 0.1,
-            0, 0.7, 0.3,
+          c(0.3, 0.4, 0.2,
+            0, 0.2, 0.8,
             0, 0, 1),
           c(3,3)))
 
-init2 <- c(0.3, 0.1, 0.5)
+init2 <- c(0.6, 0.1, 0.3)
 probObs2 <- t(array(
          c(0.9, 0.1,
            0.1, 0.9,
@@ -292,7 +293,7 @@ probObs2 <- t(array(
          c(2, 3)))
 
 probTrans2 <- t(array(
-          c(0.5, 0.4, 0.1,
+          c(0.4, 0.4, 0.2,
             0, 0.3, 0.7,
             0, 0, 1),
           c(3,3)))
@@ -300,8 +301,12 @@ probTrans2 <- t(array(
 nc <- nimbleCode({
   x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
                   probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
-  for (i in 1:3) {
+  for (i in 1:2) {
     init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
     probObs[i, 1] ~ dunif(0, 1)
     probObs[i, 2] <- 1 - probObs[i, 1]
     probTrans[i, 1] ~ dunif(0, 1)
@@ -322,11 +327,14 @@ Rmodel$calculate()
 Cmodel <- compileNimble(Rmodel)
 Cmodel$calculate()
 
-nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
-                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
-                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3]')))
-v1_case1 <- list(arg1 = c(init, probTrans, probObs)) # taping values for prob and lambda
-v2_case1 <- list(arg1 = c(init2, probTrans2, probObs2)) # testing values for prob and lambda
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]')#,
+                                                                       # Rmodel$expandNodeNames('probObs[1:3, 1]')#,
+                                                                       # Rmodel$expandNodeNames('probTrans[1:3, 1:2]'
+                                                                                              ))#)
+# v1_case1 <- list(arg1 = c(init[1:2], probTrans[1:3, 1], probObs[1:3, 1:2])) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(init2[1:2], probTrans2[1:3, 1], probObs2[1:3, 1:2])) # testing values for prob and lambda
+v1_case1 <- list(arg1 = c(init[1:3]))
+v2_case1 <- list(arg1 = c(init2[1:3]))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
@@ -343,6 +351,9 @@ nimbleOptions(buildModelDerivs = BMDopt)
 
 
 #### Notes:
-#' dNmixture appears not to work
-#' in dCJS_*v variations, I had to only do derivs for probCapture[2:n] since element 1 is
-#'     ignored in the likelihood. Works fine when I do this, but I want to flag this
+#' dNmixture appears not to work. When the function is first defined I get the following message:
+#'     [Note] Detected use of function(s) that are not supported for derivative tracking in a function or method for which buildDerivs has been requested: qpois.
+#' in dCJS_*v variations, I had to manually specify to only do derivs for probCapture[2:n] since element probCapture[1] is
+#'     ignored in the likelihood. Works fine with this change
+#' hit issues with dHMM. I can't get this function to work. I believe the issue
+#'     stems from parameters probObs and probTrans--seems to work fine for just init[1:3].
