@@ -1,5 +1,21 @@
 Release notes for each version of nimbleEcologyy
 
+
+0.4.1
+-- Fix a bug in dBetaBinom and dBetaBinom_One distribution registration that prevented
+those from being used directly in a model (but did not cause silent errors)
+
+0.4.0
+-- Implement N-mixture extensions for the beta binomial and negative binomial
+submodel variations.
+-- Allow a tolerance of 1e-6 in the sums of the "init" probabilities in dHMM and
+dDHMM. This addresses inconsistencies in R/C++ floating point numbers which led
+to a phenomenon where sum(init) == 1 in R but sum(init) != 1 in C++.
+
+0.3.1
+-- Fixed rounding errors in edge cases of dNmixture with many observations.
+Thanks to NIMBLE developer Chris Paciorek for the algorithm.
+
 0.3.0
 
 -- Fixed an internal problem with dHMM and dDHMM resulting in a mismatch between documentation and internal behavior
