@@ -1,867 +1,888 @@
-context("Test that functions work when AD is enabled.")
+# Testing examples:
 
-oldDerivOption <- nimbleOptions("experimentalEnableDerivs")
-nimbleOptions(experimentalEnableDerivs = TRUE)
+# install nimble from branch ADoak: devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
+# install nimbleEcology from branch AD_0.3: devtools::install_github("nimble-dev/nimbleEcology", ref = "AD_0.3")
 
-nfm <- nimbleFunction(
-  setup = function(model, wrt, nodes) {},
-  run = function(x = double(1),
-                 order = double(1),
-                 reset = logical(0, default=FALSE)) {
-    values(model, wrt) <<- x
-    ans <- nimDerivs(model$calculate(nodes), wrt = wrt,
-                     order = order, reset = reset)
-    return(ans)
-    returnType(ADNimbleList())
+# load nimble's testing tools
+library(nimble)
+library(nimbleEcology)
+# source(system.file(file.path('tests', 'testthat', 'test_utils.R'), package = 'nimble'))
+# source(system.file(file.path('tests', 'testthat', 'AD_test_utils.R'), package = 'nimble'))
+source("../nimble/packages/nimble/tests/testthat/test_utils.R")
+source("../nimble/packages/nimble/tests/testthat/AD_test_utils.R")
+
+EDopt <- nimbleOptions("enableDerivs")
+BMDopt <- nimbleOptions("buildModelDerivs")
+nimbleOptions(enableDerivs = TRUE)
+nimbleOptions(buildModelDerivs = TRUE)
+nimbleOptions(allowDynamicIndexing = FALSE)
+
+#####################
+#### dOcc_s case ####
+
+dat <- c(1,1,0,0) # A vector of observations
+probOcc <- 0.6
+probDetect <- 0.4
+
+nc <- nimbleCode({
+  x[1:4] ~ dOcc_s(probOcc, probDetect, len = 4)
+  probOcc ~ dunif(0,1)
+  probDetect ~ dunif(0,1)
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = dat),
+                         inits = list(probOcc = probOcc,
+                                      probDetect = probDetect),
+                      buildDerivs=TRUE)
+
+Cmodel <- compileNimble(Rmodel)
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('probOcc', 'probDetect'))
+v1_case1 <- list(arg1 = c(0.6, 0.4)) # taping values for probOcc and probDetect
+v2_case1 <- list(arg1 = c(0.65, 0.35)) # testing values for probOcc and probDetect
+RCrelTol = c(1e-15, 1e-8, 1e-3, 1e-14)
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2) # lots of output numbers with no warning messages means it passes.
+
+#####################
+#### dOcc_v case ####
+
+x <- c(1,0,1,1,0)
+probOcc <- 0.4
+probDetect <- c(0.7, 0.3, 0.5, 0.7, 0.25)
+
+probOcc2 <- 0.5
+probDetect2 <- c(0.77, 0.39, 0.52, 0.78, 0.32)
+
+
+nc <- nimbleCode({
+  x[1:5] ~ dOcc_v(probOcc, probDetect[1:5], len = 5)
+  for (i in 1:5) {
+    probDetect[i] ~ dunif(0,1)
   }
-)
-
-########################## Test dCJS ############################
-
-test_that("dCJS works with AD", {
-
-# Test code with dCJS_sv
-  cjs_code <- nimbleCode({
-    logit(pSurv) <- pSurv_int
-    for (i in 1:10) {
-      logit(pCap[i]) <- pCap_int + beta_pCap * (i - 5.5)
-
-      x[i, 1:ntime] ~ dCJS_sv(probSurvive = pSurv,
-                              probCapture = pCap[1:ntime],
-                              len = ntime)
-    }
-  })
-  cjs_model <- nimbleModel(cjs_code,
-                           constants = list(
-                             ntime = 10
-                           ), inits = list(
-                             beta_pCap = 0.05, pCap_int = 0, pSurv_int = 2
-                           ))
-  cjs_model$simulate("x")
-  cjs_wrt <- cjs_model$expandNodeNames(c("beta_pCap", "pCap_int", "pSurv_int"))
-  cjs_nodes <- cjs_model$getDependencies(cjs_wrt)
-  cjs_nfm <- nfm(model = cjs_model,
-                 wrt = cjs_wrt,
-                 nodes = cjs_nodes)
-  Ccjs_model <- compileNimble(cjs_model)
-  Ccjs_nfm <- compileNimble(cjs_nfm)
-  cjs_sv_result <- Ccjs_nfm$run(x = values(cjs_model, cjs_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(cjs_sv_result$hessian)))
-
-# Test code with dCJS_vs
-  cjs_code <- nimbleCode({
-    logit(pCap) <- pCap_int
-    for (i in 1:9) logit(pSurv[i]) <- pSurv_int + beta_pSurv * (i - 5.5)
-    for (i in 1:10) {
-
-      x[i, 1:ntime] ~ dCJS_vs(probSurvive = pSurv[1:(ntime - 1)],
-                              probCapture = pCap,
-                              len = ntime)
-    }
-  })
-  cjs_model <- nimbleModel(cjs_code,
-                           constants = list(
-                             ntime = 10
-                           ), inits = list(
-                             beta_pSurv = 0.05, pCap_int = 0, pSurv_int = 2
-                           ))
-  cjs_model$simulate("x")
-  cjs_wrt <- cjs_model$expandNodeNames(c("beta_pSurv", "pCap_int", "pSurv_int"))
-  cjs_nodes <- cjs_model$getDependencies(cjs_wrt)
-  cjs_nfm <- nfm(model = cjs_model,
-                 wrt = cjs_wrt,
-                 nodes = cjs_nodes)
-  Ccjs_model <- compileNimble(cjs_model)
-  Ccjs_nfm <- compileNimble(cjs_nfm)
-  cjs_sv_result <- Ccjs_nfm$run(x = values(cjs_model, cjs_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(cjs_sv_result$hessian)))
-
-# Test code with dCJS_vv
-  cjs_code <- nimbleCode({
-    for (i in 1:9) logit(pSurv[i]) <- pSurv_int + beta_pSurv * (i - 5.5)
-    for (i in 1:10) {
-      logit(pCap[i]) <- pCap_int + beta_pCap * (i - 5.5)
-
-      x[i, 1:ntime] ~ dCJS_vv(probSurvive = pSurv[1:(ntime - 1)],
-                              probCapture = pCap[1:ntime],
-                              len = ntime)
-    }
-  })
-  cjs_model <- nimbleModel(cjs_code,
-                           constants = list(
-                             ntime = 10
-                           ), inits = list(
-                             beta_pSurv = 0.05, beta_pCap = 0.1, pCap_int = 0, pSurv_int = 2
-                           ))
-  cjs_model$simulate("x")
-  cjs_wrt <- cjs_model$expandNodeNames(c("beta_pSurv", "pCap_int", "pSurv_int", "beta_pCap"))
-  cjs_nodes <- cjs_model$getDependencies(cjs_wrt)
-  cjs_nfm <- nfm(model = cjs_model,
-                 wrt = cjs_wrt,
-                 nodes = cjs_nodes)
-  Ccjs_model <- compileNimble(cjs_model)
-  Ccjs_nfm <- compileNimble(cjs_nfm)
-  cjs_sv_result <- Ccjs_nfm$run(x = values(cjs_model, cjs_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(cjs_sv_result$hessian)))
-
-# Test code with dCJS_ss
-  cjs_code <- nimbleCode({
-    logit(pSurv) <- pSurv_int
-    logit(pCap) <- pCap_int
-    for (i in 1:10) {
-      x[i, 1:ntime] ~ dCJS_ss(probSurvive = pSurv,
-                              probCapture = pCap,
-                              len = ntime)
-    }
-  })
-  cjs_model <- nimbleModel(cjs_code,
-                           constants = list(
-                             ntime = 10
-                           ), inits = list(
-                             pCap_int = 0, pSurv_int = 2
-                           ))
-  cjs_model$simulate("x")
-  cjs_wrt <- cjs_model$expandNodeNames(c("pCap_int", "pSurv_int"))
-  cjs_nodes <- cjs_model$getDependencies(cjs_wrt)
-  cjs_nfm <- nfm(model = cjs_model,
-                 wrt = cjs_wrt,
-                 nodes = cjs_nodes)
-  Ccjs_model <- compileNimble(cjs_model)
-  Ccjs_nfm <- compileNimble(cjs_nfm)
-  cjs_sv_result <- Ccjs_nfm$run(x = values(cjs_model, cjs_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(cjs_sv_result$hessian)))
+  probOcc ~ dunif(0,1)
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(probOcc = probOcc,
+                              probDetect = probDetect),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
 
-########################## Test dOcc ############################
-test_that("dOcc works with AD", {
+Cmodel <- compileNimble(Rmodel)
 
-# Test dOcc_v
-  occ_code <- nimbleCode({
-    for (i in 1:nsite) {
-      logit(psi[i]) <- inprod(psi_beta[1:3], occu_cov[i, 1:3])
-      for (j in 1:nvisit) {
-        logit(p[i,j]) <- inprod(p_beta[1:3], detect_cov[i, j, 1:3])
-      }
-      y[i, 1:nvisit] ~ dOcc_v(probOcc = psi[i],
-                              probDetect = p[i, 1:nvisit],
-                              len = nvisit)
-    }
-  })
-  nsite <- 30
-  nvisit <- 3
-  detect_cov <- array(rnorm(nsite * nvisit * 3),
-                      dim = c(nsite, nvisit, 3))
-  detect_cov[,,1] <- 1
-  occu_cov <- matrix(data = rnorm(nsite*3), nrow = nsite)
-  occu_cov[,1] <- 1
-  psi_beta <- c(0, 1, -1)
-  p_beta <- c(1, 1, -1)
-  occ_model <- nimbleModel(code = occ_code,
-                           constants = list(
-                             nsite = nsite,
-                             nvisit = nvisit),
-                           data = list(
-                             occu_cov = occu_cov,
-                             detect_cov = detect_cov
-                           ),
-                           inits = list(
-                             psi_beta = psi_beta,
-                             p_beta = p_beta
-                           ))
-  occ_model$simulate("y")
-  C_occ_model <- compileNimble(occ_model)
-  wrt <- c(occ_model$expandNodeNames("psi_beta"),
-           occ_model$expandNodeNames("p_beta"))
-  nodes <- occ_model$getDependencies(wrt)
-  nfm1 <- nfm(occ_model, wrt, nodes)
-  Cnfm1 <- compileNimble(nfm1)
-  occ_result <- Cnfm1$run(x = rep(0, 6), order = c(0,1,2))
-  expect_true(all(!is.na(occ_result$hessian)))
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel,
+                                                c('probOcc', Rmodel$expandNodeNames('probDetect[1:5]')))
+v1_case1 <- list(arg1 = c(probOcc, probDetect)) # taping values for probOcc and probDetect
+v2_case1 <- list(arg1 = c(probOcc2, probDetect2)) # testing values for probOcc and probDetect
 
-# Test dOcc_s
-  occ_code <- nimbleCode({
-    for (i in 1:nsite) {
-      logit(psi[i]) <- inprod(psi_beta[1:3], occu_cov[i, 1:3])
-      logit(p[i]) <- inprod(p_beta[1:3], detect_cov[i, 1:3])
-      y[i, 1:nvisit] ~ dOcc_s(probOcc = psi[i],
-                              probDetect = p[i],
-                              len = nvisit)
-    }
-  })
-  nsite <- 30
-  nvisit <- 3
-  detect_cov <- matrix(data = rnorm(nsite*3), nrow = nsite)
-  detect_cov[,1] <- 1
-  occu_cov <- matrix(data = rnorm(nsite*3), nrow = nsite)
-  occu_cov[,1] <- 1
-  psi_beta <- c(0, 1, -1)
-  p_beta <- c(1, 1, -1)
-  occ_model <- nimbleModel(code = occ_code,
-                           constants = list(
-                             nsite = nsite,
-                             nvisit = nvisit),
-                           data = list(
-                             occu_cov = occu_cov,
-                             detect_cov = detect_cov
-                           ),
-                           inits = list(
-                             psi_beta = psi_beta,
-                             p_beta = p_beta
-                           ))
-  occ_model$simulate("y")
-  C_occ_model <- compileNimble(occ_model)
-  wrt <- c(occ_model$expandNodeNames("psi_beta"),
-           occ_model$expandNodeNames("p_beta"))
-  nodes <- occ_model$getDependencies(wrt)
-  nfm1 <- nfm(occ_model, wrt, nodes)
-  Cnfm1 <- compileNimble(nfm1)
-  occ_result <- Cnfm1$run(x = rep(0, 6), order = c(0,1,2))
-  expect_true(all(!is.na(occ_result$hessian)))
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2)
+
+
+##########################
+#### dNmixture_s case ####
+
+x <- c(7, 7, 6, 9, 10)
+lambda <- 15
+prob <- 0.7
+
+lambda2 <- 18
+prob2 <- 0.5
+
+
+nc <- nimbleCode({
+  x[1:5] ~ dNmixture_s(lambda, prob,
+                       Nmin = 0, Nmax = 100, len = 5)
+  prob ~ dunif(0, 1)
+  lambda ~ dunif(0, 100)
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(prob = prob,
+                              lambda = lambda),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
+v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2)
 
 
-########################## Test dHMM ############################
-test_that("dHMM works with AD", {
+######################
+#### dCJS_ss case ####
 
-# Test dHMM
-  hmm_code <- nimbleCode({
-    for (i in 1:10) {
-      x[i, 1:ntime] ~ dHMM(init = inits[1:nstate],
-                           probObs = pO[1:nstate, 1:nobs],
-                           probTrans = pT[1:nstate, 1:nstate],
-                           len = ntime,
-                           checkRowSums = 1)
-    }
-  })
-  hmm_model <- nimbleModel(hmm_code,
-                           constants = list(
-                             ntime = 10,
-                             nstate = 3,
-                             nobs = 2
-                           ), inits = list(
-                             inits = c(0.9, 0.1, 0),
-                             pO = matrix(c(0.9, 0.1,
-                                           0.8, 0.2,
-                                           0, 1), nrow = 3, byrow = TRUE),
-                             pT = matrix(c(0.8, 0.2, 0,
-                                           0, 0.7, 0.3,
-                                           0, 0, 1), nrow = 3, byrow = TRUE)))
-  hmm_model$simulate("x")
-  hmm_model$x
-  hmm_wrt <- hmm_model$expandNodeNames(c("inits", "pO", "pT"))
-  hmm_nodes <- hmm_model$getDependencies(hmm_wrt)
-  hmm_nfm <- nfm(model = hmm_model,
-                 wrt = hmm_wrt,
-                 nodes = hmm_nodes)
-  Chmm_model <- compileNimble(hmm_model)
-  Chmm_nfm <- compileNimble(hmm_nfm)
-  hmm_result <- Chmm_nfm$run(x = values(hmm_model, hmm_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(hmm_result$hessian)))
+x <- c(1, 0, 1, 0, 0, 0)
+probSurvive <- 0.8
+probCapture <- 0.4
 
-  # Test dHMMo
-  hmm_code <- nimbleCode({
-    for (i in 1:10) {
-      x[i, 1:ntime] ~ dHMMo(init = inits[1:nstate],
-                            probObs = pO[1:nstate, 1:nobs, 1:ntime],
-                            probTrans = pT[1:nstate, 1:nstate],
-                            len = ntime,
-                            checkRowSums = 1)
-    }
-  })
+probSurvive2 <- 0.7
+probCapture2 <- 0.2
 
-  hmm_model <- nimbleModel(hmm_code,
-                           constants = list(
-                             ntime = 10,
-                             nstate = 3,
-                             nobs = 2
-                           ), inits = list(
-                             inits = c(0.9, 0.1, 0),
-                             pO = array(rep(c(0.9, 0.8, 0.1,
-                                              0.1, 0.2, 0.9), 10), dim = c(3, 2, 10)),
-                             pT = matrix(c(0.8, 0.2, 0,
-                                           0, 0.7, 0.3,
-                                           0, 0, 1), nrow = 3, byrow = TRUE)))
-  hmm_model$simulate("x")
-  hmm_model$x
-  hmm_model$calculate()
-  Chmm_model <- compileNimble(hmm_model)
-  hmm_wrt <- hmm_model$expandNodeNames(c("inits", "pO", "pT"))
-  hmm_nodes <- hmm_model$getDependencies(hmm_wrt)
-  hmm_nfm <- nfm(model = hmm_model,
-                 wrt = hmm_wrt,
-                 nodes = hmm_nodes)
 
-  Chmm_nfm <- compileNimble(hmm_nfm)
-  hmm_result <- Chmm_nfm$run(x = values(hmm_model, hmm_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(hmm_result$hessian)))
+nc <- nimbleCode({
+  x[1:6] ~ dCJS_ss(probSurvive, probCapture, len = 6)
+  probSurvive ~ dunif(0, 1)
+  probCapture ~ dunif(0, 1)
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(probSurvive = probSurvive,
+                              probCapture = probCapture),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('probSurvive', 'probCapture'))
+v1_case1 <- list(arg1 = c(probSurvive, probCapture)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(probSurvive2, probCapture2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2)
 
 
+######################
+#### dCJS_sv case ####
 
-############################## Test dDHMM #####################################
-test_that("dHMM works with AD", {
+x <- c(1, 0, 1, 0, 0, 0)
+probSurvive <- 0.8
+probCapture <- c(1, 0.5, 0.5, 0.4, 0.3, 0.4)
 
-  # Test DHMM
-  dhmm_code <- nimbleCode({
-    for (i in 1:10) {
-      x[i, 1:ntime] ~ dDHMM(init = inits[1:nstate],
-                            probObs = pO[1:nstate, 1:nobs],
-                            probTrans = pT[1:nstate, 1:nstate, 1:(ntime-1)],
-                            len = ntime,
-                            checkRowSums = 1)
-    }
-  })
-  dhmm_model <- nimbleModel(dhmm_code,
-                            constants = list(
-                              ntime = 10,
-                              nstate = 3,
-                              nobs = 2
-                            ), inits = list(
-                              inits = c(0.9, 0.1, 0),
-                              pO = matrix(c(0.9, 0.1,
-                                            0.8, 0.2,
-                                            0, 1), nrow = 3, byrow = TRUE),
-                              pT = array(rep(c(0.8, 0, 0,
-                                               0.2, 0.7, 0,
-                                               0, 0.3, 1), 9), dim = c(3, 3, 9))))
-  dhmm_model$simulate("x")
-  dhmm_wrt <- dhmm_model$expandNodeNames(c("inits", "pO", "pT"))
-  dhmm_nodes <- dhmm_model$getDependencies(dhmm_wrt)
-  dhmm_nfm <- nfm(model = dhmm_model,
-                  wrt = dhmm_wrt,
-                  nodes = dhmm_nodes)
-  Cdhmm_model <- compileNimble(dhmm_model)
-  Cdhmm_nfm <- compileNimble(dhmm_nfm)
-  dhmm_result <- Cdhmm_nfm$run(x = values(dhmm_model, dhmm_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(dhmm_result$hessian)))
+probSurvive2 <- 0.7
+probCapture2 <- c(1, 0.6, 0.7, 0.4, 0.2, 0.2)
 
-  # Test DHMMo
-  # Test DHMM
-  dhmm_code <- nimbleCode({
-    for (i in 1:10) {
-      x[i, 1:ntime] ~ dDHMMo(init = inits[1:nstate],
-                            probObs = pO[1:nstate, 1:nobs, 1:ntime],
-                            probTrans = pT[1:nstate, 1:nstate, 1:(ntime-1)],
-                            len = ntime,
-                            checkRowSums = 1)
-    }
-  })
-  dhmm_model <- nimbleModel(dhmm_code,
-                            constants = list(
-                              ntime = 10,
-                              nstate = 3,
-                              nobs = 2
-                            ), inits = list(
-                              inits = c(0.9, 0.1, 0),
-                              pO = array(rep(c(0.9, 0.8, 0.1,
-                                               0.1, 0.2, 0.9), 10), dim = c(3, 2, 10)),
-                              pT = array(rep(c(0.8, 0, 0,
-                                               0.2, 0.7, 0,
-                                               0, 0.3, 1), 9), dim = c(3, 3, 9))))
-  dhmm_model$simulate("x")
-  dhmm_wrt <- dhmm_model$expandNodeNames(c("inits", "pO", "pT"))
-  dhmm_nodes <- dhmm_model$getDependencies(dhmm_wrt)
-  dhmm_nfm <- nfm(model = dhmm_model,
-                  wrt = dhmm_wrt,
-                  nodes = dhmm_nodes)
-  Cdhmm_model <- compileNimble(dhmm_model)
-  Cdhmm_nfm <- compileNimble(dhmm_nfm)
-  dhmm_result <- Cdhmm_nfm$run(x = values(dhmm_model, dhmm_wrt), order = c(0,1,2))
-  expect_true(all(!is.na(dhmm_result$hessian)))
+
+nc <- nimbleCode({
+  x[1:6] ~ dCJS_sv(probSurvive, probCapture[1:6], len = 6)
+  for (i in 1:6) {
+    probCapture[i] ~ dunif(0, 1)
+  }
+  probSurvive ~ dunif(0, 1)
 
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(probSurvive = probSurvive,
+                              probCapture = probCapture),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('probSurvive', Rmodel$expandNodeNames('probCapture[2:6]')))
+v1_case1 <- list(arg1 = c(probSurvive, probCapture[2:6])) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(probSurvive2, probCapture2[2:6])) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
 
-########################### Test dDynOcc_ss* ##################################
-# Since there are so many flavors of dDynOcc, I'm going to split them up
-# across multiple test_that blocks.
-test_that("dDynOcc_ss* works with AD", {
+######################
+#### dCJS_vs case ####
 
-# Test DynOcc_sss
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_sss(inits,
-                                     probCol,
-                                     probPer,
-                                     p = p,
-                                     start = start[1:nssn],
-                                     end = end[1:nssn])
+x <- c(1, 0, 1, 0, 0, 0)
+probSurvive <- c(0.8, 0.5, 0.3, 0.9, 0.9)
+probCapture <- 0.5
 
-    logit(p) <- p_int
-    logit(probCol) <- col_int
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 10),
-                                end = rep(4, 10)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x")
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+probSurvive2 <- c(0.7, 0.55, 0.32, 0.8, 0.1)
+probCapture2 <- 0.7
 
-# Test DynOcc_ssv
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_ssv(inits,
-                                     probCol,
-                                     probPer,
-                                     p = p[1:nssn],
-                                     start = start[1:nssn],
-                                     end = end[1:nssn])
 
-    for (i in 1:nssn) logit(p[i]) <- p_int + i - 2
-    logit(probCol) <- col_int
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
-
-# Test DynOcc_ssm
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_ssm(inits,
-                                      probCol,
-                                      probPer,
-                                      p = p[1:nssn, 1:nvisit],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
-
-    for (i in 1:nssn){
-      for (j in 1:nvisit) {
-        logit(p[i, j]) <- p_int + i - 2 + j - 2
-      }
-    }
-    logit(probCol) <- col_int
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+nc <- nimbleCode({
+  x[1:6] ~ dCJS_vs(probSurvive[1:5], probCapture, len = 6)
+  for (i in 1:5) {
+    probSurvive[i] ~ dunif(0, 1)
+  }
+  probCapture ~ dunif(0, 1)
 
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(probSurvive = probSurvive,
+                              probCapture = probCapture),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
 
-########################### Test dDynOcc_sv* ##################################
-# Since there are so many flavors of dDynOcc, I'm going to split them up
-# across multiple test_that blocks.
-test_that("dDynOcc_sv* works with AD", {
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
 
-  # Test DynOcc_svs
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_svs(inits,
-                                     probCol,
-                                     probPer[1:(nssn-1)],
-                                     p = p,
-                                     start = start[1:nssn],
-                                     end = end[1:nssn])
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('probSurvive[1:5]'), 'probCapture'))
+v1_case1 <- list(arg1 = c(probSurvive, probCapture)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(probSurvive2, probCapture2)) # testing values for prob and lambda
 
-    logit(p) <- p_int
-    logit(probCol) <- col_int
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 10),
-                                end = rep(4, 10)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x")
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
-  # Test DynOcc_svv
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_svv(inits,
-                                      probCol,
-                                      probPer[1:(nssn-1)],
-                                      p = p[1:nssn],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+######################
+#### dCJS_vv case ####
 
-    for (i in 1:nssn) logit(p[i]) <- p_int + i - 2
-    logit(probCol) <- col_int
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+x <- c(1, 0, 1, 0, 0, 0)
+probSurvive <- c(0.8, 0.5, 0.3, 0.9, 0.9)
+probCapture <- c(1, 0.5, 0.5, 0.4, 0.3, 0.4)
 
-  # Test DynOcc_svm
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_svm(inits,
-                                      probCol,
-                                      probPer[1:(nssn-1)],
-                                      p = p[1:nssn, 1:nvisit],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+probSurvive2 <- c(0.7, 0.55, 0.32, 0.8, 0.1)
+probCapture2 <- c(1, 0.6, 0.7, 0.4, 0.2, 0.2)
 
-    for (i in 1:nssn){
-      for (j in 1:nvisit) {
-        logit(p[i, j]) <- p_int + i - 2 + j - 2
-      }
-    }
-    logit(probCol) <- col_int
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+
+nc <- nimbleCode({
+  x[1:6] ~ dCJS_vv(probSurvive[1:5], probCapture[1:6], len = 6)
+  for (i in 1:5) {
+    probSurvive[i] ~ dunif(0, 1)
+  }
+  for (i in 1:6) {
+    probCapture[i] ~ dunif(0, 1)
+  }
 
 })
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(probSurvive = probSurvive,
+                              probCapture = probCapture),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
 
-########################### Test dDynOcc_vv* ##################################
-# Since there are so many flavors of dDynOcc, I'm going to split them up
-# across multiple test_that blocks.
-test_that("dDynOcc_vv* works with AD", {
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
 
-  # Test DynOcc_vvs
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vvs(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer[1:(nssn-1)],
-                                      p = p,
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('probSurvive[1:5]'),
+                                                                       Rmodel$expandNodeNames('probCapture[2:6]')))
+v1_case1 <- list(arg1 = c(probSurvive, probCapture[2:6])) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(probSurvive2, probCapture2[2:6])) # testing values for prob and lambda
 
-    logit(p) <- p_int
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 10),
-                                end = rep(4, 10)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x")
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
-  # Test DynOcc_vvv
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vvv(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer[1:(nssn-1)],
-                                      p = p[1:nssn],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+######################
+#### dHMM case ####
 
-    for (i in 1:nssn) logit(p[i]) <- p_int + i - 2
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+x <- c(1, 1, 1, 2, 2)
 
-  # Test DynOcc_vvm
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vvm(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer[1:(nssn-1)],
-                                      p = p[1:nssn, 1:nvisit],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+init <- c(0.4, 0.2, 0.4)
+probObs <- t(array(
+         c(0.9, 0.1,
+           0.1, 0.9,
+           0.8, 0.2),
+         c(2, 3)))
 
-    for (i in 1:nssn){
-      for (j in 1:nvisit) {
-        logit(p[i, j]) <- p_int + i - 2 + j - 2
-      }
+probTrans <- t(array(
+          c(0.3, 0.4, 0.2,
+            0.1, 0.1, 0.8,
+            0.05, 0.05, 0.9),
+          c(3,3)))
+
+init2 <- c(0.6, 0.1, 0.3)
+probObs2 <- t(array(
+         c(0.9, 0.1,
+           0.1, 0.9,
+           0.7, 0.3),
+         c(2, 3)))
+
+probTrans2 <- t(array(
+          c(0.4, 0.4, 0.2,
+            0.05, 0.25, 0.7,
+            0.05, 0.15, 0.8),
+          c(3,3)))
+
+nc <- nimbleCode({
+  x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
+                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
+  for (i in 1:2) {
+    init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
+    probObs[i, 1] ~ dunif(0, 1)
+    probObs[i, 2] <- 1 - probObs[i, 1]
+    probTrans[i, 1] ~ dunif(0, 1)
+    probTrans[i, 2] ~ dunif(0, 1 - probTrans[i, 1])
+    probTrans[i, 3] <- 1 - probTrans[i, 1] - probTrans[i, 2]
+  }
+
+})
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(
+                   init = init,
+                   probObs = probObs,
+                   probTrans = probTrans
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
+                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3]')
+                                                                       ))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2], probTrans[1:3, 1:3]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3]))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+#######
+
+
+######################
+#### dHMM with 0s in transition matrix case ####
+
+x <- c(1, 1, 1, 2, 2)
+
+init <- c(0.4, 0.2, 0.4)
+probObs <- t(array(
+         c(0.9, 0.1,
+           0.1, 0.9,
+           0.8, 0.2),
+         c(2, 3)))
+
+probTrans <- t(array(
+          c(0.3, 0.4, 0.2,
+            0.1, 0.1, 0.8,
+            0.05, 0.05, 0.9),
+          c(3,3)))
+
+init2 <- c(0.6, 0.1, 0.3)
+probObs2 <- t(array(
+         c(1, 0,
+           0, 1,
+           0.7, 0.3),
+         c(2, 3)))
+
+probTrans2 <- t(array(
+          c(0.4, 0.4, 0.2,
+            0, 0.3, 0.7,
+            0, 0, 1),
+          c(3,3)))
+
+nc <- nimbleCode({
+  x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
+                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
+  for (i in 1:2) {
+    init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
+    probObs[i, 1] ~ dunif(0, 1)
+    probObs[i, 2] <- 1 - probObs[i, 1]
+    probTrans[i, 1] ~ dunif(0, 1)
+    probTrans[i, 2] ~ dunif(0, 1 - probTrans[i, 1])
+    probTrans[i, 3] <- 1 - probTrans[i, 1] - probTrans[i, 2]
+  }
+
+})
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(
+                   init = init,
+                   probObs = probObs,
+                   probTrans = probTrans
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
+                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3]')
+                                                                       ))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2], probTrans[1:3, 1:3]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3]))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+#######
+
+######################
+#### dHMMo case ####
+
+x <- c(1, 1, 1, 2, 2)
+
+init <- c(0.4, 0.2, 0.4)
+probObs <- array(
+       c(0.95, 0.05, 0.8, 0.05, 0.95, 0.2,
+         0.95, 0.05, 0.8, 0.05, 0.95, 0.2,
+         0.9, 0.05, 0.8, 0.1, 0.95, 0.2,
+         0.95, 0.1, 0.8, 0.05, 0.9, 0.2,
+         0.95, 0.05, 0.7, 0.05, 0.95, 0.3),
+       c(3, 2, 5))
+
+probTrans <- t(array(
+          c(0.3, 0.4, 0.2,
+            0.1, 0.1, 0.8,
+            0.05, 0.05, 0.9),
+          c(3,3)))
+
+init2 <- c(0.6, 0.1, 0.3)
+probObs2 <- array(
+       c(0.6, 0.05, 0.8, 0.4, 0.95, 0.2,
+         0.8, 0.05, 0.6, 0.2, 0.95, 0.4,
+         0.9, 0.05, 0.8, 0.1, 0.95, 0.2,
+         0.9, 0.1, 0.8, 0.1, 0.9, 0.2,
+         0.95, 0.05, 0.4, 0.05, 0.95, 0.6),
+       c(3, 2, 5))
+
+probTrans2 <- t(array(
+          c(0.4, 0.4, 0.2,
+            0.05, 0.25, 0.7,
+            0.05, 0.15, 0.8),
+          c(3,3)))
+
+nc <- nimbleCode({
+  x[1:5] ~ dHMMo(init[1:3], probObs = probObs[1:3,1:2,1:5],
+                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
+  for (i in 1:2) {
+    init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
+    for (j in 1:5) {
+      probObs[i, 1, j] ~ dunif(0, 1)
+      probObs[i, 2, j] <- 1 - probObs[i, 1, j]
     }
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    for (i in 1:(nssn - 1)) logit(probPer[i]) <- per_int + i - 1
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+    probTrans[i, 1] ~ dunif(0, 1)
+    probTrans[i, 2] ~ dunif(0, 1 - probTrans[i, 1])
+    probTrans[i, 3] <- 1 - probTrans[i, 1] - probTrans[i, 2]
+  }
+
+})
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(
+                   init = init,
+                   probObs = probObs,
+                   probTrans = probTrans
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2, 1:5]'),
+                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3]')
+                                                                       ))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2, 1:5], probTrans[1:3, 1:3]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2, 1:5],  probTrans2[1:3, 1:3]))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+#######
+
+
+######################
+#### dDHMM case ####
+
+x <- c(1, 1, 1, 2, 2)
+
+init <- c(0.4, 0.2, 0.4)
+probObs <- t(array(
+         c(0.9, 0.1,
+           0.1, 0.9,
+           0.8, 0.2),
+         c(2, 3)))
+
+probTrans <- array(
+        c(0.6, 0.05, 0.05, 0.3, 0.65, 0.25, 0.1, 0.3, 0.7,
+          0.6, 0.05, 0.05, 0.2, 0.65, 0.05, 0.2, 0.3, 0.9,
+          0.6, 0.05, 0.05, 0.2, 0.65, 0.05, 0.2, 0.3, 0.9,
+          0.6, 0.05, 0.20, 0.3, 0.65, 0.05, 0.1, 0.3, 0.75
+          ),
+        c(3,3,4))
+
+init2 <- c(0.6, 0.1, 0.3)
+probObs2 <- t(array(
+         c(0.9, 0.1,
+           0.1, 0.9,
+           0.7, 0.3),
+         c(2, 3)))
+probTrans2 <- array(
+        c(0.5, 0.05, 0.02, 0.4, 0.65, 0.28, 0.1, 0.3, 0.7,
+          0.5, 0.05, 0.02, 0.3, 0.75, 0.08, 0.2, 0.2, 0.9,
+          0.6, 0.05, 0.05, 0.2, 0.75, 0.05, 0.2, 0.2, 0.9,
+          0.6, 0.05, 0.20, 0.3, 0.65, 0.05, 0.1, 0.3, 0.75
+          ),
+        c(3,3,4))
+
+nc <- nimbleCode({
+  x[1:5] ~ dDHMM(init[1:3], probObs = probObs[1:3,1:2],
+                  probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkRowSums = 0)
+  for (i in 1:2) {
+    init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
+    probObs[i, 1] ~ dunif(0, 1)
+    probObs[i, 2] <- 1 - probObs[i, 1]
+    for (k in 1:4) {
+      probTrans[i, 1, k] ~ dunif(0, 1)
+      probTrans[i, 2, k] ~ dunif(0, 1 - probTrans[i, 1, k])
+      probTrans[i, 3, k] <- 1 - probTrans[i, 1, k] - probTrans[i, 2, k]
+    }
+  }
+
+})
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(
+                   init = init,
+                   probObs = probObs,
+                   probTrans = probTrans
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2, 1:5]'),
+                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3, 1:4]')
+                                                                       ))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2, 1:5], probTrans[1:3, 1:3, 1:4]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2, 1:5],  probTrans2[1:3, 1:3, 1:4]))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+#######
+
+
+######################
+#### dDHMMo case ####
+
+x <- c(1, 1, 1, 2, 2)
+
+init <- c(0.4, 0.2, 0.4)
+probObs <- array(
+       c(0.95, 0.05, 0.8, 0.05, 0.95, 0.2,
+         0.95, 0.05, 0.8, 0.05, 0.95, 0.2,
+         0.9, 0.05, 0.8, 0.1, 0.95, 0.2,
+         0.95, 0.1, 0.8, 0.05, 0.9, 0.2,
+         0.95, 0.05, 0.7, 0.05, 0.95, 0.3),
+       c(3, 2, 5))
+
+probTrans <- array(
+        c(0.6, 0.05, 0.05, 0.3, 0.65, 0.25, 0.1, 0.3, 0.7,
+          0.6, 0.05, 0.05, 0.2, 0.65, 0.05, 0.2, 0.3, 0.9,
+          0.6, 0.05, 0.05, 0.2, 0.65, 0.05, 0.2, 0.3, 0.9,
+          0.6, 0.05, 0.20, 0.3, 0.65, 0.05, 0.1, 0.3, 0.75
+          ),
+        c(3,3,4))
+
+init2 <- c(0.6, 0.1, 0.3)
+probObs2 <- array(
+       c(0.6, 0.05, 0.8, 0.4, 0.95, 0.2,
+         0.8, 0.05, 0.6, 0.2, 0.95, 0.4,
+         0.9, 0.05, 0.8, 0.1, 0.95, 0.2,
+         0.9, 0.1, 0.8, 0.1, 0.9, 0.2,
+         0.95, 0.05, 0.4, 0.05, 0.95, 0.6),
+       c(3, 2, 5))
+
+probTrans2 <- array(
+        c(0.5, 0.05, 0.02, 0.4, 0.65, 0.28, 0.1, 0.3, 0.7,
+          0.5, 0.05, 0.02, 0.3, 0.75, 0.08, 0.2, 0.2, 0.9,
+          0.6, 0.05, 0.05, 0.2, 0.75, 0.05, 0.2, 0.2, 0.9,
+          0.6, 0.05, 0.20, 0.3, 0.65, 0.05, 0.1, 0.3, 0.75
+          ),
+        c(3,3,4))
+
+nc <- nimbleCode({
+  x[1:5] ~ dDHMMo(init[1:3], probObs = probObs[1:3,1:2,1:5],
+                  probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkRowSums = 0)
+  for (i in 1:2) {
+    init[i] ~ dunif(0, 1)
+  }
+  init[3] <- 1 - init[1] - init[2]
+
+  for (i in 1:3) {
+    for (j in 1:5) {
+      probObs[i, 1, j] ~ dunif(0, 1)
+      probObs[i, 2, j] <- 1 - probObs[i, 1, j]
+    }
+    for (k in 1:4) {
+      probTrans[i, 1, k] ~ dunif(0, 1)
+      probTrans[i, 2, k] ~ dunif(0, 1 - probTrans[i, 1, k])
+      probTrans[i, 3, k] <- 1 - probTrans[i, 1, k] - probTrans[i, 2, k]
+    }
+  }
+
+})
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                 inits = list(
+                   init = init,
+                   probObs = probObs,
+                   probTrans = probTrans
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2, 1:5]'),
+                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3, 1:4]')
+                                                                       ))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2, 1:5], probTrans[1:3, 1:3, 1:4]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2, 1:5],  probTrans2[1:3, 1:3, 1:4]))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+#######
+
+######################
+#### dDynOcc_vvm case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- c(0.4, 0.2, 0.1)
+p <- matrix(rep(c(0.8, 0.7, 0.8, 0.8, 0.9), each = 4), nrow = 4, byrow =TRUE)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- matrix(rep(c(0.7, 0.5, 0.3, 0.8, 0.66), each = 4), nrow = 4, byrow =TRUE)
+
+
+nc <- nimbleCode({
+    x[1:4, 1:5] ~ dDynOcc_vvm(init,
+                              probPersist[1:3],
+                              probColonize[1:3],
+                              p[1:4,1:5],
+                              start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+    probPersist[i] ~ dunif(0, 1)
+  }
+  for (i in 1:4) {
+    for (j in 1:5) {
+      p[i, j] ~ dunif(0, 1)
+    }
+  }
 
 })
 
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                 inits = list(
+                   init = init,
+                   p = p,
+                   probColonize = probColonize,
+                   probPersist = probPersist
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
 
-########################### Test dDynOcc_vs* ##################################
-# Since there are so many flavors of dDynOcc, I'm going to split them up
-# across multiple test_that blocks.
-test_that("dDynOcc_vs* works with AD", {
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
 
-  # Test DynOcc_vvs
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vss(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer,
-                                      p = p,
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+       "init",
+       Rmodel$expandNodeNames('p[1:4, 1:5]'),
+       Rmodel$expandNodeNames('probColonize[1:3]'),
+       Rmodel$expandNodeNames('probPersist[1:3]')
+   ))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
-    logit(p) <- p_int
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 10),
-                                end = rep(4, 10)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x")
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
-  # Test DynOcc_vsv
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vsv(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer,
-                                      p = p[1:nssn],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
 
-    for (i in 1:nssn) logit(p[i]) <- p_int + i - 2
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
 
-  # Test DynOcc_vsm
-  dynocc_code <- nimbleCode({
-    x[1:nssn, 1:nvisit] ~ dDynOcc_vsm(inits,
-                                      probCol[1:(nssn-1)],
-                                      probPer,
-                                      p = p[1:nssn, 1:nvisit],
-                                      start = start[1:nssn],
-                                      end = end[1:nssn])
+######################
+#### dDynOcc_vvv case ####
 
-    for (i in 1:nssn){
-      for (j in 1:nvisit) {
-        logit(p[i, j]) <- p_int + i - 2 + j - 2
-      }
-    }
-    for (i in 1:(nssn - 1)) logit(probCol[i]) <- col_int + i - 1
-    logit(probPer) <- per_int
-  })
-  dynocc_model <- nimbleModel(code = dynocc_code,
-                              constants = list(
-                                nvisit = 4,
-                                nssn = 3,
-                                start = rep(1, 3),
-                                end = rep(4, 3)
-                              ), inits = list(
-                                p_int = 0.5,
-                                col_int = 0.5,
-                                per_int = -0.5,
-                                inits = 0.9
-                              ))
-  dynocc_model$simulate("x[1:3, 1:4]", includeData = TRUE)
-  dynocc_model$x
-  dynocc_model$calculate()
-  dynocc_nfm <- nfm(model = dynocc_model,
-                    wrt = c("p_int", "col_int", "per_int", "inits"),
-                    nodes = dynocc_model$getDependencies(c("p_int", "col_int",
-                                                           "per_int", "inits")))
-  Cdynocc_model <- compileNimble(dynocc_model)
-  Cdynocc_nfm <- compileNimble(dynocc_nfm)
-  dynocc_result <- Cdynocc_nfm$run(x = rep(0.5, 4), order = c(0,1,2))
-  expect_true(all(!is.na(dynocc_result$hessian)))
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- c(0.4, 0.2, 0.1)
+p <- c(0.8, 0.7, 0.8, 0.8)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- c(0.7, 0.5, 0.3, 0.8)
+
+
+nc <- nimbleCode({
+    x[1:4, 1:5] ~ dDynOcc_vvv(init,
+                              probPersist[1:3],
+                              probColonize[1:3],
+                              p[1:4],
+                              start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+    probPersist[i] ~ dunif(0, 1)
+  }
+  for (i in 1:4) {
+    p[i] ~ dunif(0, 1)
+  }
 
 })
 
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                 inits = list(
+                   init = init,
+                   p = p,
+                   probColonize = probColonize,
+                   probPersist = probPersist
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+       "init",
+       Rmodel$expandNodeNames('p[1:4]'),
+       Rmodel$expandNodeNames('probColonize[1:3]'),
+       Rmodel$expandNodeNames('probPersist[1:3]')
+   ))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+######################
+#### dDynOcc_vvs case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- c(0.4, 0.2, 0.1)
+p <- c(0.8)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- c(0.7)
 
 
-########### dNmixture not yet implemented with AD ############
-# END
+nc <- nimbleCode({
+    x[1:4, 1:5] ~ dDynOcc_vvs(init,
+                              probPersist[1:3],
+                              probColonize[1:3],
+                              p,
+                              start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+    probPersist[i] ~ dunif(0, 1)
+  }
+  p ~ dunif(0, 1)
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                 inits = list(
+                   init = init,
+                   p = p,
+                   probColonize = probColonize,
+                   probPersist = probPersist
+                 ),
+                 buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+       "init", "p",
+       Rmodel$expandNodeNames('probColonize[1:3]'),
+       Rmodel$expandNodeNames('probPersist[1:3]')
+   ))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+
+# reset options before finishing
+nimbleOptions(enableDerivs = EDopt)
+nimbleOptions(buildModelDerivs = BMDopt)
+
+
+
+
+
+#### Notes:
+#' dNmixture appears not to work. When the model is first defined I get the following message:
+#'     [Note] Detected use of function(s) that are not supported for derivative tracking in a function or method for which buildDerivs has been requested: qpois.
+#'     Then model compilation fails.
+#' in dCJS_*v variations, I had to manually specify to only do derivs for probCapture[2:n] since element probCapture[1] is
+#'     ignored in the likelihood. Works fine with this change
+#' hit issues with d*HMM*. The derivatives work fine, except if probabilities equal to 0 are included in the
+#'     transition matrices. Even then the error only occurs during model_calculate_test_case.
+#'     The error I get is: "Error in if (!all_result) { : missing value where TRUE/FALSE needed"
+#'     which I beleive stems from an NA derivative. (Could be helpful to have a more informative error msg here.)
+#'
+#'Got the following error in dDHMMo test, and an equivalent error in dDynOcc_vvm, dDynOcc_vvv
+#'Detected some values out of relative tolerance  (RC order 0) :  as.numeric(first)   as.numeric(others[[i]]) .
+# [1] 2.140095e-01 2.140095e-01 2.075091e-15
+# ******************
+# Some C-to-R derivatives to not match for order 0Called from: test_AD2_oneCall(Rfxn, Cfxn, recordArgs = v1, testArgs = v2,
+#     order = order, Rmodel = Rmodel, Cmodel = Cmodel, recordInits = varValues,
+#     testInits = varValues2, nodesToChange = c(nodesList$updateNodes),
+#     ...)
+#'
+#'
