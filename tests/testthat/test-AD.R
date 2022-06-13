@@ -1,15 +1,16 @@
 # Testing examples:
 
-# install nimble from branch ADoak: devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
+# install nimble from branch ADoak:
+devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
 # install nimbleEcology from branch AD_0.3: devtools::install_github("nimble-dev/nimbleEcology", ref = "AD_0.3")
 
 # load nimble's testing tools
 library(nimble)
 library(nimbleEcology)
-# source(system.file(file.path('tests', 'testthat', 'test_utils.R'), package = 'nimble'))
-# source(system.file(file.path('tests', 'testthat', 'AD_test_utils.R'), package = 'nimble'))
-source("../nimble/packages/nimble/tests/testthat/test_utils.R")
-source("../nimble/packages/nimble/tests/testthat/AD_test_utils.R")
+source(system.file(file.path('tests', 'testthat', 'test_utils.R'), package = 'nimble'))
+source(system.file(file.path('tests', 'testthat', 'AD_test_utils.R'), package = 'nimble'))
+# source("../nimble/packages/nimble/tests/testthat/test_utils.R")
+# source("../nimble/packages/nimble/tests/testthat/AD_test_utils.R")
 
 EDopt <- nimbleOptions("enableDerivs")
 BMDopt <- nimbleOptions("buildModelDerivs")
@@ -83,41 +84,427 @@ model_calculate_test_case(Rmodel, Cmodel,
                           v1_case1, v2_case1,
                           0:2)
 
-
-##########################
-#### dNmixture_s case ####
-
-x <- c(7, 7, 6, 9, 10)
-lambda <- 15
-prob <- 0.7
-
-lambda2 <- 18
-prob2 <- 0.5
-
-
-nc <- nimbleCode({
-  x[1:5] ~ dNmixture_s(lambda, prob,
-                       Nmin = 0, Nmax = 100, len = 5)
-  prob ~ dunif(0, 1)
-  lambda ~ dunif(0, 100)
-})
-Rmodel <- nimbleModel(nc, data = list(x = x),
-                 inits = list(prob = prob,
-                              lambda = lambda),
-                 buildDerivs=TRUE)
-Rmodel$calculate()
-
-Cmodel <- compileNimble(Rmodel)
-Cmodel$calculate()
-
-nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
-v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
-v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
-
-model_calculate_test_case(Rmodel, Cmodel,
-                          model_calculate_test, nodesList_case1,
-                          v1_case1, v2_case1,
-                          0:2)
+# {
+# ##########################
+# #### dNmixture_s case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- 0.7
+#
+# lambda2 <- 18
+# prob2 <- 0.5
+#
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_s(lambda, prob,
+#                        Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                  inits = list(prob = prob,
+#                               lambda = lambda),
+#                  buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
+# v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##########################
+# #### dNmixture_BNB_s case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- 0.7
+# theta <- 1.1
+#
+# lambda2 <- 18
+# prob2 <- 0.5
+# theta2 <- 1.2
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BNB_s(lambda, prob, theta = theta,
+#                        Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    theta = theta),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##############################
+# #### dNmixture_BBP_s case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- 0.7
+# s <- 0.93
+#
+# lambda2 <- 18
+# prob2 <- 0.5
+# s2 <- 1.111
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BBNB_s(lambda, prob, s = s,
+#                             Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    s = s),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##############################
+# #### dNmixture_BBNB_s case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- 0.7
+# theta <- 1.1
+# s <- 0.93
+#
+# lambda2 <- 18
+# prob2 <- 0.5
+# theta2 <- 1.2
+# s2 <- 1.111
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BBNB_s(lambda, prob, theta = theta, s = s,
+#                            Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    theta = theta, s = s),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##########################
+# #### dNmixture_v case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- c(0.6, 0.6, 0.4, 0.9, 0.8)
+#
+# lambda2 <- 18
+# prob2 <-  c(0.65, 0.65, 0.45, 0.95, 0.85)
+#
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_v(lambda, prob[1:5],
+#                        Nmin = 0, Nmax = 100, len = 5)
+#   for (i in 1:5) {
+#     prob[i] ~ dunif(0, 1)
+#   }
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
+# v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##############################
+# #### dNmixture_BNB_v case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- c(0.6, 0.6, 0.4, 0.9, 0.8)
+# theta = 1.1
+#
+#
+# lambda2 <- 18
+# prob2 <-  c(0.65, 0.65, 0.45, 0.95, 0.85)
+# theta2 <- 1.2
+#
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BNB_v(lambda, prob[1:5], theta = theta,
+#                        Nmin = 0, Nmax = 100, len = 5)
+#   for (i in 1:5) {
+#     prob[i] ~ dunif(0, 1)
+#   }
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    theta = theta),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##############################
+# #### dNmixture_BBP_v case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- c(0.6, 0.6, 0.4, 0.9, 0.8)
+# s <- 0.9
+#
+#
+# lambda2 <- 18
+# prob2 <-  c(0.65, 0.65, 0.45, 0.95, 0.85)
+# s2 <- 1.2
+#
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BBP_v(lambda, prob[1:5], s = s,
+#                             Nmin = 0, Nmax = 100, len = 5)
+#   for (i in 1:5) {
+#     prob[i] ~ dunif(0, 1)
+#   }
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    s = s),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##############################
+# #### dNmixture_BBNB_v case ####
+#
+# x <- c(7, 7, 6, 9, 10)
+# lambda <- 15
+# prob <- c(0.6, 0.6, 0.4, 0.9, 0.8)
+# theta <- 1.1
+# s <- 0.9
+#
+#
+# lambda2 <- 18
+# prob2 <-  c(0.65, 0.65, 0.45, 0.95, 0.85)
+# theta2 <- 1.2
+# s2 <- 1.2
+#
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dNmixture_BBNB_v(lambda, prob[1:5], theta = theta, s = s,
+#                            Nmin = 0, Nmax = 100, len = 5)
+#   for (i in 1:5) {
+#     prob[i] ~ dunif(0, 1)
+#   }
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob,
+#                                    lambda = lambda,
+#                                    theta = theta, s = s),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##########################
+# #### dNmixture_BNB_oneObs case ####
+#
+# x <- 8
+# lambda <- 15
+# prob <- 0.7
+# theta <- 1.1
+#
+# lambda2 <- 18
+# prob2 <- 0.66
+# theta2 <- 1.4
+#
+# nc <- nimbleCode({
+#   x ~ dNmixture_BNB_oneObs(lambda, prob, theta = theta,
+#                        Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob, theta = theta,
+#                                    lambda = lambda),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##########################
+# #### dNmixture_BBP_oneObs case ####
+#
+# x <- 8
+# lambda <- 15
+# prob <- 0.7
+# s <- 0.8
+#
+# lambda2 <- 18
+# prob2 <- 0.66
+# s <- 1.1
+#
+# nc <- nimbleCode({
+#   x ~ dNmixture_BBP_oneObs(lambda, prob, s = s,
+#                             Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob, s=s,
+#                                    lambda = lambda),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, s2)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+#
+# ##########################
+# #### dNmixture_BBNB_oneObs case ####
+#
+# x <- 8
+# lambda <- 15
+# prob <- 0.7
+# theta <- 1.1
+# s <- 0.8
+#
+# lambda2 <- 18
+# prob2 <- 0.66
+# theta2 <- 1.4
+# s <- 1.1
+#
+# nc <- nimbleCode({
+#   x ~ dNmixture_BBNB_oneObs(lambda, prob, theta = theta, s = s,
+#                            Nmin = 0, Nmax = 100, len = 5)
+#   prob ~ dunif(0, 1)
+#   lambda ~ dunif(0, 100)
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                       inits = list(prob = prob, theta = theta, s=s,
+#                                    lambda = lambda),
+#                       buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+# v1_case1 <- list(arg1 = c(prob, lambda, theta, s2)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+#
+# model_calculate_test_case(Rmodel, Cmodel,
+#                           model_calculate_test, nodesList_case1,
+#                           v1_case1, v2_case1,
+#                           0:2)
+# }
 
 
 ######################
@@ -339,77 +726,78 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           order = 0:2)
 #######
 
-
-######################
-#### dHMM with 0s in transition matrix case ####
-
-x <- c(1, 1, 1, 2, 2)
-
-init <- c(0.4, 0.2, 0.4)
-probObs <- t(array(
-         c(0.9, 0.1,
-           0.1, 0.9,
-           0.8, 0.2),
-         c(2, 3)))
-
-probTrans <- t(array(
-          c(0.3, 0.4, 0.2,
-            0.1, 0.1, 0.8,
-            0.05, 0.05, 0.9),
-          c(3,3)))
-
-init2 <- c(0.6, 0.1, 0.3)
-probObs2 <- t(array(
-         c(1, 0,
-           0, 1,
-           0.7, 0.3),
-         c(2, 3)))
-
-probTrans2 <- t(array(
-          c(0.4, 0.4, 0.2,
-            0, 0.3, 0.7,
-            0, 0, 1),
-          c(3,3)))
-
-nc <- nimbleCode({
-  x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
-                  probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
-  for (i in 1:2) {
-    init[i] ~ dunif(0, 1)
-  }
-  init[3] <- 1 - init[1] - init[2]
-
-  for (i in 1:3) {
-    probObs[i, 1] ~ dunif(0, 1)
-    probObs[i, 2] <- 1 - probObs[i, 1]
-    probTrans[i, 1] ~ dunif(0, 1)
-    probTrans[i, 2] ~ dunif(0, 1 - probTrans[i, 1])
-    probTrans[i, 3] <- 1 - probTrans[i, 1] - probTrans[i, 2]
-  }
-
-})
-Rmodel <- nimbleModel(nc, data = list(x = x),
-                 inits = list(
-                   init = init,
-                   probObs = probObs,
-                   probTrans = probTrans
-                 ),
-                 buildDerivs=TRUE)
-Rmodel$calculate()
-
-Cmodel <- compileNimble(Rmodel)
-Cmodel$calculate()
-
-nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
-                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
-                                                                       Rmodel$expandNodeNames('probTrans[1:3, 1:3]')
-                                                                       ))
-v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2], probTrans[1:3, 1:3]))
-v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3]))
-
-model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
-                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+# {
+# ######################
+# #### dHMM with 0s in transition matrix case ####
+#
+# x <- c(1, 1, 1, 2, 2)
+#
+# init <- c(0.4, 0.2, 0.4)
+# probObs <- t(array(
+#          c(0.9, 0.1,
+#            0.1, 0.9,
+#            0.8, 0.2),
+#          c(2, 3)))
+#
+# probTrans <- t(array(
+#           c(0.3, 0.4, 0.2,
+#             0.1, 0.1, 0.8,
+#             0.05, 0.05, 0.9),
+#           c(3,3)))
+#
+# init2 <- c(0.6, 0.1, 0.3)
+# probObs2 <- t(array(
+#          c(1, 0,
+#            0, 1,
+#            0.7, 0.3),
+#          c(2, 3)))
+#
+# probTrans2 <- t(array(
+#           c(0.4, 0.4, 0.2,
+#             0, 0.3, 0.7,
+#             0, 0, 1),
+#           c(3,3)))
+#
+# nc <- nimbleCode({
+#   x[1:5] ~ dHMM(init[1:3], probObs = probObs[1:3,1:2],
+#                   probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 0)
+#   for (i in 1:2) {
+#     init[i] ~ dunif(0, 1)
+#   }
+#   init[3] <- 1 - init[1] - init[2]
+#
+#   for (i in 1:3) {
+#     probObs[i, 1] ~ dunif(0, 1)
+#     probObs[i, 2] <- 1 - probObs[i, 1]
+#     probTrans[i, 1] ~ dunif(0, 1)
+#     probTrans[i, 2] ~ dunif(0, 1 - probTrans[i, 1])
+#     probTrans[i, 3] <- 1 - probTrans[i, 1] - probTrans[i, 2]
+#   }
+#
+# })
+# Rmodel <- nimbleModel(nc, data = list(x = x),
+#                  inits = list(
+#                    init = init,
+#                    probObs = probObs,
+#                    probTrans = probTrans
+#                  ),
+#                  buildDerivs=TRUE)
+# Rmodel$calculate()
+#
+# Cmodel <- compileNimble(Rmodel)
+# Cmodel$calculate()
+#
+# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
+#                                                                        Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
+#                                                                        Rmodel$expandNodeNames('probTrans[1:3, 1:3]')
+#                                                                        ))
+# v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2], probTrans[1:3, 1:3]))
+# v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3]))
+#
+# model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+#                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+#                           order = 0:2)
+# }
 #######
 
 ######################
@@ -722,7 +1110,144 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                           order = 0:2)
 
+######################
+#### dDynOcc_vsm case ####
 
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- 0.4
+p <- matrix(rep(c(0.8, 0.7, 0.8, 0.8, 0.9), each = 4), nrow = 4, byrow =TRUE)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- 0.6
+p2 <- matrix(rep(c(0.7, 0.5, 0.3, 0.8, 0.66), each = 4), nrow = 4, byrow =TRUE)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_vsm(init,
+                            probPersist[1:3],
+                            probColonize,
+                            p[1:4,1:5],
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  probColonize ~ dunif(0, 1)
+  for (i in 1:3) {
+    probPersist[i] ~ dunif(0, 1)
+  }
+  for (i in 1:4) {
+    for (j in 1:5) {
+      p[i, j] ~ dunif(0, 1)
+    }
+  }
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init",
+  Rmodel$expandNodeNames('p[1:4, 1:5]'),
+  Rmodel$expandNodeNames('probColonize'),
+  Rmodel$expandNodeNames('probPersist[1:3]')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+######################
+#### dDynOcc_svm case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- 0.4
+probColonize <- c(0.4, 0.2, 0.1)
+p <- matrix(rep(c(0.8, 0.7, 0.8, 0.8, 0.9), each = 4), nrow = 4, byrow =TRUE)
+
+init2 <- 0.9
+probPersist2 <- 0.6
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- matrix(rep(c(0.7, 0.5, 0.3, 0.8, 0.66), each = 4), nrow = 4, byrow =TRUE)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_svm(init,
+                            probPersist,
+                            probColonize[1:3],
+                            p[1:4,1:5],
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+  }
+  probPersist ~ dunif(0, 1)
+  for (i in 1:4) {
+    for (j in 1:5) {
+      p[i, j] ~ dunif(0, 1)
+    }
+  }
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init",
+  Rmodel$expandNodeNames('p[1:4, 1:5]'),
+  Rmodel$expandNodeNames('probColonize[1:3]'),
+  Rmodel$expandNodeNames('probPersist')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
 ######################
 #### dDynOcc_vvv case ####
@@ -784,6 +1309,208 @@ nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
        Rmodel$expandNodeNames('probColonize[1:3]'),
        Rmodel$expandNodeNames('probPersist[1:3]')
    ))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+######################
+#### dDynOcc_vsv case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- 0.5
+p <- c(0.8, 0.7, 0.8, 0.8)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- 0.7
+p2 <- c(0.7, 0.5, 0.3, 0.8)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_vsv(init,
+                            probPersist[1:3],
+                            probColonize,
+                            p[1:4],
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  probColonize ~ dunif(0, 1)
+  for (i in 1:3) {
+    probPersist[i] ~ dunif(0, 1)
+  }
+  for (i in 1:4) {
+    p[i] ~ dunif(0, 1)
+  }
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init",
+  Rmodel$expandNodeNames('p[1:4]'),
+  Rmodel$expandNodeNames('probColonize'),
+  Rmodel$expandNodeNames('probPersist[1:3]')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+######################
+#### dDynOcc_svv case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- 0.5
+probColonize <- c(0.4, 0.2, 0.1)
+p <- c(0.8, 0.7, 0.8, 0.8)
+
+init2 <- 0.9
+probPersist2 <- 0.5
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- c(0.7, 0.5, 0.3, 0.8)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_svv(init,
+                            probPersist,
+                            probColonize[1:3],
+                            p[1:4],
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+  }
+  probPersist ~ dunif(0, 1)
+  for (i in 1:4) {
+    p[i] ~ dunif(0, 1)
+  }
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init",
+  Rmodel$expandNodeNames('p[1:4]'),
+  Rmodel$expandNodeNames('probColonize[1:3]'),
+  Rmodel$expandNodeNames('probPersist')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+######################
+#### dDynOcc_ssv case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- 0.5
+probColonize <- 0.4
+p <- c(0.8, 0.7, 0.8, 0.8)
+
+init2 <- 0.9
+probPersist2 <- 0.5
+probColonize2 <- 0.8
+p2 <- c(0.7, 0.5, 0.3, 0.8)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_ssv(init,
+                            probPersist,
+                            probColonize,
+                            p[1:4],
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  probColonize ~ dunif(0, 1)
+  probPersist ~ dunif(0, 1)
+  for (i in 1:4) {
+    p[i] ~ dunif(0, 1)
+  }
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init",
+  Rmodel$expandNodeNames('p[1:4]'),
+  Rmodel$expandNodeNames('probColonize'),
+  Rmodel$expandNodeNames('probPersist')
+))
 v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
 v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
@@ -856,6 +1583,201 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           order = 0:2)
 
 
+######################
+#### dDynOcc_vss case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- c(0.4, 0.4, 0.1)
+probColonize <- 0.2
+p <- c(0.8)
+
+init2 <- 0.9
+probPersist2 <- c(0.4, 0.4, 0.1)
+probColonize2 <- 0.8
+p2 <- c(0.7)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_vss(init,
+                            probPersist[1:3],
+                            probColonize,
+                            p,
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  probColonize ~ dunif(0, 1)
+  for (i in 1:3) {
+    probPersist[i] ~ dunif(0, 1)
+  }
+  p ~ dunif(0, 1)
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init", "p",
+  Rmodel$expandNodeNames('probColonize'),
+  Rmodel$expandNodeNames('probPersist[1:3]')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+
+######################
+#### dDynOcc_svs case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- 0.3
+probColonize <- c(0.4, 0.2, 0.1)
+p <- c(0.8)
+
+init2 <- 0.9
+probPersist2 <- 0.44
+probColonize2 <- c(0.4, 0.2, 0.1)
+p2 <- c(0.7)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_svs(init,
+                            probPersist,
+                            probColonize[1:3],
+                            p,
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  for (i in 1:3) {
+    probColonize[i] ~ dunif(0, 1)
+  }
+  probPersist ~ dunif(0, 1)
+  p ~ dunif(0, 1)
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init", "p",
+  Rmodel$expandNodeNames('probColonize[1:3]'),
+  Rmodel$expandNodeNames('probPersist')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
+
+# reset options before finishing
+nimbleOptions(enableDerivs = EDopt)
+nimbleOptions(buildModelDerivs = BMDopt)
+
+
+######################
+#### dDynOcc_sss case ####
+
+x <- matrix(c(0,0,NA,0,
+              1,1,1,0,
+              0,0,0,0,
+              0,0,1,0,
+              0,0,0,NA), nrow = 4)
+start <- c(1,1,2,1)
+end <- c(5,5,5,4)
+
+init <- 0.7
+probPersist <- 0.3
+probColonize <- 0.6
+p <- c(0.8)
+
+init2 <- 0.9
+probPersist2 <- 0.44
+probColonize2 <- 0.7
+p2 <- c(0.7)
+
+
+nc <- nimbleCode({
+  x[1:4, 1:5] ~ dDynOcc_sss(init,
+                            probPersist,
+                            probColonize,
+                            p,
+                            start[1:4], end[1:4])
+
+  init ~ dunif(0, 1)
+  probColonize ~ dunif(0, 1)
+  probPersist ~ dunif(0, 1)
+  p ~ dunif(0, 1)
+
+})
+
+Rmodel <- nimbleModel(nc, data = list(x = x),
+                      constants = list(start = start, end = end),
+                      inits = list(
+                        init = init,
+                        p = p,
+                        probColonize = probColonize,
+                        probPersist = probPersist
+                      ),
+                      buildDerivs=TRUE)
+Rmodel$calculate()
+
+Cmodel <- compileNimble(Rmodel)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
+  "init", "p",
+  Rmodel$expandNodeNames('probColonize'),
+  Rmodel$expandNodeNames('probPersist')
+))
+v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
+v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+
+model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
+                          nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
+                          order = 0:2)
 
 # reset options before finishing
 nimbleOptions(enableDerivs = EDopt)
