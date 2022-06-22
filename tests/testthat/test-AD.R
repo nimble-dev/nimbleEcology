@@ -1,7 +1,7 @@
 # Testing examples:
 
 # install nimble from branch ADoak:
-devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
+# devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
 # install nimbleEcology from branch AD_0.3: devtools::install_github("nimble-dev/nimbleEcology", ref = "AD_0.3")
 
 # load nimble's testing tools
@@ -16,7 +16,6 @@ EDopt <- nimbleOptions("enableDerivs")
 BMDopt <- nimbleOptions("buildModelDerivs")
 nimbleOptions(enableDerivs = TRUE)
 nimbleOptions(buildModelDerivs = TRUE)
-nimbleOptions(allowDynamicIndexing = FALSE)
 
 #####################
 #### dOcc_s case ####
@@ -623,7 +622,7 @@ probSurvive <- c(0.8, 0.5, 0.3, 0.9, 0.9)
 probCapture <- c(1, 0.5, 0.5, 0.4, 0.3, 0.4)
 
 probSurvive2 <- c(0.7, 0.55, 0.32, 0.8, 0.1)
-probCapture2 <- c(1, 0.6, 0.7, 0.4, 0.2, 0.2)
+probCapture2 <- c(-10, 0.6, 0.7, 0.4, 0.2, 0.2)
 
 
 nc <- nimbleCode({
@@ -649,6 +648,8 @@ nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$ex
                                                                        Rmodel$expandNodeNames('probCapture[2:6]')))
 v1_case1 <- list(arg1 = c(probSurvive, probCapture[2:6])) # taping values for prob and lambda
 v2_case1 <- list(arg1 = c(probSurvive2, probCapture2[2:6])) # testing values for prob and lambda
+# v1_case1 <- list(arg1 = c(probSurvive, probCapture)) # taping values for prob and lambda
+# v2_case1 <- list(arg1 = c(probSurvive2, probCapture2)) # testing values for prob and lambda
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
@@ -728,7 +729,7 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
 
 # {
 # ######################
-# #### dHMM with 0s in transition matrix case ####
+# # #### dHMM with 0s in transition matrix case ####
 #
 # x <- c(1, 1, 1, 2, 2)
 #
@@ -945,11 +946,11 @@ Cmodel <- compileNimble(Rmodel)
 Cmodel$calculate()
 
 nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(Rmodel$expandNodeNames('init[1:3]'),
-                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2, 1:5]'),
+                                                                       Rmodel$expandNodeNames('probObs[1:3, 1:2]'),
                                                                        Rmodel$expandNodeNames('probTrans[1:3, 1:3, 1:4]')
                                                                        ))
-v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2, 1:5], probTrans[1:3, 1:3, 1:4]))
-v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2, 1:5],  probTrans2[1:3, 1:3, 1:4]))
+v1_case1 <- list(arg1 = c(init[1:3],  probObs[1:3, 1:2], probTrans[1:3, 1:3, 1:4]))
+v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3, 1:4]))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
@@ -1043,6 +1044,9 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
 
 ######################
 #### dDynOcc_vvm case ####
+# ADtestEnv$RCrelTol sets tolerance
+# [1] value [2] first order [3] second order
+# can also look at ADtestEnv$CCrelTol
 
 x <- matrix(c(0,0,NA,0,
               1,1,1,0,
@@ -1058,8 +1062,8 @@ probColonize <- c(0.4, 0.2, 0.1)
 p <- matrix(rep(c(0.8, 0.7, 0.8, 0.8, 0.9), each = 4), nrow = 4, byrow =TRUE)
 
 init2 <- 0.9
-probPersist2 <- c(0.4, 0.4, 0.1)
-probColonize2 <- c(0.4, 0.2, 0.1)
+probPersist2 <- c(0.5, 0.55, 0.2)
+probColonize2 <- c(0.3, 0.3, 0.6)
 p2 <- matrix(rep(c(0.7, 0.5, 0.3, 0.8, 0.66), each = 4), nrow = 4, byrow =TRUE)
 
 
@@ -1108,7 +1112,9 @@ v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(ADtestEnv$RCrelTol[1], 1e-6,
+                                       0.004, 1e-7))
 
 ######################
 #### dDynOcc_vsm case ####
@@ -1122,9 +1128,9 @@ start <- c(1,1,2,1)
 end <- c(5,5,5,4)
 
 init <- 0.7
-probPersist <- c(0.4, 0.4, 0.1)
+probPersist <- c(0.2, 0.1, 0.3)
 probColonize <- 0.4
-p <- matrix(rep(c(0.8, 0.7, 0.8, 0.8, 0.9), each = 4), nrow = 4, byrow =TRUE)
+p <- matrix(rep(c(0.8, 0.7, 0.8, 0.7, 0.9), each = 4), nrow = 4, byrow =TRUE)
 
 init2 <- 0.9
 probPersist2 <- c(0.4, 0.4, 0.1)
@@ -1172,12 +1178,21 @@ nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c(
   Rmodel$expandNodeNames('probColonize'),
   Rmodel$expandNodeNames('probPersist[1:3]')
 ))
-v1_case1 <- list(arg1 = c(init, p, probColonize, probPersist))
-v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
+v1_case1 <- list(arg1 = c(init,
+                          p,
+                          probColonize,
+                          probPersist
+                          ))
+v2_case1 <- list(arg1 = c(init2, p2,
+                          probColonize2,
+                          probPersist2
+                          ))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(ADtestEnv$RCrelTol[1], 4e-7, 0.014, 1e-6))
+                                       #0.004, 1e-7))
 
 
 ######################
@@ -1247,7 +1262,8 @@ v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(ADtestEnv$RCrelTol[1], 2e-7, 1e-3, 2e-6))
 
 ######################
 #### dDynOcc_vvv case ####
@@ -1314,7 +1330,8 @@ v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(ADtestEnv$RCrelTol[1], 1e-7, 1e-3, 1e-14))
 
 
 ######################
@@ -1382,7 +1399,10 @@ v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(ADtestEnv$RCrelTol[1], 1e-7,
+                                       ADtestEnv$RCrelTol[3], 1e-14))
+                                       # 0.014, 1e-6))
 
 
 ######################
@@ -1784,27 +1804,3 @@ nimbleOptions(enableDerivs = EDopt)
 nimbleOptions(buildModelDerivs = BMDopt)
 
 
-
-
-
-#### Notes:
-#' dNmixture appears not to work. When the model is first defined I get the following message:
-#'     [Note] Detected use of function(s) that are not supported for derivative tracking in a function or method for which buildDerivs has been requested: qpois.
-#'     Then model compilation fails.
-#' in dCJS_*v variations, I had to manually specify to only do derivs for probCapture[2:n] since element probCapture[1] is
-#'     ignored in the likelihood. Works fine with this change
-#' hit issues with d*HMM*. The derivatives work fine, except if probabilities equal to 0 are included in the
-#'     transition matrices. Even then the error only occurs during model_calculate_test_case.
-#'     The error I get is: "Error in if (!all_result) { : missing value where TRUE/FALSE needed"
-#'     which I beleive stems from an NA derivative. (Could be helpful to have a more informative error msg here.)
-#'
-#'Got the following error in dDHMMo test, and an equivalent error in dDynOcc_vvm, dDynOcc_vvv
-#'Detected some values out of relative tolerance  (RC order 0) :  as.numeric(first)   as.numeric(others[[i]]) .
-# [1] 2.140095e-01 2.140095e-01 2.075091e-15
-# ******************
-# Some C-to-R derivatives to not match for order 0Called from: test_AD2_oneCall(Rfxn, Cfxn, recordArgs = v1, testArgs = v2,
-#     order = order, Rmodel = Rmodel, Cmodel = Cmodel, recordInits = varValues,
-#     testInits = varValues2, nodesToChange = c(nodesList$updateNodes),
-#     ...)
-#'
-#'

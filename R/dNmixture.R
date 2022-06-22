@@ -259,7 +259,7 @@ dNmixture_v <- nimbleFunction(
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-}, buildDerivs = TRUE
+}
 )
 
 NULL
@@ -307,7 +307,7 @@ dNmixture_s <- nimbleFunction(
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-}, buildDerivs = TRUE
+}
 )
 
 NULL
@@ -421,7 +421,7 @@ dNmixture_BNB_v <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BNB_s #####
@@ -489,7 +489,7 @@ dNmixture_BNB_s <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BNB_oneObs #####
@@ -556,7 +556,7 @@ dNmixture_BNB_oneObs <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BBP_v #####
@@ -617,7 +617,7 @@ dNmixture_BBP_v <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BBP_s #####
@@ -677,7 +677,7 @@ dNmixture_BBP_s <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BBP_oneObs #####
@@ -735,7 +735,7 @@ dNmixture_BBP_oneObs <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 
@@ -806,7 +806,7 @@ dNmixture_BBNB_v <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BBNB_s #####
@@ -875,7 +875,7 @@ dNmixture_BBNB_s <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### dNmixture_BBNB_oneObs #####
@@ -943,7 +943,7 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = TRUE
+  }
 )
 
 ##### rNmixture extensions #####
