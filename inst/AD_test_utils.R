@@ -213,7 +213,7 @@ test_AD2_oneCall <- function(Robj, Cobj,
           argsLength <- length(wrt_all)
           reorder_jac_jac <- function(x) {
             outLength <- length(x) / (argsLength*argsLength)
-            as.numeric(x) |> array(c(outLength, argsLength, argsLength)) |> aperm(c(2, 3, 1))
+            aperm(array(as.numeric(x), c(outLength, argsLength, argsLength)), c(2, 3, 1))
           }
         }
         if(doR) {
