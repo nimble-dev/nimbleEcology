@@ -7,8 +7,8 @@
 # load nimble's testing tools
 library(nimble)
 library(nimbleEcology)
-source(system.file(file.path('tests', 'testthat', 'test_utils.R'), package = 'nimble'))
-source(system.file(file.path('tests', 'testthat', 'AD_test_utils.R'), package = 'nimble'))
+source(system.file('test_utils.R', package = 'nimbleEcology'))
+source(system.file('AD_test_utils.R', package = 'nimbleEcology'))
 # source("../nimble/packages/nimble/tests/testthat/test_utils.R")
 # source("../nimble/packages/nimble/tests/testthat/AD_test_utils.R")
 
