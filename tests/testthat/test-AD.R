@@ -17,6 +17,8 @@ BMDopt <- nimbleOptions("buildModelDerivs")
 nimbleOptions(enableDerivs = TRUE)
 nimbleOptions(buildModelDerivs = TRUE)
 
+test_that("dOcc works with AD",
+          {
 #####################
 #### dOcc_s case ####
 
@@ -82,8 +84,8 @@ model_calculate_test_case(Rmodel, Cmodel,
                           model_calculate_test, nodesList_case1,
                           v1_case1, v2_case1,
                           0:2)
-
-# {
+})
+# test_that ("dNmixture works with AD", {
 # ##########################
 # #### dNmixture_s case ####
 #
@@ -503,9 +505,10 @@ model_calculate_test_case(Rmodel, Cmodel,
 #                           model_calculate_test, nodesList_case1,
 #                           v1_case1, v2_case1,
 #                           0:2)
-# }
+# })
 
 
+test_that("dCJS works with AD", {
 ######################
 #### dCJS_ss case ####
 
@@ -654,7 +657,11 @@ v2_case1 <- list(arg1 = c(probSurvive2, probCapture2[2:6])) # testing values for
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                           order = 0:2)
+})
 
+
+
+test_that("dHMM works with AD", {
 ######################
 #### dHMM case ####
 
@@ -878,8 +885,10 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                           order = 0:2)
 #######
+})
 
 
+test_that("dDHMM works with AD", {
 ######################
 #### dDHMM case ####
 
@@ -1041,7 +1050,9 @@ model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                           order = 0:2)
 #######
+})
 
+test_that("dDynOcc works with AD", {
 ######################
 #### dDynOcc_vvm case ####
 # ADtestEnv$RCrelTol sets tolerance
@@ -1798,6 +1809,7 @@ v2_case1 <- list(arg1 = c(init, p2, probColonize2, probPersist2))
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                           order = 0:2)
+})
 
 # reset options before finishing
 nimbleOptions(enableDerivs = EDopt)
