@@ -14,7 +14,7 @@ Description: Common ecological distributions for 'nimble' models in the form of 
   (Jolly (1965) <DOI: 10.2307/2333826>, Seber (1965) <DOI: 10.2307/2333827>, Turek et al. (2016) <doi:10.1007/s10651-016-0353-z>).
 License: GPL-3
 Copyright: Copyright (c) 2019, Perry de Valpine, Ben Goldstein, Daniel Turek, Lauren Ponisio
-Depends: R (>= 3.4.0), nimble, numDeriv, pracma
+Depends: R (>= 4.0.0), nimble
 Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/nimble-dev/nimbleEcology
