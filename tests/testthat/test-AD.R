@@ -862,6 +862,8 @@ nc <- nimbleCode({
   }
 
 })
+
+# capture <- capture_warning(
 Rmodel <- nimbleModel(nc, data = list(x = x),
                  inits = list(
                    init = init,
@@ -869,6 +871,8 @@ Rmodel <- nimbleModel(nc, data = list(x = x),
                    probTrans = probTrans
                  ),
                  buildDerivs=TRUE)
+# )
+
 Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
@@ -942,6 +946,8 @@ nc <- nimbleCode({
   }
 
 })
+
+# capture <- capture_warning(
 Rmodel <- nimbleModel(nc, data = list(x = x),
                  inits = list(
                    init = init,
@@ -949,6 +955,7 @@ Rmodel <- nimbleModel(nc, data = list(x = x),
                    probTrans = probTrans
                  ),
                  buildDerivs=TRUE)
+# )
 Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
@@ -963,7 +970,8 @@ v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2],  probTrans2[1:3, 1:3, 
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(3e-15, 1e-8, 1e-3, 1e-14))
 #######
 
 
@@ -1027,6 +1035,7 @@ nc <- nimbleCode({
   }
 
 })
+# capture <- capture_warning(
 Rmodel <- nimbleModel(nc, data = list(x = x),
                  inits = list(
                    init = init,
@@ -1034,6 +1043,7 @@ Rmodel <- nimbleModel(nc, data = list(x = x),
                    probTrans = probTrans
                  ),
                  buildDerivs=TRUE)
+# )
 Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
@@ -1048,9 +1058,11 @@ v2_case1 <- list(arg1 = c(init2[1:3], probObs2[1:3, 1:2, 1:5],  probTrans2[1:3, 
 
 model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                           nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
-                          order = 0:2)
+                          order = 0:2,
+                          RCrelTol = c(1e-14, 1e-8, 1e-3, 1e-14))
 #######
 })
+
 
 test_that("dDynOcc works with AD", {
 ######################
