@@ -72,7 +72,7 @@ jobs:
         run: |
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble") # Remove this line once AD is released in NIMBLE
+          remotes::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble") # Remove this line once AD is released in NIMBLE
         shell: Rscript {0}
 
       - name: Session info
