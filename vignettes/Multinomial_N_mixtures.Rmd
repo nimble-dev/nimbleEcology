@@ -1,0 +1,303 @@
+---
+title: "Multinomial-Negative Binomial N-Mixture Models"
+author: "Juniper Simonis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+description: >
+  A worked example of multinomial mixture models.
+vignette: >
+  %\VignetteIndexEntry{Multinomial-Negative Binomial N-Mixture Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+  ,eval = TRUE ## uncomment this to build quickly without running code.
+)
+```
+
+
+This vignette details the use of two Multinomial - Negative Binomial mixture models in nimble:
+  - Nmixture_MNB_s  is a multinomial with scalar p 
+  - Nmixture_MNB_v  is a multinomial with vector p
+
+This example follows that implemented in the foundational paper by Haines (2020), with additional complexities.
+
+
+The distributions are parameterized in terms of mean (mu), scale (r) and visit-specific detection probability (p), where there are J visits to a given site.
+
+For extension of the basic model (with a single site), we replicate the distribution across R total sites (i in 1 ... R), each with variable numbers of visits (J_i) and J_tot total visits across all sites.
+
+We also include covariates on site abundance (z) and detection probability (w), the latter of which include site- and search-specific values (wR and wJ, respectively). 
+These covariates influence the mu and p parameters via generalized linear models (b and g parameters, respectively; log and logit links, respectively).
+
+To accommodate uneven sampling effort across sites, we use nested indexing approaches, and facilitate efficiency by pre-determining the index locations (spot1, spot2 corresponding to the first and last) for each site's values within the search-level vector.
+
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+library(nimble)
+library(nimbleEcology)
+```
+
+```{r}
+  
+  set.seed(1312)
+
+  # Parameters and constants
+
+    mu <- 28.05
+    p  <- 0.61
+    r  <- 11.4
+    rt <- log(r)
+    b0 <- 3.077
+    b1 <- 0.101
+    g0 <- 0.5
+    g1 <- 0.125
+    g2 <- 0.125
+
+    R     <- 20
+    J_i   <- rep(3:5, length.out = R)
+    J_tot <- sum(J_i)
+
+    spot1 <- integer(R)
+    spot2 <- integer(R)
+    for (i in 1:R) {
+      spot1[i] <- (sum(J_i[1:i]) - J_i[i] + 1)
+      spot2[i] <- (sum(J_i[1:i]))
+    }
+
+
+  # Covariates
+
+    z       <- rnorm(R, 0, 1)
+    wR_draw <- rnorm(R, 0, 1) 
+    wR      <- rep(wR_draw, J_i)
+    wJ_draw <- rnorm(max(J_i), 0, 1)
+    wJ      <- wJ_draw[sequence(J_i)]
+
+
+  # Derived parameters
+  #  mu at the site level
+  #  p  at the site level for the scalar model
+  #     at the visit level for the vector model
+
+    mu_i  <- exp(b0 + b1 * z)
+    p_s_i <- expit(g0 + g1 * wR_draw)
+    p_v_j <- expit(g0 + g1 * wR + g2 * wJ)
+
+
+  # Simulate observations from scalar and vector p
+  
+    ys <- NULL
+    for (i in 1:R) {
+      ys <- c(ys, rNmixture_MNB_s(n = 1, mu = mu_i[i], p = p_s_i[i], r = r, J = J_i[i]))
+    }
+
+    yv <- NULL
+    for (i in 1:R) {
+      spots_in <- (sum(J_i[1:i]) - J_i[i] + 1):sum(J_i[1:i])
+      yv       <- c(yv, rNmixture_MNB_v(n = 1, mu = mu_i[i], p = p_v_j[spots_in], r = r, J = J_i[i]))
+    }
+```
+
+Next, we construct the scalar and vector model code:
+
+
+```{r}
+
+
+  nc_s <- nimbleCode({
+
+    rt ~ dnorm(0, 0.1)
+
+    b0 ~ dnorm(0, 0.5)
+    b1 ~ dnorm(0, 0.1)
+
+    g0 ~ dnorm(0, 0.5)
+    g1 ~ dnorm(0, 0.1)
+
+
+    r <- exp(rt)
+  
+    for (i in 1:R) {
+
+      mut_i[i] <- b0 + b1 * z[i] 
+      mu_i[i]  <- exp(mut_i[i])
+      pt_i[i]  <- g0 + g1 * wR[i]
+      p_i[i]   <- expit(pt_i[i])
+
+      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_s(mu = mu_i[i], p = p_i[i], r = r, J = J_i[i])
+
+    }
+	
+  })
+
+  nc_v <- nimbleCode({
+
+    rt ~ dnorm(0, 0.1)
+
+    b0 ~ dnorm(0, 0.5)
+    b1 ~ dnorm(0, 0.1)
+  
+    g0 ~ dnorm(0, 0.5)
+    g1 ~ dnorm(0, 0.1)
+    g2 ~ dnorm(0, 0.1)
+
+    r <- exp(rt)
+    
+    pt_j[1:J_tot] <- g0 + g1 * wR[1:J_tot] + g2 * wJ[1:J_tot]
+    p_j[1:J_tot]  <- expit(pt_j[1:J_tot])
+
+    for (i in 1:R) {
+	
+      mut_i[i] <- b0 + b1 * z[i] 
+      mu_i[i]  <- exp(mut_i[i])
+	  
+      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_v(mu = mu_i[i], p = p_j[spot1[i]:spot2[i]], r = r, J = J_i[i])
+
+    }
+
+  })
+  
+```
+
+This allows us to combine scalar and vector data and models cross-wise into four full model objects:
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+
+  # Scalar data, scalar model
+
+    nmix_ss <- nimbleModel(nc_s,
+                           constants = list(J_i = J_i, R = R, spot1 = spot1, spot2 = spot2, J_tot = J_tot),
+                           data = list(x = ys, z = z, wR = wR),
+                           inits = list(b0 = b0,
+                                        b1 = b1,
+                                        g0 = g0,
+                                        g1 = g1,
+                                        rt = rt))
+
+
+  # Scalar data, vector model
+
+     nmix_sv <- nimbleModel(nc_v,
+                           constants = list(J_i = J_i, R = R, spot1 = spot1, spot2 = spot2, J_tot = J_tot),
+                           data = list(x = ys, z = z, wR = wR, wJ = wJ),
+                           inits = list(b0 = b0,
+                                        b1 = b1,
+                                        g0 = g0,
+                                        g1 = g1,
+                                        g2 = g2,
+                                        rt = rt))
+
+
+  # Vector data, scalar model
+
+     nmix_vs <- nimbleModel(nc_s,
+                           constants = list(J_i = J_i, R = R, spot1 = spot1, spot2 = spot2, J_tot = J_tot),
+                           data = list(x = yv, z = z, wR = wR),
+                           inits = list(b0 = b0,
+                                        b1 = b1,
+                                        g0 = g0,
+                                        g1 = g1,
+                                        rt = rt))
+
+
+  # Vector data, vector model
+
+     nmix_vv <- nimbleModel(nc_v,
+                           constants = list(J_i = J_i, R = R, spot1 = spot1, spot2 = spot2, J_tot = J_tot),
+                           data = list(x = yv, z = z, wR = wR, wJ = wJ),
+                           inits = list(b0 = b0,
+                                        b1 = b1,
+                                        g0 = g0,
+                                        g1 = g1,
+                                        g2 = g2,
+                                        rt = rt))
+```
+
+Which we can then use in a variety of ways!
+
+```{r, results='hide', messages=FALSE,warnings=FALSE}
+
+  # Calculate based on provided parameters
+
+    nmix_ss$calculate()
+    nmix_sv$calculate()
+    nmix_vs$calculate()
+    nmix_vv$calculate()
+
+
+  # Compile and sample the models 10,000 times
+
+    cnmix_ss     <- compileNimble(nmix_ss)
+    nmix_ssMCMC  <- buildMCMC(nmix_ss)
+    cnmix_ssMCMC <- compileNimble(nmix_ssMCMC, project = cnmix_ss)
+    samples_ss   <- runMCMC(cnmix_ssMCMC, niter = 10000)
+
+    cnmix_sv     <- compileNimble(nmix_sv)
+    nmix_svMCMC  <- buildMCMC(nmix_sv)
+    cnmix_svMCMC <- compileNimble(nmix_svMCMC, project = cnmix_sv)
+    samples_sv   <- runMCMC(cnmix_svMCMC, niter = 10000)
+
+    cnmix_vs     <- compileNimble(nmix_vs)
+    nmix_vsMCMC  <- buildMCMC(nmix_vs)
+    cnmix_vsMCMC <- compileNimble(nmix_vsMCMC, project = cnmix_vs)
+    samples_vs   <- runMCMC(cnmix_vsMCMC, niter = 10000)
+
+    cnmix_vv     <- compileNimble(nmix_vv)
+    nmix_vvMCMC  <- buildMCMC(nmix_vv)
+    cnmix_vvMCMC <- compileNimble(nmix_vvMCMC, project = cnmix_vv)
+    samples_vv   <- runMCMC(cnmix_vvMCMC, niter = 10000)
+
+```
+
+And plot the last 1,000
+
+### Scalar data, scalar model
+
+```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE, fig.dim =c(6, 3), fig.align="center"}
+  par(mar = c(4, 4, 1, 1))
+  plot(samples_ss[9001:10000, "b0"], type = "l", ylab = "b0", las = 1, xlab = "sample")
+  plot(samples_ss[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
+  plot(samples_ss[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
+  plot(samples_ss[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_ss[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+```
+
+### Scalar data, vector model
+
+```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE, fig.dim =c(6, 3), fig.align="center"}
+  par(mar = c(4, 4, 1, 1))
+  plot(samples_sv[9001:10000, "b0"], type = "l", ylab = "b0", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "g2"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+```
+
+### Vector data, scalar model
+
+```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE, fig.dim =c(6, 3), fig.align="center"}
+  par(mar = c(4, 4, 1, 1))
+  plot(samples_vs[9001:10000, "b0"], type = "l", ylab = "b0", las = 1, xlab = "sample")
+  plot(samples_vs[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
+  plot(samples_vs[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
+  plot(samples_vs[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_vs[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+```
+
+### Vector data, vector model
+
+```{r, echo = FALSE, results='hide', messages=FALSE,warnings=FALSE, fig.dim =c(6, 3), fig.align="center"}
+  par(mar = c(4, 4, 1, 1))
+  plot(samples_vv[9001:10000, "b0"], type = "l", ylab = "b0", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "g2"], type = "l", ylab = "g1", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+```

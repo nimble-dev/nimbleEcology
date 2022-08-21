@@ -2,7 +2,7 @@
 .onAttach <- function(libname, pkgname) {
 
   packageStartupMessage("Loading nimbleEcology. Registering the following distributions:\n ",
-                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n")
+                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture", ", dNmixture_M.\n")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -521,4 +521,37 @@
   )
 
 
+  registerDistributions(list(
+    dNmixture_MNB_s = list(
+      BUGSdist = "dNmixture_MNB_s(mu, p, r, J)",
+      Rdist = "dNmixture_MNB_s(mu, p, r, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'mu = double()',
+                'p = double()',
+                'r = double()',
+                'J = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
+
+  registerDistributions(list(
+    dNmixture_MNB_v = list(
+      BUGSdist = "dNmixture_MNB_v(mu, p, r, J)",
+      Rdist = "dNmixture_MNB_v(mu, p, r, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'mu = double()',
+                'p = double(1)',
+                'r = double()',
+                'J = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+  
 })}
