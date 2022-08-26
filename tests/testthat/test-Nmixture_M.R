@@ -136,6 +136,7 @@ test_that("dNmixture_MNB_s works",
       # Uncompiled calculation
           x  <- c(1, 0, 1, 3, 2)
           mu <- 8
+          r  <- 0.5
           p  <- 0.4
           J  <- 5
 
