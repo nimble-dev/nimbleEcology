@@ -111,7 +111,8 @@ test_that("dNmixture_MNB_v works",
           }
           expect_identical(xSim, CxSim)
 
-          simNodes <- m$getDependencies(c('prob', 'mu'), self = FALSE)
+          simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
+
           mxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for(i in 1:nSim) {
@@ -209,7 +210,7 @@ test_that("dNmixture_MNB_s works",
           }
           expect_identical(xSim, CxSim)
 
-          simNodes <- m$getDependencies(c('prob', 'mu'), self = FALSE)
+          simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
           mxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for(i in 1:nSim) {
