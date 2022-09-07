@@ -17,22 +17,53 @@ test_that("dNmixture_MNB_v works",
           J  <- 5
           probX <- dNmixture_MNB_v(x = x, mu = mu, p = p, r = r, J = J)
 
-      # Manually calculate the correct answer
 
-          x_tot <- sum(x)
-          x_miss <- sum(x * nimSeq(0, J - 1))
-          pp <- nimC(0, p)
-          prob <- nimNumeric(J)
+      # Calaculate likelihood using truncated infinite sum approach
+          K <- 1000
+          pp <- c(0, p)
+          prob <- numeric(J + 1)
           for (j in 1:J) {
-              prob[j] <- prod(1 - pp[1:j]) * p[j]
+            prob[j] <- prod(1 - pp[1:j]) * p[j]
           }
-          ptot <- sum(prob)
-          term1 <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-          term2 <- r * log(r) + x_tot * log(mu)
-          term3 <- sum(x * log(prob))
-          term4 <- -(x_tot + r) * log(r + mu * ptot)
-          logProb <- term1 + term2 + term3 + term4
-          correctProbX <- exp(logProb)
+          prob[J + 1] <- 1 - sum(prob[1:J])
+
+
+          min_N <- sum(x)
+          max_N <- K
+
+
+          # Manually calculate the correct answer via trunc inf sum
+          N_vec <- min_N:max_N
+          l_vec <- numeric(length(N_vec))
+          for (i in 1:length(N_vec)) {
+            # log prob of N
+            lp_N <- dnbinom(x = N_vec[i], size = r,
+                            prob = 1/(1 + (1/r) * mu), log = TRUE)
+
+            # Log prob of data
+            lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
+                              log = TRUE)
+
+            l_vec[i] <- exp(lp_N + lp_x)
+          }
+          correctProbX <- sum(l_vec)
+#
+#       # Manually calculate the correct answer
+#
+#           x_tot <- sum(x)
+#           x_miss <- sum(x * nimSeq(0, J - 1))
+#           pp <- nimC(0, p)
+#           prob <- nimNumeric(J)
+#           for (j in 1:J) {
+#               prob[j] <- prod(1 - pp[1:j]) * p[j]
+#           }
+#           ptot <- sum(prob)
+#           term1 <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
+#           term2 <- r * log(r) + x_tot * log(mu)
+#           term3 <- sum(x * log(prob))
+#           term4 <- -(x_tot + r) * log(r + mu * ptot)
+#           logProb <- term1 + term2 + term3 + term4
+#           correctProbX <- exp(logProb)
 
           expect_equal(probX, correctProbX)
 
@@ -142,6 +173,36 @@ test_that("dNmixture_MNB_s works",
           J  <- 5
 
           probX <- dNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J)
+
+
+      # Calaculate likelihood using truncated infinite sum approach
+          K <- 1000
+          prob <- numeric(J + 1)
+          for (i in 1:(J)) {
+            prob[i] <- pow(1 - p, i - 1) * p
+          }
+          prob[J + 1] <- 1 - sum(prob[1:J])
+
+          min_N <- sum(x)
+          max_N <- K
+
+      # Manually calculate the correct answer via trunc inf sum
+          N_vec <- min_N:max_N
+          l_vec <- numeric(length(N_vec))
+          for (i in 1:length(N_vec)) {
+            # log prob of N
+            lp_N <- dnbinom(x = N_vec[i], size = r,
+                            prob = 1/(1 + (1/r) * mu), log = TRUE)
+
+            # Log prob of data
+            lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
+                              log = TRUE)
+
+            l_vec[i] <- exp(lp_N + lp_x)
+          }
+          correctProbX <- sum(l_vec)
+
+          expect_equal(correctProbX, probX)
 
       # Uncompiled log probability
           lProbX <- dNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J, log = TRUE)
