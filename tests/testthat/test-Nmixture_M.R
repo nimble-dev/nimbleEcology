@@ -291,7 +291,7 @@ test_that("dNmixture_MNB_s works",
 
 
 # -----------------------------------------------------------------------------
-#### 1. Test dNmixture_MP_v ####
+#### 3. Test dNmixture_MP_v ####
 test_that("dNmixture_MP_v works",
           {
             # Uncompiled calculation
@@ -360,7 +360,7 @@ test_that("dNmixture_MP_v works",
             m <- nimbleModel(code = nc,
                              data = list(x = x),
                              inits = list(mu = mu,
-                                          p = p, r = r),
+                                          p = p),
                              constants = list(J = J))
             m$calculate()
             MlProbX <- m$getLogProb("x")
@@ -427,6 +427,8 @@ test_that("dNmixture_MP_v works",
           })
 
 
+# -----------------------------------------------------------------------------
+#### 4. Test dNmixture_MP_s ####
 
 test_that("dNmixture_MP_s works",
           {
@@ -495,7 +497,7 @@ test_that("dNmixture_MP_s works",
             m <- nimbleModel(code = nc,
                              data = list(x = x),
                              inits = list(mu = mu,
-                                          p = p, r = r),
+                                          p = p),
                              constants = list(J = J))
             m$calculate()
             MlProbX <- m$getLogProb("x")
