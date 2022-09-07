@@ -6,17 +6,18 @@
 # dNmixture_M
 #' @title Multinomial N-mixture distribution for use in \code{nimble} models
 #'
-#' @description \code{dNmixture_MNB_s} and \code{dNmixture_MNB_v} provide Multinomial Negative Binomial (MNB) mixture distributions of abundance ("N-mixture") for use in \code{nimble} models. 
+#' @description \code{dNmixture_MNB_s} and \code{dNmixture_MNB_v} provide Multinomial Negative Binomial (MNB) mixture distributions of abundance ("N-mixture") for use in \code{nimble} models.
 #'
 #' @name dNmixture_M
-#' @aliases dNmixture_MNB_s dNmixture_MNB_v rNmixture_MNB_s rNmixture_MNB_v 
+#' @aliases dNmixture_MNB_s dNmixture_MNB_v rNmixture_MNB_s rNmixture_MNB_v
+#' dNmixture_MP_s dNmixture_MP_v rNmixture_MP_s rNmixture_MP_v
 #'
 #' @author Juniper Simonis
 #'
 #' @param x vector of integer counts from a series of sampling occasions.
-#' @param mu expected value of the Negative Binomial distribution of true abundance.
-#' @param r shape parameter defining overdispersion. As \code{r} approaches 0, the Negative Binomial converges to a Poisson.
-#' @param p detection probability (scalar for \code{dNmixture_MNB_s}, vector for \code{dNmixture_MNB_v}).
+#' @param mu expected value of the (negative binomial or Poisson) distribution of true abundance.
+#' @param r shape parameter defining overdispersion. As \code{r} approaches 0, the negative binomial converges to a Poisson.
+#' @param p detection probability (scalar for \code{dNmixture_M\*_s}, vector for \code{dNmixture_M\*_v}).
 #' @param J integer number of searches.
 #' @param log \code{TRUE} or \code{1} to return log probability. \code{FALSE} or \code{0} to return probability.
 #' @param n number of random draws, each returning a vector of length \code{len}. Currently only \code{n = 1} is supported, but the argument exists for standardization of "\code{r}" functions.
@@ -68,9 +69,9 @@
 #'     for (j in 1:J) {
 #'       p[j] ~ dunif(0, 1)
 #'     }
-#'  
+#'
 #'     x[1:J] ~ dNmixture_MNB_v(mu = mu, p = p[1:J], r = r, J = J)
-#'  
+#'
 #'   })
 #'
 #' # Construct the model object
@@ -113,7 +114,7 @@ dNmixture_MNB_s <- nimbleFunction(
 
   if (log) return(logProb)
   else return(exp(logProb))
-  returnType(double())  
+  returnType(double())
 
 })
 
@@ -161,11 +162,18 @@ dNmixture_MNB_v <- nimbleFunction(
   x_tot <- sum(x)
   x_miss <- sum(x * seq(0, J - 1))
   pp <- c(0, p)
-    prob <- numeric(J)
-    for (j in 1:J) {
-      prob[j] <- prod(1 - pp[1:j]) * p[j]
-    }
-    ptot <- sum(prob)
+  prob <- numeric(J)
+  for (j in 1:J) {
+    prob[j] <- prod(1 - pp[1:j]) * p[j]
+  }
+  ptot <- sum(prob)
+
+  # from _s:
+  # term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
+  # term2   <- r * log(r) + x_tot * log(mu)
+  # term3   <- x_tot * log(p) + x_miss * log(1 - p)
+  # term4   <- -(x_tot + r) * log(r + mu * (1 - (1 - p) ^ J))
+  #
 
   term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
   term2   <- r * log(r) + x_tot * log(mu)
@@ -175,7 +183,7 @@ dNmixture_MNB_v <- nimbleFunction(
 
   if (log) return(logProb)
   else return(exp(logProb))
-  returnType(double())  
+  returnType(double())
 
 })
 
