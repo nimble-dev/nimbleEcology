@@ -11,11 +11,11 @@ test_that("dNmixture_MNB_v works",
           {
       # Uncompiled calculation
           x  <- c(1, 0, 1, 3, 0)
-          mu <- 8
-          r  <- 0.5
+          lambda <- 8
+          theta  <- 0.5
           p  <- c(0.5, 0.3, 0.5, 0.4, 0.1)
           J  <- 5
-          probX <- dNmixture_MNB_v(x = x, mu = mu, p = p, r = r, J = J)
+          probX <- dNmixture_MNB_v(x = x, lambda = lambda, p = p, theta = theta, J = J)
 
 
       # Calaculate likelihood using truncated infinite sum approach
@@ -37,8 +37,8 @@ test_that("dNmixture_MNB_v works",
           l_vec <- numeric(length(N_vec))
           for (i in 1:length(N_vec)) {
             # log prob of N
-            lp_N <- dnbinom(x = N_vec[i], size = r,
-                            prob = 1/(1 + (1/r) * mu), log = TRUE)
+            lp_N <- dnbinom(x = N_vec[i], size = 1/theta,
+                            prob = 1/(1 + theta * lambda), log = TRUE)
 
             # Log prob of data
             lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
@@ -69,7 +69,7 @@ test_that("dNmixture_MNB_v works",
 
       # Uncompiled log probability
 
-          lProbX        <- dNmixture_MNB_v(x = x, mu = mu, p = p, r = r, J = J, log = TRUE)
+          lProbX        <- dNmixture_MNB_v(x = x, lambda = lambda, p = p, theta = theta, J = J, log = TRUE)
           lCorrectProbX <- log(correctProbX)
 
           expect_equal(lProbX, lCorrectProbX)
@@ -77,25 +77,25 @@ test_that("dNmixture_MNB_v works",
       # Compilation and compiled calculations
 
           CdNmixture_MNB_v <- compileNimble(dNmixture_MNB_v)
-          CprobX <- CdNmixture_MNB_v(x = x, mu = mu, p = p, r = r, J = J)
+          CprobX <- CdNmixture_MNB_v(x = x, lambda = lambda, p = p, theta = theta, J = J)
 
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdNmixture_MNB_v(x = x, mu = mu, p = p, r = r, J = J, log = TRUE)
+          ClProbX <- CdNmixture_MNB_v(x = x, lambda = lambda, p = p, theta = theta, J = J, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
 
       # Use in Nimble model
           nc <- nimbleCode({
-            x[1:5] ~ dNmixture_MNB_v(mu = mu, p = p[1:5], r = r,
+            x[1:5] ~ dNmixture_MNB_v(lambda = lambda, p = p[1:5], theta = theta,
                                  J = J)
 
           })
 
           m <- nimbleModel(code = nc,
                            data = list(x = x),
-                           inits = list(mu = mu,
-                                        p = p, r = r),
+                           inits = list(lambda = lambda,
+                                        p = p, theta = theta),
                            constants = list(J = J))
           m$calculate()
           MlProbX <- m$getLogProb("x")
@@ -110,8 +110,8 @@ test_that("dNmixture_MNB_v works",
       # Test imputing value for all NAs
           xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
-                 inits = list(mu = mu,
-                              p = p, r = r),
+                 inits = list(lambda = lambda,
+                              p = p, theta = theta),
                  constants = list(J = J))
 
 
@@ -131,18 +131,18 @@ test_that("dNmixture_MNB_v works",
           xSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for (i in 1:nSim) {
-            xSim[i,] <- rNmixture_MNB_v(1, mu = mu, p = p, r = r, J = J)
+            xSim[i,] <- rNmixture_MNB_v(1, lambda = lambda, p = p, theta = theta, J = J)
           }
 
           CrNmixture_MNB_v <- compileNimble(rNmixture_MNB_v)
           CxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for (i in 1:nSim) {
-            CxSim[i,] <- CrNmixture_MNB_v(1, mu = mu, p = p, r = r, J = J)
+            CxSim[i,] <- CrNmixture_MNB_v(1, lambda = lambda, p = p, theta = theta, J = J)
           }
-          expect_identical(xSim, CxSim)
+          expect_equal(xSim, CxSim)
 
-          simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
+          simNodes <- m$getDependencies(c('p', 'lambda'), self = FALSE)
 
           mxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
@@ -150,7 +150,7 @@ test_that("dNmixture_MNB_v works",
             m$simulate(simNodes, includeData = TRUE)
             mxSim[i,] <- m$x
           }
-          expect_identical(mxSim, xSim)
+          expect_equal(mxSim, xSim)
 
           CmxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
@@ -158,7 +158,7 @@ test_that("dNmixture_MNB_v works",
             cm$simulate(simNodes, includeData = TRUE)
             CmxSim[i,] <- cm$x
           }
-          expect_identical(CmxSim, mxSim)
+          expect_equal(CmxSim, mxSim)
         })
 
 # -----------------------------------------------------------------------------
@@ -167,12 +167,12 @@ test_that("dNmixture_MNB_s works",
           {
       # Uncompiled calculation
           x  <- c(1, 0, 1, 3, 2)
-          mu <- 8
-          r  <- 0.5
+          lambda <- 8
+          theta  <- 0.5
           p  <- 0.4
           J  <- 5
 
-          probX <- dNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J)
+          probX <- dNmixture_MNB_s(x = x, lambda = lambda, p = p, theta = theta, J = J)
 
 
       # Calaculate likelihood using truncated infinite sum approach
@@ -191,8 +191,8 @@ test_that("dNmixture_MNB_s works",
           l_vec <- numeric(length(N_vec))
           for (i in 1:length(N_vec)) {
             # log prob of N
-            lp_N <- dnbinom(x = N_vec[i], size = r,
-                            prob = 1/(1 + (1/r) * mu), log = TRUE)
+            lp_N <- dnbinom(x = N_vec[i], size = 1/theta,
+                            prob = 1/(1 + theta * lambda), log = TRUE)
 
             # Log prob of data
             lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
@@ -205,26 +205,26 @@ test_that("dNmixture_MNB_s works",
           expect_equal(correctProbX, probX)
 
       # Uncompiled log probability
-          lProbX <- dNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J, log = TRUE)
+          lProbX <- dNmixture_MNB_s(x = x, lambda = lambda, p = p, theta = theta, J = J, log = TRUE)
 
       # Compilation and compiled calculations
           CdNmixture_MNB_s <- compileNimble(dNmixture_MNB_s)
-          CprobX <- CdNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J)
+          CprobX <- CdNmixture_MNB_s(x = x, lambda = lambda, p = p, theta = theta, J = J)
           expect_equal(CprobX, probX)
 
-          ClProbX <- CdNmixture_MNB_s(x = x, mu = mu, p = p, r = r, J = J, log = TRUE)
+          ClProbX <- CdNmixture_MNB_s(x = x, lambda = lambda, p = p, theta = theta, J = J, log = TRUE)
           expect_equal(ClProbX, lProbX)
 
       # Use in Nimble model
           nc <- nimbleCode({
-            x[1:5] ~ dNmixture_MNB_s(mu = mu, p = p, r = r, J = J)
+            x[1:5] ~ dNmixture_MNB_s(lambda = lambda, p = p, theta = theta, J = J)
 
           })
 
           m <- nimbleModel(code = nc,
                            data = list(x = x),
-                           inits = list(mu = mu,
-                                        p = p, r = r),
+                           inits = list(lambda = lambda,
+                                        p = p, theta = theta),
                            constants = list(J = J))
           m$calculate()
           MlProbX <- m$getLogProb("x")
@@ -239,8 +239,8 @@ test_that("dNmixture_MNB_s works",
       # Test imputing value for all NAs
           xNA <- c(NA, NA, NA, NA, NA)
           mNA <- nimbleModel(nc, data = list(x = xNA),
-                 inits = list(mu = mu,
-                              p = p, r = r),
+                 inits = list(lambda = lambda,
+                              p = p, theta = theta),
                  constants = list(J = J))
 
 
@@ -260,25 +260,25 @@ test_that("dNmixture_MNB_s works",
           xSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for (i in 1:nSim) {
-            xSim[i,] <- rNmixture_MNB_s(1, mu = mu, p = p, r = r, J = J)
+            xSim[i,] <- rNmixture_MNB_s(1, lambda = lambda, p = p, theta = theta, J = J)
           }
 
           CrNmixture_MNB_s <- compileNimble(rNmixture_MNB_s)
           CxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for (i in 1:nSim) {
-            CxSim[i,] <- CrNmixture_MNB_s(1, mu = mu, p = p, r = r, J = J)
+            CxSim[i,] <- CrNmixture_MNB_s(1, lambda = lambda, p = p, theta = theta, J = J)
           }
-          expect_identical(xSim, CxSim)
+          expect_equal(xSim, CxSim)
 
-          simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
+          simNodes <- m$getDependencies(c('p', 'lambda'), self = FALSE)
           mxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
           for(i in 1:nSim) {
             m$simulate(simNodes, includeData = TRUE)
             mxSim[i,] <- m$x
           }
-          expect_identical(mxSim, xSim)
+          expect_equal(mxSim, xSim)
 
           CmxSim <- array(NA, dim = c(nSim, J))
           set.seed(1)
@@ -286,7 +286,7 @@ test_that("dNmixture_MNB_s works",
             cm$simulate(simNodes, includeData = TRUE)
             CmxSim[i,] <- cm$x
           }
-          expect_identical(CmxSim, mxSim)
+          expect_equal(CmxSim, mxSim)
         })
 
 
@@ -296,10 +296,10 @@ test_that("dNmixture_MP_v works",
           {
             # Uncompiled calculation
             x  <- c(1, 0, 1, 3, 0)
-            mu <- 8
+            lambda <- 8
             p  <- c(0.5, 0.3, 0.5, 0.4, 0.1)
             J  <- 5
-            probX <- dNmixture_MP_v(x = x, mu = mu, p = p, J = J)
+            probX <- dNmixture_MP_v(x = x, lambda = lambda, p = p, J = J)
 
 
             # Calaculate likelihood using truncated infinite sum approach
@@ -321,7 +321,7 @@ test_that("dNmixture_MP_v works",
             l_vec <- numeric(length(N_vec))
             for (i in 1:length(N_vec)) {
               # log prob of N
-              lp_N <- dpois(x = N_vec[i], lambda = mu, log = TRUE)
+              lp_N <- dpois(x = N_vec[i], lambda = lambda, log = TRUE)
 
               # Log prob of data
               lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
@@ -335,7 +335,7 @@ test_that("dNmixture_MP_v works",
 
             # Uncompiled log probability
 
-            lProbX        <- dNmixture_MP_v(x = x, mu = mu, p = p, J = J, log = TRUE)
+            lProbX        <- dNmixture_MP_v(x = x, lambda = lambda, p = p, J = J, log = TRUE)
             lCorrectProbX <- log(correctProbX)
 
             expect_equal(lProbX, lCorrectProbX)
@@ -343,23 +343,23 @@ test_that("dNmixture_MP_v works",
             # Compilation and compiled calculations
 
             CdNmixture_MP_v <- compileNimble(dNmixture_MP_v)
-            CprobX <- CdNmixture_MP_v(x = x, mu = mu, p = p, J = J)
+            CprobX <- CdNmixture_MP_v(x = x, lambda = lambda, p = p, J = J)
 
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdNmixture_MP_v(x = x, mu = mu, p = p, J = J, log = TRUE)
+            ClProbX <- CdNmixture_MP_v(x = x, lambda = lambda, p = p, J = J, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
 
             # Use in Nimble model
             nc <- nimbleCode({
-              x[1:5] ~ dNmixture_MP_v(mu = mu, p = p[1:5], J = J)
+              x[1:5] ~ dNmixture_MP_v(lambda = lambda, p = p[1:5], J = J)
 
             })
 
             m <- nimbleModel(code = nc,
                              data = list(x = x),
-                             inits = list(mu = mu,
+                             inits = list(lambda = lambda,
                                           p = p),
                              constants = list(J = J))
             m$calculate()
@@ -375,7 +375,7 @@ test_that("dNmixture_MP_v works",
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
-                               inits = list(mu = mu,
+                               inits = list(lambda = lambda,
                                             p = p),
                                constants = list(J = J))
 
@@ -396,18 +396,18 @@ test_that("dNmixture_MP_v works",
             xSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
             for (i in 1:nSim) {
-              xSim[i,] <- rNmixture_MP_v(1, mu = mu, p = p, J = J)
+              xSim[i,] <- rNmixture_MP_v(1, lambda = lambda, p = p, J = J)
             }
 
             CrNmixture_MP_v <- compileNimble(rNmixture_MP_v)
             CxSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
             for (i in 1:nSim) {
-              CxSim[i,] <- CrNmixture_MP_v(1, mu = mu, p = p, J = J)
+              CxSim[i,] <- CrNmixture_MP_v(1, lambda = lambda, p = p, J = J)
             }
             expect_equal(xSim, CxSim)
 
-            simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
+            simNodes <- m$getDependencies(c('p', 'lambda'), self = FALSE)
 
             mxSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
@@ -423,7 +423,7 @@ test_that("dNmixture_MP_v works",
               cm$simulate(simNodes, includeData = TRUE)
               CmxSim[i,] <- cm$x
             }
-            expect_identical(CmxSim, mxSim)
+            expect_equal(CmxSim, mxSim)
           })
 
 
@@ -434,10 +434,10 @@ test_that("dNmixture_MP_s works",
           {
             # Uncompiled calculation
             x  <- c(1, 0, 1, 3, 0)
-            mu <- 8
+            lambda <- 8
             p  <- c(0.4)
             J  <- 5
-            probX <- dNmixture_MP_s(x = x, mu = mu, p = p, J = J)
+            probX <- dNmixture_MP_s(x = x, lambda = lambda, p = p, J = J)
 
 
             # Calaculate likelihood using truncated infinite sum approach
@@ -458,7 +458,7 @@ test_that("dNmixture_MP_s works",
             l_vec <- numeric(length(N_vec))
             for (i in 1:length(N_vec)) {
               # log prob of N
-              lp_N <- dpois(x = N_vec[i], lambda = mu, log = TRUE)
+              lp_N <- dpois(x = N_vec[i], lambda = lambda, log = TRUE)
 
               # Log prob of data
               lp_x <- dmultinom(c(x, N_vec[i] - sum(x)), size = N_vec[i], prob = prob,
@@ -472,7 +472,7 @@ test_that("dNmixture_MP_s works",
 
             # Uncompiled log probability
 
-            lProbX        <- dNmixture_MP_s(x = x, mu = mu, p = p, J = J, log = TRUE)
+            lProbX        <- dNmixture_MP_s(x = x, lambda = lambda, p = p, J = J, log = TRUE)
             lCorrectProbX <- log(correctProbX)
 
             expect_equal(lProbX, lCorrectProbX)
@@ -480,23 +480,23 @@ test_that("dNmixture_MP_s works",
             # Compilation and compiled calculations
 
             CdNmixture_MP_s <- compileNimble(dNmixture_MP_s)
-            CprobX <- CdNmixture_MP_s(x = x, mu = mu, p = p, J = J)
+            CprobX <- CdNmixture_MP_s(x = x, lambda = lambda, p = p, J = J)
 
             expect_equal(CprobX, probX)
 
-            ClProbX <- CdNmixture_MP_s(x = x, mu = mu, p = p, J = J, log = TRUE)
+            ClProbX <- CdNmixture_MP_s(x = x, lambda = lambda, p = p, J = J, log = TRUE)
             expect_equal(ClProbX, lProbX)
 
 
             # Use in Nimble model
             nc <- nimbleCode({
-              x[1:5] ~ dNmixture_MP_s(mu = mu, p = p, J = J)
+              x[1:5] ~ dNmixture_MP_s(lambda = lambda, p = p, J = J)
 
             })
 
             m <- nimbleModel(code = nc,
                              data = list(x = x),
-                             inits = list(mu = mu,
+                             inits = list(lambda = lambda,
                                           p = p),
                              constants = list(J = J))
             m$calculate()
@@ -512,7 +512,7 @@ test_that("dNmixture_MP_s works",
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
-                               inits = list(mu = mu,
+                               inits = list(lambda = lambda,
                                             p = p),
                                constants = list(J = J))
 
@@ -533,18 +533,18 @@ test_that("dNmixture_MP_s works",
             xSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
             for (i in 1:nSim) {
-              xSim[i,] <- rNmixture_MP_s(1, mu = mu, p = p, J = J)
+              xSim[i,] <- rNmixture_MP_s(1, lambda = lambda, p = p, J = J)
             }
 
             CrNmixture_MP_s <- compileNimble(rNmixture_MP_s)
             CxSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
             for (i in 1:nSim) {
-              CxSim[i,] <- CrNmixture_MP_s(1, mu = mu, p = p, J = J)
+              CxSim[i,] <- CrNmixture_MP_s(1, lambda = lambda, p = p, J = J)
             }
             expect_equal(xSim, CxSim)
 
-            simNodes <- m$getDependencies(c('p', 'mu'), self = FALSE)
+            simNodes <- m$getDependencies(c('p', 'lambda'), self = FALSE)
 
             mxSim <- array(NA, dim = c(nSim, J))
             set.seed(1)
@@ -560,6 +560,6 @@ test_that("dNmixture_MP_s works",
               cm$simulate(simNodes, includeData = TRUE)
               CmxSim[i,] <- cm$x
             }
-            expect_identical(CmxSim, mxSim)
+            expect_equal(CmxSim, mxSim)
           })
 

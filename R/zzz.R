@@ -523,13 +523,13 @@
 
   registerDistributions(list(
     dNmixture_MNB_s = list(
-      BUGSdist = "dNmixture_MNB_s(mu, p, r, J)",
-      Rdist = "dNmixture_MNB_s(mu, p, r, J)",
+      BUGSdist = "dNmixture_MNB_s(lambda, p, theta, J)",
+      Rdist = "dNmixture_MNB_s(lambda, p, theta, J)",
       discrete = TRUE,
       types = c('value = double(1)',
-                'mu = double()',
+                'lambda = double()',
                 'p = double()',
-                'r = double()',
+                'theta = double()',
                 'J = double()'
                 ),
       mixedSizes = FALSE,
@@ -540,18 +540,50 @@
 
   registerDistributions(list(
     dNmixture_MNB_v = list(
-      BUGSdist = "dNmixture_MNB_v(mu, p, r, J)",
-      Rdist = "dNmixture_MNB_v(mu, p, r, J)",
+      BUGSdist = "dNmixture_MNB_v(lambda, p, theta, J)",
+      Rdist = "dNmixture_MNB_v(lambda, p, theta, J)",
       discrete = TRUE,
       types = c('value = double(1)',
-                'mu = double()',
+                'lambda = double()',
                 'p = double(1)',
-                'r = double()',
+                'theta = double()',
                 'J = double()'
                 ),
       mixedSizes = FALSE,
       pqAvail = FALSE
     )), verbose = FALSE
   )
-  
+
+
+  registerDistributions(list(
+    dNmixture_MP_s = list(
+      BUGSdist = "dNmixture_MP_s(lambda, p, J)",
+      Rdist = "dNmixture_MP_s(lambda, p, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double()',
+                'J = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
+
+  registerDistributions(list(
+    dNmixture_MP_v = list(
+      BUGSdist = "dNmixture_MP_v(lambda, p, J)",
+      Rdist = "dNmixture_MP_v(lambda, p, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double(1)',
+                'J = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
 })}

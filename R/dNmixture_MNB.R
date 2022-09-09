@@ -12,11 +12,11 @@
 #' @aliases dNmixture_MNB_s dNmixture_MNB_v rNmixture_MNB_s rNmixture_MNB_v
 #' dNmixture_MP_s dNmixture_MP_v rNmixture_MP_s rNmixture_MP_v
 #'
-#' @author Juniper Simonis
+#' @author Juniper Simonis, Ben Goldstein
 #'
 #' @param x vector of integer counts from a series of sampling occasions.
-#' @param mu expected value of the (negative binomial or Poisson) distribution of true abundance.
-#' @param r shape parameter defining overdispersion. As \code{r} approaches 0, the negative binomial converges to a Poisson.
+#' @param lambda expected value of the (negative binomial or Poisson) distribution of true abundance.
+#' @param theta shape parameter defining overdispersion.
 #' @param p detection probability (scalar for \code{dNmixture_M\*_s}, vector for \code{dNmixture_M\*_v}).
 #' @param J integer number of searches.
 #' @param log \code{TRUE} or \code{1} to return log probability. \code{FALSE} or \code{0} to return probability.
@@ -40,37 +40,37 @@
 #'
 #' # Set up variables and parameters
 #' #  J:  number of visits
-#' #  mu: mean abundance
-#' #  r:  scale parameter on abundance distribution
+#' #  lambda: mean abundance
+#' #  theta:  scale parameter on abundance distribution
 #' #  p:  search-specific detection probabilities
 #'
 #'  J <- 10
-#'  mu <- 5
-#'  r  <- 2
+#'  lambda <- 5
+#'  theta  <- 2
 #'  p  <- runif(J, 0.4, 0.7)
 #'
-#'  mut <- log(mu)
-#'  rt  <- log(r)
+#'  lambdat <- log(mu)
+#'  thetat  <- log(theta)
 #'
 #' # Generate data
 #'
-#'   yv <- rNmixture_MNB_v(n = 1, mu = mu, p = p, r = r, J = J)
+#'   yv <- rNmixture_MNB_v(n = 1, lambda = lambda, p = p, theta = theta, J = J)
 #'
 #' # Write the model code
 #'
 #'   nc <- nimbleCode({
 #'
-#'     mut ~  dnorm(0, 1/2)
-#'     mu  <- exp(mut)
+#'     lambdat ~  dnorm(0, 1/2)
+#'     lambda  <- exp(lambdat)
 #'
-#'     rt ~  dnorm(0, 0.1)
-#'     r  <- exp(rt)
+#'     thetat ~  dnorm(0, 0.1)
+#'     theta  <- exp(thetat)
 #'
 #'     for (j in 1:J) {
 #'       p[j] ~ dunif(0, 1)
 #'     }
 #'
-#'     x[1:J] ~ dNmixture_MNB_v(mu = mu, p = p[1:J], r = r, J = J)
+#'     x[1:J] ~ dNmixture_MNB_v(lambda = lambda, p = p[1:J], theta = theta, J = J)
 #'
 #'   })
 #'
@@ -79,8 +79,8 @@
 #'   nmix <- nimbleModel(nc,
 #'                       constants = list(J = J),
 #'                       data = list(x = yv),
-#'                       inits = list(mut = mut,
-#'                                    rt  = rt,
+#'                       inits = list(lambdat = lambdat,
+#'                                    thetat  = thetat,
 #'                                    p   = p))
 #'
 #' # Calculate log probability of data from the model
@@ -96,20 +96,22 @@ NULL
 #' @export
 #'
 dNmixture_MNB_s <- nimbleFunction(
-    run = function(x   = double(1),
-                   mu  = double(),
-                   p   = double(),
-                   r   = double(),
-                   J   = double(),
-                   log = integer(0, default = 0)) {
+    run = function(x       = double(1),
+                   lambda  = double(),
+                   p       = double(),
+                   theta   = double(),
+                   J       = double(),
+                   log     = integer(0, default = 0)) {
+
+  r <- 1 / theta
 
   x_tot <- sum(x)
   x_miss <- sum(x * seq(0, J - 1))
 
   term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-  term2   <- r * log(r) + x_tot * log(mu)
+  term2   <- r * log(r) + x_tot * log(lambda)
   term3   <- x_tot * log(p) + x_miss * log(1 - p)
-  term4   <- -(x_tot + r) * log(r + mu * (1 - (1 - p) ^ J))
+  term4   <- -(x_tot + r) * log(r + lambda * (1 - (1 - p) ^ J))
   logProb <- term1 + term2 + term3 + term4
 
   if (log) return(logProb)
@@ -123,11 +125,11 @@ dNmixture_MNB_s <- nimbleFunction(
 #' @export
 #'
 rNmixture_MNB_s <- nimbleFunction(
-  run = function(n  = integer(),
-                 mu = double(),
-                 p  = double(),
-                 r  = double(),
-                 J  = double()) {
+  run = function(n      = integer(),
+                 lambda = double(),
+                 p      = double(),
+                 theta  = double(),
+                 J      = double()) {
 
 
     prob <- numeric(J + 1)
@@ -137,7 +139,7 @@ rNmixture_MNB_s <- nimbleFunction(
     prob[J + 1] <- 1 - sum(prob[1:J])
 
     ans <- numeric(J + 1)
-    n <- rnbinom(n = 1, size = r, prob = 1/(1 + (1/r) * mu))
+    n <- rnbinom(n = 1, size = 1/theta, prob = 1/(1 + theta * lambda))
     if (n > 0) {
       ans <- rmulti(n = 1, size = n, prob = prob)
     }
@@ -152,12 +154,14 @@ rNmixture_MNB_s <- nimbleFunction(
 #' @export
 #'
 dNmixture_MNB_v <- nimbleFunction(
-    run = function(x   = double(1),
-                   mu  = double(),
-                   p   = double(1),
-                   r   = double(),
-                   J   = double(),
-                   log = integer(0, default = 0)) {
+    run = function(x       = double(1),
+                   lambda  = double(),
+                   p       = double(1),
+                   theta   = double(),
+                   J       = double(),
+                   log     = integer(0, default = 0)) {
+
+  r <- 1/theta
 
   x_tot <- sum(x)
   x_miss <- sum(x * seq(0, J - 1))
@@ -176,9 +180,9 @@ dNmixture_MNB_v <- nimbleFunction(
   #
 
   term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-  term2   <- r * log(r) + x_tot * log(mu)
+  term2   <- r * log(r) + x_tot * log(lambda)
   term3   <- sum(x * log(prob))
-  term4   <- -(x_tot + r) * log(r + mu * ptot)
+  term4   <- -(x_tot + r) * log(r + lambda * ptot)
   logProb <- term1 + term2 + term3 + term4
 
   if (log) return(logProb)
@@ -193,11 +197,11 @@ dNmixture_MNB_v <- nimbleFunction(
 #' @export
 #'
 rNmixture_MNB_v <- nimbleFunction(
-  run = function(n  = integer(),
-                 mu = double(),
-                 p  = double(1),
-                 r  = double(),
-                 J  = double()) {
+  run = function(n      = integer(),
+                 lambda = double(),
+                 p      = double(1),
+                 theta  = double(),
+                 J      = double()) {
 
 
     pp <- c(0, p)
@@ -208,7 +212,7 @@ rNmixture_MNB_v <- nimbleFunction(
     prob[J + 1] <- 1 - sum(prob[1:J])
 
     ans <- numeric(J + 1)
-    n <- rnbinom(n = 1, size = r, prob = 1/(1 + (1/r) * mu))
+    n <- rnbinom(n = 1, size = 1/theta, prob = 1/(1 + theta * lambda))
     if (n > 0) {
       ans <- rmulti(n = 1, size = n, prob = prob)
     }

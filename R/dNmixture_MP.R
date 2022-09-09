@@ -4,11 +4,11 @@
 #' @export
 #'
 dNmixture_MP_s <- nimbleFunction(
-  run = function(x   = double(1),
-                 mu  = double(),
-                 p   = double(),
-                 J   = double(),
-                 log = integer(0, default = 0)) {
+  run = function(x       = double(1),
+                 lambda  = double(),
+                 p       = double(),
+                 J       = double(),
+                 log     = integer(0, default = 0)) {
 
     x_tot <- sum(x)
     x_miss <- sum(x * seq(0, J - 1))
@@ -27,8 +27,8 @@ dNmixture_MP_s <- nimbleFunction(
     # term2   <- r * log(r) + x_tot * log(mu)
     # term3   <- x_tot * log(p) + x_miss * log(1 - p)
     # term4   <- -(x_tot + r) * log(r + mu * (1 - (1 - p) ^ J))
-    logProb <- x_tot * log(mu) + x_tot * log(p) + x_miss * log(1 - p) -
-      mu * (1 - (1 - p) ^ J) - sum(lfactorial(x))
+    logProb <- x_tot * log(lambda) + x_tot * log(p) + x_miss * log(1 - p) -
+      lambda * (1 - (1 - p) ^ J) - sum(lfactorial(x))
 
 
     if (log) return(logProb)
@@ -43,7 +43,7 @@ dNmixture_MP_s <- nimbleFunction(
 #'
 rNmixture_MP_s <- nimbleFunction(
   run = function(n  = integer(),
-                 mu = double(),
+                 lambda = double(),
                  p  = double(),
                  J  = double()) {
 
@@ -55,7 +55,7 @@ rNmixture_MP_s <- nimbleFunction(
     prob[J + 1] <- 1 - sum(prob[1:J])
 
     ans <- numeric(J + 1)
-    n <- rpois(n = 1, lambda = mu)
+    n <- rpois(n = 1, lambda = lambda)
     if (n > 0) {
       ans <- rmulti(n = 1, size = n, prob = prob)
     }
@@ -71,7 +71,7 @@ rNmixture_MP_s <- nimbleFunction(
 #'
 dNmixture_MP_v <- nimbleFunction(
   run = function(x   = double(1),
-                 mu  = double(),
+                 lambda  = double(),
                  p   = double(1),
                  J   = double(),
                  log = integer(0, default = 0)) {
@@ -87,8 +87,8 @@ dNmixture_MP_v <- nimbleFunction(
     }
     ptot <- sum(prob)
 
-    logProb <- x_tot * log(mu) + sum(x * log(prob)) -
-      mu * ptot - sum(lfactorial(x))
+    logProb <- x_tot * log(lambda) + sum(x * log(prob)) -
+      lambda * ptot - sum(lfactorial(x))
 
     if (log) return(logProb)
     else return(exp(logProb))
@@ -103,7 +103,7 @@ dNmixture_MP_v <- nimbleFunction(
 #'
 rNmixture_MP_v <- nimbleFunction(
   run = function(n  = integer(),
-                 mu = double(),
+                 lambda = double(),
                  p  = double(1),
                  J  = double()) {
 
@@ -116,7 +116,7 @@ rNmixture_MP_v <- nimbleFunction(
     prob[J + 1] <- 1 - sum(prob[1:J])
 
     ans <- numeric(J + 1)
-    n <- rpois(n = 1, lambda = mu)
+    n <- rpois(n = 1, lambda = lambda)
     if (n > 0) {
       ans <- rmulti(n = 1, size = n, prob = prob)
     }
