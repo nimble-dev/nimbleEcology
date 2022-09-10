@@ -31,9 +31,15 @@ rNmixture_MP_v(n, lambda, p, J)
 \arguments{
 \item{x}{vector of integer counts from a series of sampling occasions.}
 
-\item{lambda}{expected value of the (negative binomial or Poisson) distribution of true abundance.}
+\item{lambda}{expected value of the (negative binomial or Poisson)
+distribution of true abundance.}
 
-\item{p}{detection probability (scalar for \code{dNmixture_M\*_s}, vector for \code{dNmixture_M\*_v}).}
+\item{p}{detection probability (scalar for \code{dNmixture_M\*_s},
+vector for \code{dNmixture_M\*_v}). If a vector, p[i] is the probability
+that an individual is observed in observation category i and no other
+categories. \code{p} must sum to less than or equal to 1, although this
+is not checked by the function for computational efficiency. The
+probability of an individual going unobserved is \code{1 - sum(p)}.}
 
 \item{theta}{overdispersion parameter required for negative binomial
 (*NB) models. theta is parameterized such that variance of
@@ -41,9 +47,12 @@ the negative binomial variable x is \code{lambda^2 * theta + lambda}}
 
 \item{J}{integer number of searches.}
 
-\item{log}{\code{TRUE} or \code{1} to return log probability. \code{FALSE} or \code{0} to return probability.}
+\item{log}{\code{TRUE} or \code{1} to return log probability. \code{FALSE} or
+\code{0} to return probability.}
 
-\item{n}{number of random draws, each returning a vector of length \code{len}. Currently only \code{n = 1} is supported, but the argument exists for standardization of "\code{r}" functions.}
+\item{n}{number of random draws, each returning a vector of length
+\code{len}. Currently only \code{n = 1} is supported, but the argument
+exists for standardization of "\code{r}" functions.}
 }
 \value{
 For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log probability of observation vector \code{x}. \cr
