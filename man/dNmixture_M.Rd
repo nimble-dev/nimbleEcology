@@ -12,30 +12,32 @@
 \alias{rNmixture_MP_v}
 \title{Multinomial N-mixture distribution for use in \code{nimble} models}
 \usage{
-dNmixture_MNB_s(x, mu, p, r, J, log = 0)
+dNmixture_MNB_s(x, lambda, p, theta, J, log = 0)
 
-rNmixture_MNB_s(n, mu, p, r, J)
+rNmixture_MNB_s(n, lambda, p, theta, J)
 
-dNmixture_MNB_v(x, mu, p, r, J, log = 0)
+dNmixture_MNB_v(x, lambda, p, theta, J, log = 0)
 
-rNmixture_MNB_v(n, mu, p, r, J)
+rNmixture_MNB_v(n, lambda, p, theta, J)
 
-dNmixture_MP_s(x, mu, p, J, log = 0)
+dNmixture_MP_s(x, lambda, p, J, log = 0)
 
-rNmixture_MP_s(n, mu, p, J)
+rNmixture_MP_s(n, lambda, p, J)
 
-dNmixture_MP_v(x, mu, p, J, log = 0)
+dNmixture_MP_v(x, lambda, p, J, log = 0)
 
-rNmixture_MP_v(n, mu, p, J)
+rNmixture_MP_v(n, lambda, p, J)
 }
 \arguments{
 \item{x}{vector of integer counts from a series of sampling occasions.}
 
-\item{mu}{expected value of the (negative binomial or Poisson) distribution of true abundance.}
+\item{lambda}{expected value of the (negative binomial or Poisson) distribution of true abundance.}
 
 \item{p}{detection probability (scalar for \code{dNmixture_M\*_s}, vector for \code{dNmixture_M\*_v}).}
 
-\item{r}{shape parameter defining overdispersion. As \code{r} approaches 0, the negative binomial converges to a Poisson.}
+\item{theta}{overdispersion parameter required for negative binomial
+(*NB) models. theta is parameterized such that variance of
+the negative binomial variable x is \code{lambda^2 * theta + lambda}}
 
 \item{J}{integer number of searches.}
 
@@ -58,37 +60,37 @@ These nimbleFunctions provide distributions that can be used directly in R or in
 
 # Set up variables and parameters
 #  J:  number of visits
-#  mu: mean abundance
-#  r:  scale parameter on abundance distribution
+#  lambda: mean abundance
+#  theta:  scale parameter on abundance distribution
 #  p:  search-specific detection probabilities
 
  J <- 10
- mu <- 5
- r  <- 2
+ lambda <- 5
+ theta  <- 2
  p  <- runif(J, 0.4, 0.7)
 
- mut <- log(mu)
- rt  <- log(r)
+ lambdat <- log(mu)
+ thetat  <- log(theta)
 
 # Generate data
 
-  yv <- rNmixture_MNB_v(n = 1, mu = mu, p = p, r = r, J = J)
+  yv <- rNmixture_MNB_v(n = 1, lambda = lambda, p = p, theta = theta, J = J)
 
 # Write the model code
 
   nc <- nimbleCode({
 
-    mut ~  dnorm(0, 1/2)
-    mu  <- exp(mut)
+    lambdat ~  dnorm(0, 1/2)
+    lambda  <- exp(lambdat)
 
-    rt ~  dnorm(0, 0.1)
-    r  <- exp(rt)
+    thetat ~  dnorm(0, 0.1)
+    theta  <- exp(thetat)
 
     for (j in 1:J) {
       p[j] ~ dunif(0, 1)
     }
 
-    x[1:J] ~ dNmixture_MNB_v(mu = mu, p = p[1:J], r = r, J = J)
+    x[1:J] ~ dNmixture_MNB_v(lambda = lambda, p = p[1:J], theta = theta, J = J)
 
   })
 
@@ -97,8 +99,8 @@ These nimbleFunctions provide distributions that can be used directly in R or in
   nmix <- nimbleModel(nc,
                       constants = list(J = J),
                       data = list(x = yv),
-                      inits = list(mut = mut,
-                                   rt  = rt,
+                      inits = list(lambdat = lambdat,
+                                   thetat  = thetat,
                                    p   = p))
 
 # Calculate log probability of data from the model
@@ -116,5 +118,5 @@ For binomial N-mixture models, see \code{\link{dNmixture}}. \cr
          For dynamic occupancy, see \code{\link{dDynOcc}}.
 }
 \author{
-Juniper Simonis
+Juniper Simonis, Ben Goldstein
 }

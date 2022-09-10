@@ -15,16 +15,26 @@
 #' @author Juniper Simonis, Ben Goldstein
 #'
 #' @param x vector of integer counts from a series of sampling occasions.
-#' @param lambda expected value of the (negative binomial or Poisson) distribution of true abundance.
-#' @param theta shape parameter defining overdispersion.
-#' @param p detection probability (scalar for \code{dNmixture_M\*_s}, vector for \code{dNmixture_M\*_v}).
+#' @param lambda expected value of the (negative binomial or Poisson)
+#'        distribution of true abundance.
+#' @param theta overdispersion parameter required for negative binomial
+#'        (*NB) models. theta is parameterized such that variance of
+#'        the negative binomial variable x is \code{lambda^2 * theta + lambda}
+#' @param p detection probability (scalar for \code{dNmixture_M\*_s},
+#'        vector for \code{dNmixture_M\*_v}). If a vector, p[i] is the probability
+#'        that an individual is observed in observation category i and no other
+#'        categories. \code{p} must sum to less than or equal to 1, although this
+#'        is not checked by the function for computational efficiency. The
+#'        probability of an individual going unobserved is \code{1 - sum(p)}.
 #' @param J integer number of searches.
-#' @param log \code{TRUE} or \code{1} to return log probability. \code{FALSE} or \code{0} to return probability.
-#' @param n number of random draws, each returning a vector of length \code{len}. Currently only \code{n = 1} is supported, but the argument exists for standardization of "\code{r}" functions.
+#' @param log \code{TRUE} or \code{1} to return log probability. \code{FALSE} or
+#'        \code{0} to return probability.
+#' @param n number of random draws, each returning a vector of length
+#'        \code{len}. Currently only \code{n = 1} is supported, but the argument
+#'        exists for standardization of "\code{r}" functions.
 #'
 #' @details These nimbleFunctions provide distributions that can be used directly in R or in \code{nimble} hierarchical models (via \code{\link[nimble]{nimbleCode}} and \code{\link[nimble]{nimbleModel}}). \cr
 #'          The distributions are implemented in closed-form following Haines (2020), which avoids infinite sum-based calculations.
-#'
 #'
 #' @return For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log probability of observation vector \code{x}. \cr
 #'         For \code{rNmixture_s} and \code{rNmixture_v}: a simulated detection history, \code{x}.

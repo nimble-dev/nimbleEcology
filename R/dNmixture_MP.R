@@ -83,13 +83,6 @@ rNmixture_MP_v <- nimbleFunction(
                  p  = double(1),
                  J  = double()) {
 
-
-    # pp <- c(0, p)
-    # prob <- numeric(J + 1)
-    # for (j in 1:J) {
-    #   prob[j] <- prod(1 - pp[1:j]) * p[j]
-    # }
-    # prob[J + 1] <- 1 - sum(prob[1:J])
     prob <- c(p, 1 - sum(p))
 
     ans <- numeric(J + 1)
