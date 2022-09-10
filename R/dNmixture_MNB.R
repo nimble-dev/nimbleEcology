@@ -103,16 +103,21 @@ dNmixture_MNB_s <- nimbleFunction(
                    J       = double(),
                    log     = integer(0, default = 0)) {
 
-  r <- 1 / theta
+    p_vec <- rep(p, J)
 
-  x_tot <- sum(x)
-  x_miss <- sum(x * seq(0, J - 1))
+    r <- 1/theta
 
-  term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-  term2   <- r * log(r) + x_tot * log(lambda)
-  term3   <- x_tot * log(p) + x_miss * log(1 - p)
-  term4   <- -(x_tot + r) * log(r + lambda * (1 - (1 - p) ^ J))
-  logProb <- term1 + term2 + term3 + term4
+    x_tot <- sum(x)
+    x_miss <- sum(x * seq(0, J - 1))
+
+    ptot <- sum(p_vec)
+
+    term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
+    term2   <- r * log(r) + x_tot * log(lambda)
+    term3   <- sum(x * log(p_vec))
+    term4   <- -(x_tot + r) * log(r + lambda * ptot)
+    logProb <- term1 + term2 + term3 + term4
+
 
   if (log) return(logProb)
   else return(exp(logProb))
@@ -132,11 +137,7 @@ rNmixture_MNB_s <- nimbleFunction(
                  J      = double()) {
 
 
-    prob <- numeric(J + 1)
-    for (i in 1:(J)) {
-      prob[i] <- pow(1 - p, i - 1) * p
-    }
-    prob[J + 1] <- 1 - sum(prob[1:J])
+    prob <- c(rep(p, J), 1 - (p*J))
 
     ans <- numeric(J + 1)
     n <- rnbinom(n = 1, size = 1/theta, prob = 1/(1 + theta * lambda))
@@ -165,23 +166,12 @@ dNmixture_MNB_v <- nimbleFunction(
 
   x_tot <- sum(x)
   x_miss <- sum(x * seq(0, J - 1))
-  pp <- c(0, p)
-  prob <- numeric(J)
-  for (j in 1:J) {
-    prob[j] <- prod(1 - pp[1:j]) * p[j]
-  }
-  ptot <- sum(prob)
 
-  # from _s:
-  # term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-  # term2   <- r * log(r) + x_tot * log(mu)
-  # term3   <- x_tot * log(p) + x_miss * log(1 - p)
-  # term4   <- -(x_tot + r) * log(r + mu * (1 - (1 - p) ^ J))
-  #
+  ptot <- sum(p)
 
   term1   <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
   term2   <- r * log(r) + x_tot * log(lambda)
-  term3   <- sum(x * log(prob))
+  term3   <- sum(x * log(p))
   term4   <- -(x_tot + r) * log(r + lambda * ptot)
   logProb <- term1 + term2 + term3 + term4
 
@@ -203,13 +193,7 @@ rNmixture_MNB_v <- nimbleFunction(
                  theta  = double(),
                  J      = double()) {
 
-
-    pp <- c(0, p)
-    prob <- numeric(J + 1)
-    for (j in 1:J) {
-      prob[j] <- prod(1 - pp[1:j]) * p[j]
-    }
-    prob[J + 1] <- 1 - sum(prob[1:J])
+    prob <- c(p, 1 - sum(p))
 
     ans <- numeric(J + 1)
     n <- rnbinom(n = 1, size = 1/theta, prob = 1/(1 + theta * lambda))

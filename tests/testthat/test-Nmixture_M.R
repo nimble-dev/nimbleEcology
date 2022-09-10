@@ -13,20 +13,14 @@ test_that("dNmixture_MNB_v works",
           x  <- c(1, 0, 1, 3, 0)
           lambda <- 8
           theta  <- 0.5
-          p  <- c(0.5, 0.3, 0.5, 0.4, 0.1)
+          p  <- c(0.2, 0.1, 0.05, 0.2, 0.22)
           J  <- 5
           probX <- dNmixture_MNB_v(x = x, lambda = lambda, p = p, theta = theta, J = J)
 
 
       # Calaculate likelihood using truncated infinite sum approach
           K <- 1000
-          pp <- c(0, p)
-          prob <- numeric(J + 1)
-          for (j in 1:J) {
-            prob[j] <- prod(1 - pp[1:j]) * p[j]
-          }
-          prob[J + 1] <- 1 - sum(prob[1:J])
-
+          prob <- c(p, 1 - sum(p))
 
           min_N <- sum(x)
           max_N <- K
@@ -47,23 +41,7 @@ test_that("dNmixture_MNB_v works",
             l_vec[i] <- exp(lp_N + lp_x)
           }
           correctProbX <- sum(l_vec)
-#
-#       # Manually calculate the correct answer
-#
-#           x_tot <- sum(x)
-#           x_miss <- sum(x * nimSeq(0, J - 1))
-#           pp <- nimC(0, p)
-#           prob <- nimNumeric(J)
-#           for (j in 1:J) {
-#               prob[j] <- prod(1 - pp[1:j]) * p[j]
-#           }
-#           ptot <- sum(prob)
-#           term1 <- lgamma(r + x_tot) - lgamma(r) - sum(lfactorial(x))
-#           term2 <- r * log(r) + x_tot * log(mu)
-#           term3 <- sum(x * log(prob))
-#           term4 <- -(x_tot + r) * log(r + mu * ptot)
-#           logProb <- term1 + term2 + term3 + term4
-#           correctProbX <- exp(logProb)
+
 
           expect_equal(probX, correctProbX)
 
@@ -169,7 +147,7 @@ test_that("dNmixture_MNB_s works",
           x  <- c(1, 0, 1, 3, 2)
           lambda <- 8
           theta  <- 0.5
-          p  <- 0.4
+          p  <- 0.05
           J  <- 5
 
           probX <- dNmixture_MNB_s(x = x, lambda = lambda, p = p, theta = theta, J = J)
@@ -177,11 +155,7 @@ test_that("dNmixture_MNB_s works",
 
       # Calaculate likelihood using truncated infinite sum approach
           K <- 1000
-          prob <- numeric(J + 1)
-          for (i in 1:(J)) {
-            prob[i] <- pow(1 - p, i - 1) * p
-          }
-          prob[J + 1] <- 1 - sum(prob[1:J])
+          prob <- c(rep(p, J), 1 - (p*J))
 
           min_N <- sum(x)
           max_N <- K
@@ -297,20 +271,14 @@ test_that("dNmixture_MP_v works",
             # Uncompiled calculation
             x  <- c(1, 0, 1, 3, 0)
             lambda <- 8
-            p  <- c(0.5, 0.3, 0.5, 0.4, 0.1)
+            p  <- c(0.4, 0.2, 0.1, 0.1, 0.05)
             J  <- 5
             probX <- dNmixture_MP_v(x = x, lambda = lambda, p = p, J = J)
 
 
             # Calaculate likelihood using truncated infinite sum approach
             K <- 1000
-            pp <- c(0, p)
-            prob <- numeric(J + 1)
-            for (j in 1:J) {
-              prob[j] <- prod(1 - pp[1:j]) * p[j]
-            }
-            prob[J + 1] <- 1 - sum(prob[1:J])
-
+            prob <- c(p, 1 - sum(p))
 
             min_N <- sum(x)
             max_N <- K
@@ -435,18 +403,19 @@ test_that("dNmixture_MP_s works",
             # Uncompiled calculation
             x  <- c(1, 0, 1, 3, 0)
             lambda <- 8
-            p  <- c(0.4)
+            p  <- c(0.1)
             J  <- 5
             probX <- dNmixture_MP_s(x = x, lambda = lambda, p = p, J = J)
 
 
             # Calaculate likelihood using truncated infinite sum approach
             K <- 1000
-            prob <- numeric(J + 1)
-            for (i in 1:(J)) {
-              prob[i] <- pow(1 - p, i - 1) * p
-            }
-            prob[J + 1] <- 1 - sum(prob[1:J])
+            # prob <- numeric(J + 1)
+            # for (i in 1:(J)) {
+            #   prob[i] <- pow(1 - p, i - 1) * p
+            # }
+            # prob[J + 1] <- 1 - sum(prob[1:J])
+            prob <- c(rep(p, J), 1- p*J)
 
 
             min_N <- sum(x)
