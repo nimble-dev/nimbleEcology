@@ -62,7 +62,7 @@
 #'  theta  <- 2
 #'  p  <- runif(J, 0.4, 0.7)
 #'
-#'  lambdat <- log(mu)
+#'  lambdat <- log(lambda)
 #'  thetat  <- log(theta)
 #'
 #' # Generate data
