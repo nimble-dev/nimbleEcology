@@ -24,8 +24,11 @@
 #'        vector for \code{dNmixture_M\*_v}). If a vector, p[i] is the probability
 #'        that an individual is observed in observation category i and no other
 #'        categories. \code{p} must sum to less than or equal to 1, although this
-#'        is not checked by the function for computational efficiency. The
-#'        probability of an individual going unobserved is \code{1 - sum(p)}.
+#'        is not checked by the function for computational efficiency.
+#'        If scalar, p is the probability that an individual is detected in each
+#'        observation type, and \code{p*length(x)} must be less than or equal to 1.
+#'        The probability of an individual going unobserved is \code{1 - sum(p)}
+#'        in the vector case and \code{1 - p*length(x)} in the scalar case.
 #' @param J integer number of searches.
 #' @param log \code{TRUE} or \code{1} to return log probability. \code{FALSE} or
 #'        \code{0} to return probability.

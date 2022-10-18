@@ -1,6 +1,6 @@
 ---
 title: "Multinomial-Negative Binomial N-Mixture Models"
-author: "Juniper Simonis"
+author: "Juniper Simonis and Ben Goldstein"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 description: >
@@ -20,21 +20,35 @@ knitr::opts_chunk$set(
 ```
 
 
-This vignette details the use of two Multinomial - Negative Binomial mixture models in nimble:
-  - Nmixture_MNB_s  is a multinomial with scalar p 
-  - Nmixture_MNB_v  is a multinomial with vector p
+nimbleEcology now includes 
+  - Nmixture_MNB_s is a multinomial N-mixture with negative binomial-distributed abundance and scalar (sample-invariant) detection
+  - Nmixture_MNB_v is a multinomial N-mixture with negative binomial-distributed abundance and vector (sample-variant) detection
+  - Nmixture_MP_s is a multinomial N-mixture with Poisson-distributed abundance and scalar (sample-invariant) detection
+  - Nmixture_MP_v is a multinomial N-mixture with Poisson-distributed abundance and vector (sample-variant) detection
 
-This example follows that implemented in the foundational paper by Haines (2020), with additional complexities.
+
+Multinomial N-mixture models describe a case where a population of individuals is each detected in one or more pools. Like the classical  Examples of contexts where multinomial N-mixture models occur include removal sampling, multi-observer sampling, or 
+
+For more information on multinomial N-mixture models, we recommend ____
 
 
-The distributions are parameterized in terms of mean (mu), scale (r) and visit-specific detection probability (p), where there are J visits to a given site.
+This example follows that implemented in the [foundational paper by Haines](https://pubmed.ncbi.nlm.nih.gov/31513284/) (2020), with additional complexities.
 
-For extension of the basic model (with a single site), we replicate the distribution across R total sites (i in 1 ... R), each with variable numbers of visits (J_i) and J_tot total visits across all sites.
+The distributions are parameterized in terms of mean expected abundance (lambda), scale (theta) and visit-specific detection probability (p), where there are J visits to a given site.
 
-We also include covariates on site abundance (z) and detection probability (w), the latter of which include site- and search-specific values (wR and wJ, respectively). 
+For extension of the basic model (with a single site), we model counts across R total sites (i in 1 ... R), each with variable numbers of visits ($J_i$) and $J_{tot}$ total visits across all sites.
+
+We include covariates on site abundance (z) and detection probability (w), the latter of which include site- and search-specific values (wR and wJ, respectively). 
 These covariates influence the mu and p parameters via generalized linear models (b and g parameters, respectively; log and logit links, respectively).
 
-To accommodate uneven sampling effort across sites, we use nested indexing approaches, and facilitate efficiency by pre-determining the index locations (spot1, spot2 corresponding to the first and last) for each site's values within the search-level vector.
+To accommodate uneven sampling effort across sites, we use nested indexing approaches and pre-determine the index locations (spot1, spot2 corresponding to the first and last) for each site's values within the search-level vector.
+
+We consider two cases: in one, sampling efficiency is constant across replicates.
+In the other, sampling efficiency varies across replicates. Because the detection
+probability for each replicate varies in both cases (i.e. the probability of 
+capture during sample 1 is different from sample 2 which requires that the 
+individual was NOT captured during sample 1) we use `dNmixture_MNB_v` in both
+cases.
 
 
 ```{r, results='hide', messages=FALSE,warnings=FALSE}
@@ -48,13 +62,13 @@ library(nimbleEcology)
 
   # Parameters and constants
 
-    mu <- 28.05
-    p  <- 0.61
-    r  <- 11.4
-    rt <- log(r)
+    lambda <- 28.05
+    p  <- 0.11
+    theta  <- 11.4
+    thetat <- log(theta)
     b0 <- 3.077
     b1 <- 0.101
-    g0 <- 0.5
+    g0 <- -1.5
     g1 <- 0.125
     g2 <- 0.125
 
@@ -80,11 +94,11 @@ library(nimbleEcology)
 
 
   # Derived parameters
-  #  mu at the site level
+  #  lambda at the site level
   #  p  at the site level for the scalar model
   #     at the visit level for the vector model
 
-    mu_i  <- exp(b0 + b1 * z)
+    lambda_i  <- exp(b0 + b1 * z)
     p_s_i <- expit(g0 + g1 * wR_draw)
     p_v_j <- expit(g0 + g1 * wR + g2 * wJ)
 
@@ -93,13 +107,15 @@ library(nimbleEcology)
   
     ys <- NULL
     for (i in 1:R) {
-      ys <- c(ys, rNmixture_MNB_s(n = 1, mu = mu_i[i], p = p_s_i[i], r = r, J = J_i[i]))
+      ys <- c(ys, rNmixture_MNB_s(n = 1, lambda = lambda_i[i], p = p_s_i[i], 
+                                  theta = theta, J = J_i[i]))
     }
 
     yv <- NULL
     for (i in 1:R) {
       spots_in <- (sum(J_i[1:i]) - J_i[i] + 1):sum(J_i[1:i])
-      yv       <- c(yv, rNmixture_MNB_v(n = 1, mu = mu_i[i], p = p_v_j[spots_in], r = r, J = J_i[i]))
+      yv       <- c(yv, rNmixture_MNB_v(n = 1, lambda = lambda_i[i], p = p_v_j[spots_in], 
+                                        theta = theta, J = J_i[i]))
     }
 ```
 
@@ -111,7 +127,7 @@ Next, we construct the scalar and vector model code:
 
   nc_s <- nimbleCode({
 
-    rt ~ dnorm(0, 0.1)
+    thetat ~ dnorm(0, 0.1)
 
     b0 ~ dnorm(0, 0.5)
     b1 ~ dnorm(0, 0.1)
@@ -120,24 +136,31 @@ Next, we construct the scalar and vector model code:
     g1 ~ dnorm(0, 0.1)
 
 
-    r <- exp(rt)
-  
+    theta <- exp(thetat)
+
     for (i in 1:R) {
 
-      mut_i[i] <- b0 + b1 * z[i] 
-      mu_i[i]  <- exp(mut_i[i])
-      pt_i[i]  <- g0 + g1 * wR[i]
-      p_i[i]   <- expit(pt_i[i])
+      lambdat_i[i]  <- b0 + b1 * z[i]
+      lambda_i[i]   <- exp(lambdat_i[i])
+      logit(p_i[i]) <- g0 + g1 * wR[spot1[i]]
+      
+      p_conv[i, 1] <- p_i[i]
+      for (j in 2:J_i[i]) {
+        p_conv[i, j] <- p_i[i] * (1 - p_conv[i, j - 1])
+      }
 
-      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_s(mu = mu_i[i], p = p_i[i], r = r, J = J_i[i])
+
+      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_v(lambda = lambda_i[i], 
+                                             p = p_conv[i, 1:J_i[i]],
+                                             theta = theta, J = J_i[i])
 
     }
-	
+
   })
 
   nc_v <- nimbleCode({
 
-    rt ~ dnorm(0, 0.1)
+    thetat ~ dnorm(0, 0.1)
 
     b0 ~ dnorm(0, 0.5)
     b1 ~ dnorm(0, 0.1)
@@ -146,17 +169,28 @@ Next, we construct the scalar and vector model code:
     g1 ~ dnorm(0, 0.1)
     g2 ~ dnorm(0, 0.1)
 
-    r <- exp(rt)
+    theta <- exp(thetat)
     
-    pt_j[1:J_tot] <- g0 + g1 * wR[1:J_tot] + g2 * wJ[1:J_tot]
-    p_j[1:J_tot]  <- expit(pt_j[1:J_tot])
-
+    
     for (i in 1:R) {
 	
-      mut_i[i] <- b0 + b1 * z[i] 
-      mu_i[i]  <- exp(mut_i[i])
+      lambdat_i[i] <- b0 + b1 * z[i] 
+      lambda_i[i]  <- exp(lambdat_i[i])
 	  
-      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_v(mu = mu_i[i], p = p_j[spot1[i]:spot2[i]], r = r, J = J_i[i])
+      logit(p_j[i, 1]) <- g0 + g1 * wR[spot1[i]] + g2 * wJ[spot1[i]]
+      p_conv[i, 1] <- p_j[i, 1]
+      
+      for (j in 2:J_i[i]) {
+        logit(p_j[i, j]) <- g0 + g1 * wR[spot1[i] + j-1] + g2 * wJ[spot1[i] + j-1]
+        
+        p_conv[i, j] <- p_j[i, j] * (1 - p_conv[i, j - 1])
+      }
+      
+      
+      x[spot1[i]:spot2[i]] ~ dNmixture_MNB_v(lambda = lambda_i[i], 
+                                             p = p_conv[i, 1:J_i[i]], 
+                                             theta = theta, 
+                                             J = J_i[i])
 
     }
 
@@ -177,7 +211,7 @@ This allows us to combine scalar and vector data and models cross-wise into four
                                         b1 = b1,
                                         g0 = g0,
                                         g1 = g1,
-                                        rt = rt))
+                                        thetat = thetat))
 
 
   # Scalar data, vector model
@@ -190,7 +224,7 @@ This allows us to combine scalar and vector data and models cross-wise into four
                                         g0 = g0,
                                         g1 = g1,
                                         g2 = g2,
-                                        rt = rt))
+                                        thetat = thetat))
 
 
   # Vector data, scalar model
@@ -202,7 +236,7 @@ This allows us to combine scalar and vector data and models cross-wise into four
                                         b1 = b1,
                                         g0 = g0,
                                         g1 = g1,
-                                        rt = rt))
+                                        thetat = thetat))
 
 
   # Vector data, vector model
@@ -215,7 +249,7 @@ This allows us to combine scalar and vector data and models cross-wise into four
                                         g0 = g0,
                                         g1 = g1,
                                         g2 = g2,
-                                        rt = rt))
+                                        thetat = thetat))
 ```
 
 Which we can then use in a variety of ways!
@@ -264,7 +298,7 @@ And plot the last 1,000
   plot(samples_ss[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
   plot(samples_ss[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
   plot(samples_ss[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
-  plot(samples_ss[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+  plot(samples_ss[9001:10000, "thetat"], type = "l", ylab = "thetat", las = 1, xlab = "sample")
 ```
 
 ### Scalar data, vector model
@@ -276,7 +310,7 @@ And plot the last 1,000
   plot(samples_sv[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
   plot(samples_sv[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
   plot(samples_sv[9001:10000, "g2"], type = "l", ylab = "g1", las = 1, xlab = "sample")
-  plot(samples_sv[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+  plot(samples_sv[9001:10000, "thetat"], type = "l", ylab = "thetat", las = 1, xlab = "sample")
 ```
 
 ### Vector data, scalar model
@@ -287,7 +321,7 @@ And plot the last 1,000
   plot(samples_vs[9001:10000, "b1"], type = "l", ylab = "b1", las = 1, xlab = "sample")
   plot(samples_vs[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
   plot(samples_vs[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
-  plot(samples_vs[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+  plot(samples_vs[9001:10000, "thetat"], type = "l", ylab = "thetat", las = 1, xlab = "sample")
 ```
 
 ### Vector data, vector model
@@ -299,5 +333,5 @@ And plot the last 1,000
   plot(samples_vv[9001:10000, "g0"], type = "l", ylab = "g0", las = 1, xlab = "sample")
   plot(samples_vv[9001:10000, "g1"], type = "l", ylab = "g1", las = 1, xlab = "sample")
   plot(samples_vv[9001:10000, "g2"], type = "l", ylab = "g1", las = 1, xlab = "sample")
-  plot(samples_vv[9001:10000, "rt"], type = "l", ylab = "rt", las = 1, xlab = "sample")
+  plot(samples_vv[9001:10000, "thetat"], type = "l", ylab = "thetat", las = 1, xlab = "sample")
 ```
