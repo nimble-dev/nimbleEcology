@@ -2,7 +2,7 @@
 .onAttach <- function(libname, pkgname) {
 
   packageStartupMessage("Loading nimbleEcology. Registering the following distributions:\n ",
-                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture.\n")
+                        "dOcc", ", dDynOcc", ", dCJS", ", dHMM", ", dDHMM", ", dNmixture", ", dNmixture_M.\n")
 
 # Register the distributions explicitly for two reasons:
 # 1. Avoid message to user about automatic registrations upon first use in a nimbleModel
@@ -520,5 +520,70 @@
     )), verbose = F
   )
 
+
+  registerDistributions(list(
+    dNmixture_MNB_s = list(
+      BUGSdist = "dNmixture_MNB_s(lambda, p, theta, J)",
+      Rdist = "dNmixture_MNB_s(lambda, p, theta, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double()',
+                'theta = double()',
+                'J = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
+
+  registerDistributions(list(
+    dNmixture_MNB_v = list(
+      BUGSdist = "dNmixture_MNB_v(lambda, p, theta, J)",
+      Rdist = "dNmixture_MNB_v(lambda, p, theta, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double(1)',
+                'theta = double()',
+                'J = double()'
+                ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
+
+  registerDistributions(list(
+    dNmixture_MP_s = list(
+      BUGSdist = "dNmixture_MP_s(lambda, p, J)",
+      Rdist = "dNmixture_MP_s(lambda, p, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double()',
+                'J = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
+
+
+  registerDistributions(list(
+    dNmixture_MP_v = list(
+      BUGSdist = "dNmixture_MP_v(lambda, p, J)",
+      Rdist = "dNmixture_MP_v(lambda, p, J)",
+      discrete = TRUE,
+      types = c('value = double(1)',
+                'lambda = double()',
+                'p = double(1)',
+                'J = double()'
+      ),
+      mixedSizes = FALSE,
+      pqAvail = FALSE
+    )), verbose = FALSE
+  )
 
 })}
