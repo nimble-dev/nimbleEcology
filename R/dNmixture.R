@@ -220,47 +220,54 @@ dNmixture_v <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(1),
-                   Nmin = integer(0, default = -1),
-                   Nmax = integer(0, default = -1),
+                   Nmin = integer(),
+                   Nmax = integer(),
                    len = integer(),
                    log = integer(0, default = 0)) {
   if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
   if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
-
+  
   # Lambda cannot be negative
   if (lambda < 0) {
     if (log) return(-Inf)
     else return(0)
   }
-
+  ## ***AD does not work with qpois below; I removed the default input -1 for Nmin and Nmax***
+  ## ***This is something that needs some further attention***
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1) {
-    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  }
-  if (Nmax == -1) {
-    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  }
-  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
+  # if (Nmin == -1) {
+  #   Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+  # }
+  # if (Nmax == -1) {
+  #   Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  # }
+  Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
+      
   logProb <- -Inf
-
+      
   if (Nmax > Nmin) {
     numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-    prods <- rep(0, numN)
+    ## prods <- rep(0, numN) ## This cannot compile with AD
+    prods <- numeric(length = ADbreak(numN), value = 0)
     for (i in (Nmin + 1):Nmax) {
       prods[i - Nmin] <- prod(i/(i - x)) / i
     }
-
     ff <- log(lambda) + sum(log(1-prob)) + log(prods)
     log_fac <- nimNmixPois_logFac(numN, ff)
-    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+        
+    ## ***dpois(Nmin, lambda, log = TRUE) causes compilation errors; coding this by hand avoids this***
+    ## logProb <- Nmin*log(lambda) - lambda - lgamma(Nmin + 1) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+    NminAsInt <- nimInteger(length = 1, value = Nmin)
+    logProb <- sum(dpois(NminAsInt, lambda, log = TRUE)) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
   }
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-}
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
+
 
 NULL
 #' @rdname dNmixture
@@ -269,8 +276,8 @@ dNmixture_s <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(),
-                   Nmin = double(0, default = -1),
-                   Nmax = double(0, default = -1),
+                   Nmin = integer(),
+                   Nmax = integer(),
                    len = double(),
                    log = integer(0, default = 0)) {
   if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
@@ -283,31 +290,34 @@ dNmixture_s <- nimbleFunction(
 
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1) {
-    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  }
-  if (Nmax == -1) {
-    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  }
-  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+  # if (Nmin == -1) {
+  #   Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
+  # }
+  # if (Nmax == -1) {
+  #   Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  # }
+  Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
   logProb <- -Inf
 
   if (Nmax > Nmin) {
     numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-    prods <- rep(0, numN)
+    # prods <- rep(0, numN)
+    prods <- numeric(length = ADbreak(numN), value = 0)
     for (i in (Nmin + 1):Nmax) {
       prods[i - Nmin] <- prod(i/(i - x)) / i
     }
 
     ff <- log(lambda) + log(1-prob)*len + log(prods)
     log_fac <- nimNmixPois_logFac(numN, ff)
-    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
+    NminAsInt <- nimInteger(length = 1, value = Nmin)
+    logProb <- sum(dpois(NminAsInt, lambda, log = TRUE)) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
   }
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-}
+ },
+ buildDerivs = list(run = list(ignore = c("i")))
 )
 
 NULL
@@ -317,8 +327,8 @@ rNmixture_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(1),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
@@ -339,8 +349,8 @@ rNmixture_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double()) {
     if (n != 1) stop("rNmixture_v only works for n = 1")
     trueN <- rpois(1, lambda)
@@ -363,8 +373,8 @@ dNmixture_BNB_v <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(1),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BNB_v, len must equal length(x).")
@@ -394,34 +404,37 @@ dNmixture_BNB_v <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
-      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    }
+    # if (Nmin == -1) {
+    #   Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
+    # }
+    # if (Nmax == -1) {
+    #   Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
+    # }
 
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      # prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
       for (i in (Nmin + 1):Nmax) {
         prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
       }
 
       ff <- log(1 - pNB) + sum(log(1-prob)) + log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
         sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BNB_s #####
@@ -433,8 +446,8 @@ dNmixture_BNB_s <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BNB_s, len must equal length(x).")
@@ -463,33 +476,36 @@ dNmixture_BNB_s <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
-      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    }
-    if (Nmax == -1) {
-      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    # if (Nmin == -1) {
+    #   Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
+    # }
+    # if (Nmax == -1) {
+    #   Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
+    # }
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      # prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
       for (i in (Nmin + 1):Nmax) {
         prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
       }
 
       ff <- log(1 - pNB) + len * log(1-prob) + log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
         sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BNB_oneObs #####
@@ -502,8 +518,8 @@ dNmixture_BNB_oneObs <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (theta <= 0) {
@@ -530,33 +546,37 @@ dNmixture_BNB_oneObs <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
-      Nmin <- x + qnbinom(0.00001, size = r_cond, prob = pNB_cond)
-    }
-    if (Nmax == -1) {
-      Nmax <- x + qnbinom(0.99999, size = r_cond, prob = pNB_cond)
-    }
-    Nmin <- max(c(x, Nmin)) ## set Nmin to at least the largest x
+    # if (Nmin == -1) {
+    #   Nmin <- x + qnbinom(0.00001, size = r_cond, prob = pNB_cond)
+    # }
+    # if (Nmax == -1) {
+    #   Nmax <- x + qnbinom(0.99999, size = r_cond, prob = pNB_cond)
+    # }
+    Nmin <- ADbreak(max(x, Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      # prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
       for (i in (Nmin + 1):Nmax) {
         prods[i - Nmin] <- (i + r - 1) / (i - x)
       }
 
       ff <- log(1 - pNB) + log(1-prob) + log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dbinom(x, size = Nmin, prob = prob, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      xx <- nimNumeric(length = 2, value = x)
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
+        sum(dbinom(xx, size = Nmin, prob = prob, log = TRUE))/2 + 
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BBP_v #####
@@ -568,8 +588,8 @@ dNmixture_BBP_v <- nimbleFunction(
                  lambda = double(),
                  prob = double(1),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBP_v, len must equal length(x).")
@@ -594,30 +614,32 @@ dNmixture_BBP_v <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
         prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) * (lambda / i)
       }
-
-
+      
       ff <- log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dpois(NminAsInt, lambda, log = TRUE)) +
         dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BBP_s #####
@@ -629,9 +651,9 @@ dNmixture_BBP_s <- nimbleFunction(
                  lambda = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double(),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBP_s, len must equal length(x).")
 
@@ -654,30 +676,37 @@ dNmixture_BBP_s <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
         prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) * (lambda / i)
       }
 
-
       ff <- log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
-        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
+      
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      alphaRep <- numeric(length = len, value = alpha)
+      betaRep <- numeric(length = len, value = beta)
+      
+      logProb <- sum(dpois(NminAsInt, lambda, log = TRUE)) +
+        #dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
+        dBetaBinom(x, Nmin, alphaRep, betaRep, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BBP_oneObs #####
@@ -689,8 +718,8 @@ dNmixture_BBP_oneObs <- nimbleFunction(
                  lambda = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (s <= 0) {
@@ -712,30 +741,32 @@ dNmixture_BBP_oneObs <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- x
+    Nmin <- ADbreak(x)
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
         prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) * (lambda / i)
       }
 
-
       ff <- log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dpois(NminAsInt, lambda, log = TRUE)) +
         dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 
@@ -749,8 +780,8 @@ dNmixture_BBNB_v <- nimbleFunction(
                  theta = double(),
                  prob = double(1),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBNB_v, len must equal length(x).")
@@ -782,13 +813,14 @@ dNmixture_BBNB_v <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
@@ -799,14 +831,16 @@ dNmixture_BBNB_v <- nimbleFunction(
 
       ff <- log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
         dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BBNB_s #####
@@ -819,9 +853,9 @@ dNmixture_BBNB_s <- nimbleFunction(
                  theta = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double(),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBNB_s, len must equal length(x).")
 
@@ -851,13 +885,14 @@ dNmixture_BBNB_s <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
+    Nmin <- ADbreak(max(max(x), Nmin)) ## set Nmin to at least the largest x
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
@@ -866,16 +901,22 @@ dNmixture_BBNB_s <- nimbleFunction(
       }
 
       ff <- log(prods)
-
       log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
+      
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      alphaRep <- nimNumeric(length = len, value = alpha)
+      betaRep <- nimNumeric(length = len, value = beta)
+      
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
+        #dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
+        dBetaBinom(x, Nmin, alphaRep, betaRep, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### dNmixture_BBNB_oneObs #####
@@ -888,8 +929,8 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
                  theta = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double(),
                  log = integer(0, default = 0)) {
 
@@ -919,13 +960,14 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    if (Nmin < x) Nmin <- x
+    if (Nmin < x) Nmin <- ADbreak(x)
 
     logProb <- -Inf
 
     if (Nmax > Nmin) {
       numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
+      #prods <- rep(0, numN)
+      prods <- numeric(length = ADbreak(numN), value = 0)
 
       for (i in (Nmin + 1):Nmax) {
         # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
@@ -935,15 +977,17 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
       ff <- log(prods)
 
       log_fac <- nimNmixPois_logFac(numN, ff)
-
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
+      
+      NminAsInt <- nimInteger(length = 1, value = Nmin)
+      logProb <- sum(dnbinom(NminAsInt, size = r, prob = pNB, log = TRUE)) +
         dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
         log_fac
     }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 ##### rNmixture extensions #####
@@ -956,8 +1000,8 @@ rNmixture_BNB_v <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(1),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double()) {
 
     if (n != 1) stop("rNmixture* only works for n = 1")
@@ -984,8 +1028,8 @@ rNmixture_BNB_s <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double()) {
 
     if (n != 1) stop("rNmixture* only works for n = 1")
@@ -1012,8 +1056,8 @@ rNmixture_BNB_oneObs <- nimbleFunction(
                  lambda = double(),
                  theta = double(),
                  prob = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(),
+                 Nmax = integer(),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
@@ -1036,8 +1080,8 @@ rNmixture_BBP_v <- nimbleFunction(
                  lambda = double(),
                  prob = double(1),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
     if (length(prob) != len) stop("In rNmixture*, len must equal length(prob).")
@@ -1060,9 +1104,9 @@ rNmixture_BBP_s <- nimbleFunction(
                  lambda = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
     alpha <- prob * s
@@ -1084,8 +1128,8 @@ rNmixture_BBP_oneObs <- nimbleFunction(
                  lambda = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
@@ -1108,8 +1152,8 @@ rNmixture_BBNB_v <- nimbleFunction(
                  theta = double(),
                  prob = double(1),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
@@ -1134,9 +1178,9 @@ rNmixture_BBNB_s <- nimbleFunction(
                  theta = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
+                 len = integer()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
     alpha <- prob * s
@@ -1161,8 +1205,8 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
                  theta = double(),
                  prob = double(),
                  s = double(),
-                 Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
+                 Nmin = integer(0, default = -1),
+                 Nmax = integer(0, default = -1),
                  len = double()) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 

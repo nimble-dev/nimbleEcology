@@ -26,28 +26,19 @@
 \alias{dNmixture_BBNB_oneObs}
 \title{N-mixture distribution for use in \code{nimble} models}
 \usage{
-dNmixture_v(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
+dNmixture_v(x, lambda, prob, Nmin, Nmax, len, log = 0)
 
-dNmixture_s(x, lambda, prob, Nmin = -1, Nmax = -1, len, log = 0)
+dNmixture_s(x, lambda, prob, Nmin, Nmax, len, log = 0)
 
-rNmixture_v(n, lambda, prob, Nmin = -1, Nmax = -1, len)
+rNmixture_v(n, lambda, prob, Nmin, Nmax, len)
 
-rNmixture_s(n, lambda, prob, Nmin = -1, Nmax = -1, len)
+rNmixture_s(n, lambda, prob, Nmin, Nmax, len)
 
-dNmixture_BNB_v(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+dNmixture_BNB_v(x, lambda, theta, prob, Nmin, Nmax, len, log = 0)
 
-dNmixture_BNB_s(x, lambda, theta, prob, Nmin = -1, Nmax = -1, len, log = 0)
+dNmixture_BNB_s(x, lambda, theta, prob, Nmin, Nmax, len, log = 0)
 
-dNmixture_BNB_oneObs(
-  x,
-  lambda,
-  theta,
-  prob,
-  Nmin = -1,
-  Nmax = -1,
-  len,
-  log = 0
-)
+dNmixture_BNB_oneObs(x, lambda, theta, prob, Nmin, Nmax, len, log = 0)
 
 dNmixture_BBP_v(x, lambda, prob, s, Nmin = -1, Nmax = -1, len, log = 0)
 
@@ -71,11 +62,11 @@ dNmixture_BBNB_oneObs(
   log = 0
 )
 
-rNmixture_BNB_v(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+rNmixture_BNB_v(n, lambda, theta, prob, Nmin, Nmax, len)
 
-rNmixture_BNB_s(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+rNmixture_BNB_s(n, lambda, theta, prob, Nmin, Nmax, len)
 
-rNmixture_BNB_oneObs(n, lambda, theta, prob, Nmin = -1, Nmax = -1, len)
+rNmixture_BNB_oneObs(n, lambda, theta, prob, Nmin, Nmax, len)
 
 rNmixture_BBP_v(n, lambda, prob, s, Nmin = -1, Nmax = -1, len)
 

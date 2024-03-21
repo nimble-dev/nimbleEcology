@@ -66,7 +66,9 @@ nimBetaFun <- nimbleFunction(
     if (log) return(lgamma(a) + lgamma(b) - lgamma(a + b))
     else return(exp(lgamma(a) + lgamma(b) - lgamma(a + b)))
     returnType(double(0))
-  })
+  },
+  buildDerivs = list(run = list())
+)
 
 #' @rdname dBetaBinom
 #' @export
@@ -87,7 +89,8 @@ dBetaBinom <- nimbleFunction(
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
-  }
+  },
+  buildDerivs = list(run = list(ignore = c("i")))
 )
 
 #' @rdname dBetaBinom
@@ -107,7 +110,8 @@ dBetaBinom_One <- nimbleFunction(
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
-  }
+  },
+  buildDerivs = list(run = list())
 )
 
 
