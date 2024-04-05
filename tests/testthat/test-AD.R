@@ -1,7 +1,7 @@
 # Testing examples:
 
 # install nimble from CRAN:
-install.packages("nimble")
+devtools::install_cran("nimble", force = TRUE)
 # devtools::install_github("nimble-dev/nimble", ref = "devel", subdir = "packages/nimble")
 # install nimbleEcology from branch Nmixture-AD: devtools::install_github("nimble-dev/nimbleEcology", ref = "Nmixture-AD")
 
