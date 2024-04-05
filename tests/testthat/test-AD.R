@@ -1,8 +1,9 @@
 # Testing examples:
 
-# install nimble from branch ADoak:
-# devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble")
-# install nimbleEcology from branch AD_0.3: devtools::install_github("nimble-dev/nimbleEcology", ref = "AD_0.3")
+# install nimble from CRAN:
+devtools::install_cran("nimble", force = TRUE)
+# devtools::install_github("nimble-dev/nimble", ref = "devel", subdir = "packages/nimble")
+# install nimbleEcology from branch Nmixture-AD: devtools::install_github("nimble-dev/nimbleEcology", ref = "Nmixture-AD")
 
 # load nimble's testing tools
 library(nimble)
@@ -33,8 +34,8 @@ nc <- nimbleCode({
 })
 
 Rmodel <- nimbleModel(nc, data = list(x = dat),
-                         inits = list(probOcc = probOcc,
-                                      probDetect = probDetect),
+                      inits = list(probOcc = probOcc,
+                                   probDetect = probDetect),
                       buildDerivs=TRUE)
 
 Cmodel <- compileNimble(Rmodel)
@@ -85,7 +86,8 @@ model_calculate_test_case(Rmodel, Cmodel,
                           v1_case1, v2_case1,
                           0:2)
 })
-test_that ("dNmixture errors on build with AD", {
+
+test_that ("dNmixture works with AD", {
 ##########################
 #### dNmixture_s case ####
 
@@ -104,26 +106,22 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                  inits = list(prob = prob,
                               lambda = lambda),
                  buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
-# v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
+v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##########################
 #### dNmixture_BNB_s case ####
@@ -144,26 +142,24 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    theta = theta),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-})
-# Cmodel$calculate()
-#
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##############################
 #### dNmixture_BBP_s case ####
@@ -178,31 +174,30 @@ prob2 <- 0.5
 s2 <- 1.111
 
 nc <- nimbleCode({
-  x[1:5] ~ dNmixture_BBNB_s(lambda, prob, s = s,
+  x[1:5] ~ dNmixture_BBP_s(lambda, prob, s = s,
                             Nmin = 0, Nmax = 100, len = 5)
   prob ~ dunif(0, 1)
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    s = s),
-                      buildDerivs=TRUE)
-# Rmodel$calculate()
+                      buildDerivs = TRUE)
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+Cmodel$calculate()
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##############################
 #### dNmixture_BBNB_s case ####
@@ -225,26 +220,25 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    theta = theta, s = s),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##########################
 #### dNmixture_v case ####
@@ -266,26 +260,23 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
+v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda'))
-# v1_case1 <- list(arg1 = c(prob, lambda)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##############################
 #### dNmixture_BNB_v case ####
@@ -310,26 +301,24 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    theta = theta),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##############################
 #### dNmixture_BBP_v case ####
@@ -354,26 +343,24 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    s = s),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##############################
 #### dNmixture_BBNB_v case ####
@@ -400,26 +387,24 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob,
                                    lambda = lambda,
                                    theta = theta, s = s),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##########################
 #### dNmixture_BNB_oneObs case ####
@@ -440,25 +425,23 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob, theta = theta,
                                    lambda = lambda),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##########################
 #### dNmixture_BBP_oneObs case ####
@@ -479,25 +462,23 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob, s=s,
                                    lambda = lambda),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, s2)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, s2)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
 ##########################
 #### dNmixture_BBNB_oneObs case ####
@@ -520,25 +501,23 @@ nc <- nimbleCode({
   lambda ~ dunif(0, 100)
 })
 
-expect_error({
 Rmodel <- nimbleModel(nc, data = list(x = x),
                       inits = list(prob = prob, theta = theta, s=s,
                                    lambda = lambda),
                       buildDerivs=TRUE)
-# Rmodel$calculate()
+Rmodel$calculate()
 
 Cmodel <- compileNimble(Rmodel)
-# Cmodel$calculate()
-})
+Cmodel$calculate()
 
-# nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
-# v1_case1 <- list(arg1 = c(prob, lambda, theta, s2)) # taping values for prob and lambda
-# v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
-#
-# model_calculate_test_case(Rmodel, Cmodel,
-#                           model_calculate_test, nodesList_case1,
-#                           v1_case1, v2_case1,
-#                           0:2)
+nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+v1_case1 <- list(arg1 = c(prob, lambda, theta, s2)) # taping values for prob and lambda
+v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+model_calculate_test_case(Rmodel, Cmodel,
+                          model_calculate_test, nodesList_case1,
+                          v1_case1, v2_case1,
+                          0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 })
 
 

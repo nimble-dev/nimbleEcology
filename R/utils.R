@@ -33,20 +33,22 @@ nimNmixPois_logFac <- nimbleFunction(
       max_index <- 1 # not sure this is relevant. it's defensive.
       sum_ff_g1 <- ff[1]
     }
-
-    terms <- numeric(numN + 1)
+    
+    ## terms <- numeric(numN + 1) ## This cannot compile with AD
+    terms_len <- ADbreak(numN) + 1
+    terms <- numeric(length = ADbreak(terms_len), value = 0)
     terms[max_index + 1] <- 1
-
+    
     sumff <- sum_ff_g1 ## should be the same as sum(ff[1:max_index])
-
+    
     for (i in 1:max_index) {
       # terms[i] <- 1 / exp(sum(ff[i:max_index]))
       terms[i] <- 1 / exp(sumff)
       sumff <- sumff - ff[i]
     }
-
+    
     sumff <- 0
-    for (i in (max_index + 1):numN) {
+    for (i in (max_index + 1):ADbreak(numN)) {
       # terms[i + 1] <- exp(sum(ff[(max_index + 1):i]))
       sumff <- sumff + ff[i]
       terms[i + 1] <- exp(sumff)
@@ -54,4 +56,6 @@ nimNmixPois_logFac <- nimbleFunction(
     log_fac <- sum_ff_g1 + log(sum(terms)) # Final factor is the largest term * (all factors / largest term)    }
     return(log_fac)
     returnType(double())
-  })
+  },
+  buildDerivs = list(run = list(ignore = c("i", "max_index")))
+)

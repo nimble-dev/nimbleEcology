@@ -296,8 +296,8 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double(1)',
-                'Nmin = integer(0, default = -1)',
-                'Nmax = integer(0, default = -1)',
+                'Nmin = integer()',
+                'Nmax = integer()',
                 'len = integer()'
                 ),
       mixedSizes = FALSE,
@@ -313,8 +313,8 @@
       types = c('value = double(1)',
                 'lambda = double()',
                 'prob = double()',
-                'Nmin = integer(0, default = -1)',
-                'Nmax = integer(0, default = -1)',
+                'Nmin = integer()',
+                'Nmax = integer()',
                 'len = integer()'
                 ),
       mixedSizes = FALSE,
@@ -331,8 +331,8 @@
                 'lambda = double()',
                 'theta = double()',
                 'prob = double(1)',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer()',
+                'Nmax = integer()',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -348,8 +348,8 @@
                 'lambda = double()',
                 'theta = double()',
                 'prob = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer()',
+                'Nmax = integer()',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -365,8 +365,8 @@
                 'lambda = double()',
                 'theta = double()',
                 'prob = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer()',
+                'Nmax = integer()',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -383,8 +383,8 @@
                 'lambda = double()',
                 'prob = double(1)',
                 's = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -401,9 +401,9 @@
                 'lambda = double()',
                 'prob = double()',
                 's = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
-                'len = double()'
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
+                'len = integer()'
       ),
       mixedSizes = FALSE,
       pqAvail = FALSE
@@ -419,8 +419,8 @@
                 'lambda = double()',
                 'prob = double()',
                 's = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -441,8 +441,8 @@
                 'prob = double(1)',
                 's = double()',
                 'theta = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
                 'len = double()'
       ),
       mixedSizes = FALSE,
@@ -460,9 +460,9 @@
                 'prob = double()',
                 's = double()',
                 'theta = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
-                'len = double()'
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
+                'len = integer()'
       ),
       mixedSizes = FALSE,
       pqAvail = FALSE
@@ -479,8 +479,8 @@
                 'theta = double()',
                 'prob = double()',
                 's = double()',
-                'Nmin = double(0, default = -1)',
-                'Nmax = double(0, default = -1)',
+                'Nmin = integer(0, default = -1)',
+                'Nmax = integer(0, default = -1)',
                 'len = double()'
       ),
       mixedSizes = FALSE,

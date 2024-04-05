@@ -1255,7 +1255,7 @@ setup_update_and_constant_nodes_for_tests <- function(model,
   ##  derivNodes <- model$expandNodeNames(derivNodes) # do not do this because do not want vector node names
   nNodes <- length(derivNodes)
   calcNodes <- model$getDependencies(derivNodes)
-  ucNodes <- makeDerivsInfo(model, derivNodes, calcNodes, dataAsConstantNodes = TRUE)
+  ucNodes <- makeModelDerivsInfo(model, derivNodes, calcNodes, dataAsConstantNodes = TRUE)
   updateNodes <- ucNodes$updateNodes
   constantNodes <- ucNodes$constantNodes
   updateNodes <- setdiff(updateNodes, forceConstantNodes) # remove forceConstants from updates
