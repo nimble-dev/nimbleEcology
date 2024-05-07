@@ -182,3 +182,140 @@ replaceIndex <- function(code, old_idx, new_idx){
 embedLinesInCurlyBrackets <- function(lines) {
   as.call(c(list(quote(`{`)), lines))
 }
+
+
+#' Macro to fit single-season, multi-species occupancy model
+#'
+#' Generates nimble code for a single-season, multi-species occupancy model.
+#' Covariates can be specified for both the detection and occupancy (state)
+#' submodels using R formulas.
+#'
+#' @name multispeciesOccupancy
+#' @author Ken Kellner
+#' 
+#' @param stateformula An R formula for the occupancy/state model, possibly with the 
+#'  parameters followed by brackets containing indices.
+#' @param detformula An R formula for the detection model, possibly with the 
+#'  parameters followed by brackets containing indices.
+#' @param statePrefix All state model coefficient names will begin with this prefix.
+#'  default is state_ (so x becomes state_x, etc.)
+#' @param detPrefix All detection model coefficient names will begin with this prefix.
+#'  default is det_ (so x becomes det_x, etc.)
+#' @param statePriors Prior specifications for state model parameters, should be 
+#'  generated with nimbleMacros::setPriors()
+#' @param detPriors Prior specifications for det model parameters, should be generated 
+#'  with nimbleMacros::setPriors()
+#' @param marginalized Logical. If TRUE, fit the marginalized model using the
+#'  dOcc_v nimbleFunction
+#' @param centerVar Grouping covariate to 'center' on in parameterization. By
+#'  default all random effects have mean 0 as with lme4.
+#' @param speciesID Name to use for species ID index vector 
+#'
+#' @examples
+#' nimbleOptions(enableModelMacros = TRUE)
+NULL
+
+
+#' @export
+multispeciesOccupancy <- nimble::model_macro_builder(
+function(stoch, LHS, stateformula, detformula, 
+         statePrefix=quote(state_), detPrefix=quote(det_), 
+         statePriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
+         detPriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"),
+         marginalized = FALSE, centerVar = NULL, speciesID=quote(speciesID),
+         modelInfo, .env){
+ 
+    site_dim <- LHS[[3]] # sites, e.g. 1:N
+    obs_dim <- LHS[[4]]  # obs, e.g. 1:J
+    sp_dim <- LHS[[5]]   # species, e.g. 1:S
+
+    y <- eval(LHS[[2]], envir=modelInfo$constants)
+    S <- dim(y)[3]
+    modelInfo$constants[[safeDeparse(speciesID)]] <- factor(1:S, levels=1:S)
+
+    sf <- multispeciesFormula(stateformula, sp_dim, speciesID)
+    df <- multispeciesFormula(detformula, sp_dim, speciesID)
+
+    # Code for calculating occupancy and detection parameters
+    param_code <- substitute({
+      psi[SITEDIM, SPDIM] <- linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
+                                     sdPrefix=STATEPREFIX, priorSettings=STATEPRIOR, 
+                                     center=SPID)  
+      p[SITEDIM, OBSDIM, SPDIM] <- linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
+                                           sdPrefix=DETPREFIX, priorSettings=DETPRIOR, 
+                                           center=SPID)
+    }, 
+    list(SITEDIM=site_dim, OBSDIM=obs_dim, SPDIM=sp_dim,
+         STATEFORM=sf, DETFORM = df,
+         STATEPREFIX=statePrefix, DETPREFIX = detPrefix,
+         STATEPRIOR=statePriors, DETPRIOR=detPriors,
+         SPID=speciesID)
+    )
+ 
+    if(!marginalized){
+      # Latent state model    
+      ymod_code <- substitute({
+        z[SITEDIM, SPDIM] ~ forLoop(dbern(psi[SITEDIM, SPDIM]))
+
+        RESP ~ forLoop(dbern(p[SITEDIM, OBSDIM, SPDIM]*z[SITEDIM, SPDIM]))
+        }, 
+        list(RESP=LHS, SITEDIM=site_dim, OBSDIM=obs_dim, SPDIM=sp_dim)
+      )
+
+      # Create initial values for z
+      z <- apply(y, c(1,3), max, na.rm=TRUE)
+      #z[z == 0] <- NA
+      #modelInfo$constants$z <- z
+      modelInfo$inits <- list(z = z)
+
+    } else {
+      resp <- LHS[[2]]
+      site_idx <- as.name(modelInfo$indexCreator())
+      sp_idx <- as.name(modelInfo$indexCreator())
+
+      # Obs range for a specific site (e.g. 1:J[i])
+      obs_dim2 <- replaceIndex(obs_dim, site_dim, site_idx) 
+      nsamples <- obs_dim2[[3]]
+
+      ymod_code <- substitute({
+        for (SITEIDX in SITEDIM){
+          for (SPIDX in SPDIM){
+            RESP[SITEIDX, OBSDIM2, SPIDX] ~ dOcc_v(
+              probOcc = psi[SITEIDX, SPIDX],
+              probDetect = p[SITEIDX, OBSDIM2, SPIDX],
+              len = NSAMP
+              )
+          }
+        }
+
+        }, 
+        list(RESP=LHS[[2]], SITEIDX = site_idx, SPIDX = sp_idx, SITEDIM=site_dim, 
+             OBSDIM=obs_dim, OBSDIM2 = obs_dim2, NSAMP=nsamples, SPDIM=sp_dim)
+      )
+
+    }
+
+    code <- embedLinesInCurlyBrackets(list(param_code, ymod_code))
+
+    # Return code and model info
+    list(code=code, modelInfo=modelInfo)
+  },
+use3pieces=TRUE,
+unpackArgs=TRUE
+)
+class(multispeciesOccupancy) <- "model_macro"
+
+multispeciesFormula <- function(form, sp_idx, sp_vec){
+  bars <- "||"
+  if(form == ~1) bars <- "|"
+  sp_vec <- safeDeparse(sp_vec)
+  rand <- paste0("+ (", safeDeparse(form[[2]]), " ", bars, " ", 
+                 sp_vec,"[",safeDeparse(sp_idx),"])")
+  stats::as.formula(str2lang(paste(safeDeparse(form), rand)))
+}
+
+# not the same as nimble's version
+safeDeparse <- function(inp) {
+  out <- deparse(inp)
+  paste(sapply(out, trimws), collapse=" ")
+}
