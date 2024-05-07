@@ -24,8 +24,6 @@
 #' @param centerVar Grouping covariate to 'center' on in parameterization. By
 #'  default all random effects have mean 0 as with lme4.
 #'
-#' @author Ken Kellner
-#'
 #' @examples
 #' nimbleOptions(enableModelMacros = TRUE)
 #' y <- matrix(rbinom(10, 1, 0.5), 5, 2)
@@ -92,11 +90,16 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
       modelInfo$inits <- list(z = z)
 
     } else {
+      # Marginalized model
+      # Because of the way the dOcc_v function works we can't use 
+      # the forLoop macro, so have to write the loop code manually
 
+      # New index variable for site loop
       site_idx <- as.name(modelInfo$indexCreator())
 
-      # Also check if integer
-      obs_dim2 <- replaceIndex(obs_dim, site_dim, site_dix) 
+      # Get observation range (e.g. 1:J)
+      obs_dim2 <- replaceIndex(obs_dim, site_dim, site_idx) 
+      # Number of samples
       nsamples <- obs_dim2[[3]]
 
       ymod_code <- substitute({  
