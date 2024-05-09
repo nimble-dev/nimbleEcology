@@ -33,6 +33,18 @@ Generates nimble code for a single-season, single-species occupancy model.
 Covariates can be specified for both the detection and occupancy (state)
 submodels using R formulas.
 }
+\details{
+This macro should be placed on the right-hand side of an assignment
+ (it doesn't matter if you use <- or ~). The left-hand side must be a
+ matrix of detection-nondetection data with dimensions M x J, where
+ M is sites and J is occasions. This matrix may contain
+ missing values (e.g. if you have different numbers of occasions by site). However,
+ to use the marginalized form of the model, the missing values for site M
+ must come at the end of the row of occasion data 1:J. For example
+ if you have J = 5 but the first site was only sampled 3 times, the 
+ corresponding row of the matrix should be [1, 1, 1, NA, NA] rather than
+ for example [1, NA, 1, 1, NA].
+}
 \examples{
 nimbleOptions(enableModelMacros = TRUE)
 y <- matrix(rbinom(10, 1, 0.5), 5, 2)

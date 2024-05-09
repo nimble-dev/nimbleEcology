@@ -24,6 +24,17 @@
 #' @param centerVar Grouping covariate to 'center' on in parameterization. By
 #'  default all random effects have mean 0 as with lme4.
 #'
+#' @details This macro should be placed on the right-hand side of an assignment
+#'  (it doesn't matter if you use <- or ~). The left-hand side must be a
+#'  matrix of detection-nondetection data with dimensions M x J, where
+#'  M is sites and J is occasions. This matrix may contain
+#'  missing values (e.g. if you have different numbers of occasions by site). However,
+#'  to use the marginalized form of the model, the missing values for site M
+#'  must come at the end of the row of occasion data 1:J. For example
+#'  if you have J = 5 but the first site was only sampled 3 times, the 
+#'  corresponding row of the matrix should be [1, 1, 1, NA, NA] rather than
+#'  for example [1, NA, 1, 1, NA].
+#'
 #' @examples
 #' nimbleOptions(enableModelMacros = TRUE)
 #' y <- matrix(rbinom(10, 1, 0.5), 5, 2)
@@ -186,7 +197,8 @@ embedLinesInCurlyBrackets <- function(lines) {
 
 #' Macro to fit single-season, multi-species occupancy model
 #'
-#' Generates nimble code for a single-season, multi-species occupancy model.
+#' Generates nimble code for a single-season, multi-species occupancy model,
+#' in which all intercepts and slopes are assumed to be random effects by species.
 #' Covariates can be specified for both the detection and occupancy (state)
 #' submodels using R formulas.
 #'
@@ -207,14 +219,36 @@ embedLinesInCurlyBrackets <- function(lines) {
 #'  with nimbleMacros::setPriors()
 #' @param marginalized Logical. If TRUE, fit the marginalized model using the
 #'  dOcc_v nimbleFunction
-#' @param centerVar Grouping covariate to 'center' on in parameterization. By
-#'  default all random effects have mean 0 as with lme4.
 #' @param speciesID Name to use for species ID index vector 
+#'
+#' @details This macro should be placed on the right-hand side of an assignment
+#'  (it doesn't matter if you use <- or ~). The left-hand side must be an
+#'  array of detection-nondetection data with dimensions M x J x S, where
+#'  M is sites, J is occasions, and S is species.  This array may contain
+#'  missing values (e.g. if you have different numbers of occasions by site). However,
+#'  to use the marginalized form of the model, the missing values for site M
+#'  and species S must come at the end of the occasion data 1:J. For example
+#'  if you have J = 5 but the first site was only sampled 3 times, the 
+#'  corresponding row of the array should be [1, 1, 1, NA, NA] rather than
+#'  for example [1, NA, 1, 1, NA].
 #'
 #' @examples
 #' nimbleOptions(enableModelMacros = TRUE)
+#' M <- 100 # sites
+#' J <- 5   # occasions
+#' S <- 10  # species
+#' y <- array(rbinom(M*J*S, 1, 0.5), c(M,J,S))
+#' x <- rnorm(M) # site covariate
+#'
+#' const <- list(M=M, J=J, S=S, y=y, x=x)
+#'
+#' code <- nimbleCode({
+#'   y[1:M, 1:J, 1:S] ~ multispeciesOccupancy(~x[1:M], ~1)
+#' })
+#'
+#' mod <- nimbleModel(code, constants=const)
+#' mod$getCode()
 NULL
-
 
 #' @export
 multispeciesOccupancy <- nimble::model_macro_builder(
@@ -222,7 +256,7 @@ function(stoch, LHS, stateformula, detformula,
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
          detPriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"),
-         marginalized = FALSE, centerVar = NULL, speciesID=quote(speciesID),
+         marginalized = FALSE, speciesID=quote(speciesID),
          modelInfo, .env){
  
     site_dim <- LHS[[3]] # sites, e.g. 1:N

@@ -25,18 +25,42 @@ with nimbleMacros::setPriors()}
 \item{marginalized}{Logical. If TRUE, fit the marginalized model using the
 dOcc_v nimbleFunction}
 
-\item{centerVar}{Grouping covariate to 'center' on in parameterization. By
-default all random effects have mean 0 as with lme4.}
-
 \item{speciesID}{Name to use for species ID index vector}
 }
 \description{
-Generates nimble code for a single-season, multi-species occupancy model.
+Generates nimble code for a single-season, multi-species occupancy model,
+in which all intercepts and slopes are assumed to be random effects by species.
 Covariates can be specified for both the detection and occupancy (state)
 submodels using R formulas.
 }
+\details{
+This macro should be placed on the right-hand side of an assignment
+ (it doesn't matter if you use <- or ~). The left-hand side must be an
+ array of detection-nondetection data with dimensions M x J x S, where
+ M is sites, J is occasions, and S is species.  This array may contain
+ missing values (e.g. if you have different numbers of occasions by site). However,
+ to use the marginalized form of the model, the missing values for site M
+ and species S must come at the end of the occasion data 1:J. For example
+ if you have J = 5 but the first site was only sampled 3 times, the 
+ corresponding row of the array should be [1, 1, 1, NA, NA] rather than
+ for example [1, NA, 1, 1, NA].
+}
 \examples{
 nimbleOptions(enableModelMacros = TRUE)
+M <- 100 # sites
+J <- 5   # occasions
+S <- 10  # species
+y <- array(rbinom(M*J*S, 1, 0.5), c(M,J,S))
+x <- rnorm(M) # site covariate
+
+const <- list(M=M, J=J, S=S, y=y, x=x)
+
+code <- nimbleCode({
+  y[1:M, 1:J, 1:S] ~ multispeciesOccupancy(~x[1:M], ~1)
+})
+
+mod <- nimbleModel(code, constants=const)
+mod$getCode()
 }
 \author{
 Ken Kellner
