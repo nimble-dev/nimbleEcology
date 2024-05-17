@@ -230,6 +230,72 @@ test_that("varying sampling occasions works", {
   expect_equal(mod$getCode(), code_ref)
 })
 
+test_that("nimbleOccu works", {
+  sc <- list(x = x)
+  oc <- list(x2 = x2)
+  mod <- nimbleOccu(~x, ~x2, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE)
+
+  code_ref <- quote({
+    for (i_1 in 1:M) {
+        logit(psi[i_1]) <- state_Intercept + state_x * x[i_1]
+    }
+    state_Intercept ~ dunif(-10, 10)
+    state_x ~ dlogis(0, 1)
+    for (i_2 in 1:M) {
+        for (i_3 in 1:J) {
+            logit(p[i_2, i_3]) <- det_Intercept + det_x2 * x2[i_2,
+                i_3]
+        }
+    }
+    det_Intercept ~ dunif(-10, 10)
+    det_x2 ~ dlogis(0, 1)
+    for (i_4 in 1:M) {
+        z[i_4] ~ dbern(psi[i_4])
+    }
+    for (i_5 in 1:M) {
+        for (i_6 in 1:J) {
+            y[i_5, i_6] ~ dbern(p[i_5, i_6] * z[i_5])
+        }
+    }
+  })
+  expect_equal(mod$getCode(), code_ref)
+
+  fit <- nimbleOccu(~x, ~x2, y, siteCovs=sc, obsCovs=oc, nchain=2,
+                    niter=100, nburnin=50)
+  expect_is(fit, "list")
+  expect_equal(dim(fit$chain1), c(50, 104))
+
+  # Different dimensions for different obs covs
+  mod <- nimbleOccu(~1, ~x2 + x, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE)
+  code_ref <- quote({
+    for (i_1 in 1:M) {
+        logit(psi[i_1]) <- state_Intercept
+    }
+    state_Intercept ~ dunif(-10, 10)
+    for (i_2 in 1:M) {
+        for (i_3 in 1:J) {
+            logit(p[i_2, i_3]) <- det_Intercept + det_x2 * x2[i_2,
+                i_3] + det_x * x[i_2]
+        }
+    }
+    det_Intercept ~ dunif(-10, 10)
+    det_x2 ~ dlogis(0, 1)
+    det_x ~ dlogis(0, 1)
+    for (i_4 in 1:M) {
+        z[i_4] ~ dbern(psi[i_4])
+    }
+    for (i_5 in 1:M) {
+        for (i_6 in 1:J) {
+            y[i_5, i_6] ~ dbern(p[i_5, i_6] * z[i_5])
+        }
+    }
+  })
+  expect_equal(code_ref, mod$getCode())
+
+  mod <- nimbleOccu(~x, ~x2, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE,
+                    marginalized=TRUE)
+})
+
 # Multispecies occupancy-------------------------------------------------------
 
 # Simulate data

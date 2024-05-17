@@ -122,7 +122,7 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
             )
         }
         }, 
-        list(RESP=LHS[[2]], SITEDIM=site_dim, OBSDIM=obs_dim,
+        list(Y=LHS[[2]], SITEDIM=site_dim, OBSDIM=obs_dim,
              SITEIDX=site_idx, OBSDIM2=obs_dim2, NSAMP=nsamples)
       )
     }
