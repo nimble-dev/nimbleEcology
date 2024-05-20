@@ -254,8 +254,8 @@ NULL
 multispeciesOccupancy <- nimble::model_macro_builder(
 function(stoch, LHS, stateformula, detformula, 
          statePrefix=quote(state_), detPrefix=quote(det_), 
-         statePriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
-         detPriors=setPriors(intercept="dlogis(0,1)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"),
+         statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
+         detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"),
          marginalized = FALSE, speciesID=quote(speciesID),
          modelInfo, .env){
  

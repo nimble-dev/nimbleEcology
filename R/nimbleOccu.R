@@ -1,8 +1,8 @@
 #' @export
 nimbleOccu <- function(stateformula, detformula,
                        y, siteCovs = NULL, obsCovs = NULL,
-                       statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)"), 
-                       detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)"),
+                       statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
+                       detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0, 5)"),
                        marginalized = FALSE,
                        returnModel = FALSE,
                        sampler = c("default", "hmc"),
@@ -20,11 +20,21 @@ nimbleOccu <- function(stateformula, detformula,
     nimbleOptions(buildModelDerivs=TRUE) # this is a bit hacky
   }
 
-  stopifnot(is.matrix(y))
+  stopifnot(is.array(y))
+  stopifnot(length(dim(y)) == 2 | length(dim(y)) == 3)
   stopifnot(ncol(y) > 1)
 
   M <- nrow(y)
   J <- ncol(y)
+  
+  S <- 1 # number of species
+  if(length(dim(y)) == 3){
+    S <- dim(y)[3]
+    if(S == 1){
+      # Drop last dimension if only one species
+      y <- y[,,1,drop=FALSE]
+    }
+  }
 
   # Possibly step here to move data to front of vectors
 
@@ -33,17 +43,25 @@ nimbleOccu <- function(stateformula, detformula,
 
   # Add z if latent model
   if(!marginalized){
-    z <- apply(y, 1, max, na.rm=TRUE)
+    if(S == 1){
+      z <- apply(y, 1, max, na.rm=TRUE)
+    } else {
+      z <- apply(y, c(1,3), max, na.rm=TRUE)
+    }
     z[z==0] <- NA
     data$z <- z
   }
 
   # Make basic constants list
-  constants <- list(y = y, M = M, J = J)
+  constants <- list(y = y, M = M, J = J)  
+  if(S > 1) constants <- c(constants, list(S = S))
   
   # Process site model and add required constants
   state_vars <- all.vars(stateformula)
   stopifnot(all(state_vars %in% names(siteCovs)))
+  for (i in state_vars){
+    stateformula <- addBracketToFormula(stateformula, str2lang(i), "[1:M]")
+  }
   site_sub <- siteCovs[state_vars]
   # TODO: Check factors here?
   check_site <- sapply(site_sub, function(x){
@@ -91,15 +109,22 @@ nimbleOccu <- function(stateformula, detformula,
   }
  
   # Generate code
+  if(S == 1){
+    # single species case
+    resp <- quote(y[1:M, 1:J])
+    macro <- quote(occupancy)
+  } else {
+    # multispecies
+    resp <- quote(y[1:M, 1:J, 1:S])
+    macro <- quote(multispeciesOccupancy)
+  }
+
   code <- substitute({
-    y[1:M, 1:J] ~ occupancy(stateformula = SF,
-                            detformula = DF,
-                            statePriors = SP,
-                            detPriors = DP,
-                            marginalized = MAR)
-  }, list(SF=stateformula, DF=detformula, 
-          SP = statePriors, DP = detPriors,
-          MAR = marginalized))
+    RESP ~ MACRO(stateformula = SF, detformula = DF,
+                 statePriors = SP, detPriors = DP,
+                 marginalized = MAR)
+  }, list(RESP = resp, MACRO = macro, SF=stateformula, DF=detformula, 
+          SP = statePriors, DP = detPriors, MAR = marginalized))
 
   args <- list(...)
   if(is.null(args$inits)) args$inits <- list()

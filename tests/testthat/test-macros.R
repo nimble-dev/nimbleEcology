@@ -5,7 +5,6 @@ skip_if_not(nimbleMacros_installed)
 macro_setting <- nimbleOptions("enableModelMacros")
 comm_setting <- nimbleOptions("enableMacroComments")
 nimbleOptions(enableModelMacros = TRUE)
-nimbleOptions(enableMacroComments = FALSE)
 
 # Simulate occupancy dataset
 set.seed(123)
@@ -41,6 +40,12 @@ for (i in 1:M){
 #z[z==0] <- NA
 const <- list(y=y, x=x, x2=x2, M=M, J=J, g = g)
 
+sc <- list(x = x)
+oc <- list(x2 = x2)
+
+# Force nimbleMacros to load namespace so we can turn off comments
+mod <- nimbleOccu(~1, ~1, y=y, returnModel = TRUE)
+nimbleOptions(enableMacroComments = FALSE)
 
 test_that("Latent-state occupancy macro works", {
 
@@ -143,7 +148,7 @@ test_that("Marginalized occupancy macro works", {
     det_Intercept ~ dunif(-10, 10)
     det_x2 ~ dlogis(0, 1)
     for (i_1 in 1:M) {
-        Y[i_1, 1:J] ~ dOcc_v(probOcc = psi[i_1], probDetect = p[i_1,
+        y[i_1, 1:J] ~ dOcc_v(probOcc = psi[i_1], probDetect = p[i_1,
             1:J], len = J)
     }
   })
@@ -299,7 +304,7 @@ test_that("nimbleOccu works", {
 # Multispecies occupancy-------------------------------------------------------
 
 # Simulate data
-N <- 100
+M <- 100
 S <- 10
 J <- 5
 
@@ -320,77 +325,78 @@ a1 <- rnorm(S, a1_mn, a1_sd)
 b0 <- rnorm(S, b0_mn, b0_sd)
 b1 <- rnorm(S, b1_mn, b1_sd)
 
-x1 <- rnorm(N)
-x2 <- matrix(rnorm(N*J), N, J)
+x1 <- rnorm(M)
+x2 <- matrix(rnorm(M*J), M, J)
 
-y <- array(NA, c(N, J, S))
+y <- array(NA, c(M, J, S))
 
 for (s in 1:S){
   psi <- plogis(a0[s] + a1[s] * x1)
-  z <- rbinom(N, 1, psi)
-  p <- matrix(NA, N, J)
-  for (n in 1:N){
+  z <- rbinom(M, 1, psi)
+  p <- matrix(NA, M, J)
+  for (n in 1:M){
     p[n,] <- plogis(b0[s] + b1[s] * x2[n,])
     y[n,,s] <- rbinom(J, 1, p[n,] * z[n])
   }
 }
-constants <- list(y = y, N = N, J = J, S = S, x1 = x1, x2 = x2)
+constants <- list(y = y, M = M, J = J, S = S, x1 = x1, x2 = x2)
+
+code_ref <- quote({
+  for (i_1 in 1:M) {
+      for (i_2 in 1:S) {
+          logit(psi[i_1, i_2]) <- state_speciesID[speciesID[i_2]] +
+              state_speciesID_x1[speciesID[i_2]] * x1[i_1]
+      }
+  }
+  state_Intercept ~ dunif(-10, 10)
+  state_x1 ~ dlogis(0, 1)
+  state_sd_speciesID ~ dunif(0, 5)
+  for (i_3 in 1:10) {
+      state_speciesID[i_3] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
+  }
+  state_sd_x1_speciesID ~ dunif(0, 5)
+  for (i_4 in 1:10) {
+      state_x1_speciesID[i_4] ~ dnorm(state_x1, sd = state_sd_x1_speciesID)
+  }
+  for (i_5 in 1:M) {
+      for (i_6 in 1:J) {
+          for (i_7 in 1:S) {
+              logit(p[i_5, i_6, i_7]) <- det_speciesID[speciesID[i_7]] +
+                det_speciesID_x2[speciesID[i_7]] * x2[i_5,
+                  i_6]
+          }
+      }
+  }
+  det_Intercept ~ dunif(-10, 10)
+  det_x2 ~ dlogis(0, 1)
+  det_sd_speciesID ~ dunif(0, 5)
+  for (i_8 in 1:10) {
+      det_speciesID[i_8] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
+  }
+  det_sd_x2_speciesID ~ dunif(0, 5)
+  for (i_9 in 1:10) {
+      det_x2_speciesID[i_9] ~ dnorm(det_x2, sd = det_sd_x2_speciesID)
+  }
+  for (i_10 in 1:M) {
+      for (i_11 in 1:S) {
+          z[i_10, i_11] ~ dbern(psi[i_10, i_11])
+      }
+  }
+  for (i_12 in 1:M) {
+      for (i_13 in 1:J) {
+          for (i_14 in 1:S) {
+              y[i_12, i_13, i_14] ~ dbern(p[i_12, i_13, i_14] *
+                z[i_12, i_14])
+          }
+      }
+  }
+})
+
 
 test_that("latent multispecies model works", {
 
   code <- nimbleCode({
-    y[1:N,1:J,1:S] ~ multispeciesOccupancy(~x1[1:N], ~x2[1:N,1:J])
-  })
-
-  code_ref <- quote({
-    for (i_1 in 1:N) {
-        for (i_2 in 1:S) {
-            logit(psi[i_1, i_2]) <- state_speciesID[speciesID[i_2]] +
-                state_speciesID_x1[speciesID[i_2]] * x1[i_1]
-        }
-    }
-    state_Intercept ~ dlogis(0, 1)
-    state_x1 ~ dlogis(0, 1)
-    state_sd_speciesID ~ dunif(0, 5)
-    for (i_3 in 1:10) {
-        state_speciesID[i_3] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
-    }
-    state_sd_x1_speciesID ~ dunif(0, 5)
-    for (i_4 in 1:10) {
-        state_x1_speciesID[i_4] ~ dnorm(state_x1, sd = state_sd_x1_speciesID)
-    }
-    for (i_5 in 1:N) {
-        for (i_6 in 1:J) {
-            for (i_7 in 1:S) {
-                logit(p[i_5, i_6, i_7]) <- det_speciesID[speciesID[i_7]] +
-                  det_speciesID_x2[speciesID[i_7]] * x2[i_5,
-                    i_6]
-            }
-        }
-    }
-    det_Intercept ~ dlogis(0, 1)
-    det_x2 ~ dlogis(0, 1)
-    det_sd_speciesID ~ dunif(0, 5)
-    for (i_8 in 1:10) {
-        det_speciesID[i_8] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
-    }
-    det_sd_x2_speciesID ~ dunif(0, 5)
-    for (i_9 in 1:10) {
-        det_x2_speciesID[i_9] ~ dnorm(det_x2, sd = det_sd_x2_speciesID)
-    }
-    for (i_10 in 1:N) {
-        for (i_11 in 1:S) {
-            z[i_10, i_11] ~ dbern(psi[i_10, i_11])
-        }
-    }
-    for (i_12 in 1:N) {
-        for (i_13 in 1:J) {
-            for (i_14 in 1:S) {
-                y[i_12, i_13, i_14] ~ dbern(p[i_12, i_13, i_14] *
-                  z[i_12, i_14])
-            }
-        }
-    }
+    y[1:M,1:J,1:S] ~ multispeciesOccupancy(~x1[1:M], ~x2[1:M,1:J])
   })
 
   mod <- nimbleModel(code, constants = constants)
@@ -403,17 +409,17 @@ test_that("latent multispecies model works", {
 test_that("marginalized multispecies model works", {
 
   code <- nimbleCode({
-    y[1:N,1:J,1:S] ~ multispeciesOccupancy(~x1[1:N], ~x2[1:N,1:J], marginalized = TRUE)
+    y[1:M,1:J,1:S] ~ multispeciesOccupancy(~x1[1:M], ~x2[1:M,1:J], marginalized = TRUE)
   })
 
   code_ref <- quote({
-    for (i_3 in 1:N) {
+    for (i_3 in 1:M) {
         for (i_4 in 1:S) {
             logit(psi[i_3, i_4]) <- state_speciesID[speciesID[i_4]] +
                 state_speciesID_x1[speciesID[i_4]] * x1[i_3]
         }
     }
-    state_Intercept ~ dlogis(0, 1)
+    state_Intercept ~ dunif(-10, 10)
     state_x1 ~ dlogis(0, 1)
     state_sd_speciesID ~ dunif(0, 5)
     for (i_5 in 1:10) {
@@ -423,7 +429,7 @@ test_that("marginalized multispecies model works", {
     for (i_6 in 1:10) {
         state_x1_speciesID[i_6] ~ dnorm(state_x1, sd = state_sd_x1_speciesID)
     }
-    for (i_7 in 1:N) {
+    for (i_7 in 1:M) {
         for (i_8 in 1:J) {
             for (i_9 in 1:S) {
                 logit(p[i_7, i_8, i_9]) <- det_speciesID[speciesID[i_9]] +
@@ -432,7 +438,7 @@ test_that("marginalized multispecies model works", {
             }
         }
     }
-    det_Intercept ~ dlogis(0, 1)
+    det_Intercept ~ dunif(-10, 10)
     det_x2 ~ dlogis(0, 1)
     det_sd_speciesID ~ dunif(0, 5)
     for (i_10 in 1:10) {
@@ -442,7 +448,7 @@ test_that("marginalized multispecies model works", {
     for (i_11 in 1:10) {
         det_x2_speciesID[i_11] ~ dnorm(det_x2, sd = det_sd_x2_speciesID)
     }
-    for (i_1 in 1:N) {
+    for (i_1 in 1:M) {
         for (i_2 in 1:S) {
             y[i_1, 1:J, i_2] ~ dOcc_v(probOcc = psi[i_1, i_2],
                 probDetect = p[i_1, 1:J, i_2], len = J)
@@ -451,6 +457,15 @@ test_that("marginalized multispecies model works", {
   })
 
   mod <- nimbleModel(code, constants = constants)
+
+  expect_equal(mod$getCode(), code_ref)
+
+})
+
+test_that("nimbleOccu works with multispecies data",{
+  sc <- list(x1 = x1)
+  oc <- list(x2 = x2)
+  mod <- nimbleOccu(~x1, ~x2, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE)
 
   expect_equal(mod$getCode(), code_ref)
 
