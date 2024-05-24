@@ -297,8 +297,25 @@ test_that("nimbleOccu works", {
   })
   expect_equal(code_ref, mod$getCode())
 
+  # Check marginalized model
   mod <- nimbleOccu(~x, ~x2, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE,
                     marginalized=TRUE)
+  docc_code <- mod$getCode()[[8]]
+  expect_equal(docc_code,
+    quote({
+      for (i_1 in 1:M) {
+        y[i_1, 1:J] ~ dOcc_v(probOcc = psi[i_1], probDetect = p[i_1,
+          1:J], len = J)
+      }
+    })[[2]]
+  )
+
+  # Check null model
+  mod <- nimbleOccu(~1, ~1, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE)
+
+  # Can't have species covs in a single-species model
+  sp <- list(x3 = rnorm(3))
+  expect_error(nimbleOccu(~1, ~1, y, siteCovs=sc, obsCovs=oc, speciesCovs=sp, returnModel=TRUE))
 })
 
 # Multispecies occupancy-------------------------------------------------------
@@ -468,7 +485,30 @@ test_that("nimbleOccu works with multispecies data",{
   mod <- nimbleOccu(~x1, ~x2, y, siteCovs=sc, obsCovs=oc, returnModel=TRUE)
 
   expect_equal(mod$getCode(), code_ref)
+  
+  # Species-level covariate
+  sp <- list(x3 = rnorm(S), x4 = rnorm(3))
 
+  mod <- nimbleOccu(~x1 + x3, ~x2, y, siteCovs=sc, obsCovs=oc,
+                    speciesCovs = sp, returnModel=TRUE)
+  
+  expect_equal(mod$getCode()[[2]],
+    quote({
+      for (i_1 in 1:M) {
+        for (i_2 in 1:S) {
+        logit(psi[i_1, i_2]) <- state_speciesID[speciesID[i_2]] +
+            state_speciesID_x1[speciesID[i_2]] * x1[i_1] + state_speciesID_x3[speciesID[i_2]] *
+            x3[i_2]
+      }
+    } 
+    })[[2]]
+  )
+
+  mod <- nimbleOccu(~x1, ~x2 + x3, y, siteCovs=sc, obsCovs=oc,
+                    speciesCovs = sp, returnModel=TRUE)
+  
+  expect_error(nimbleOccu(~x1, ~x2 + x4, y, siteCovs=sc, obsCovs=oc,
+                    speciesCovs = sp, returnModel=TRUE))
 })
 
 # after, not sure if this is needed

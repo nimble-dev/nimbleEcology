@@ -1,6 +1,6 @@
 #' @export
 nimbleOccu <- function(stateformula, detformula,
-                       y, siteCovs = NULL, obsCovs = NULL,
+                       y, siteCovs = NULL, obsCovs = NULL, speciesCovs = NULL,
                        statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
                        detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0, 5)"),
                        marginalized = FALSE,
@@ -36,6 +36,10 @@ nimbleOccu <- function(stateformula, detformula,
     }
   }
 
+  if(S == 1 & !is.null(speciesCovs)){
+    stop("Can't have species covariates in a single-species model", call.=FALSE)
+  }
+
   # Possibly step here to move data to front of vectors
 
   # Make data list
@@ -58,11 +62,13 @@ nimbleOccu <- function(stateformula, detformula,
   
   # Process site model and add required constants
   state_vars <- all.vars(stateformula)
-  stopifnot(all(state_vars %in% names(siteCovs)))
-  for (i in state_vars){
+  stopifnot(all(state_vars %in% c(names(siteCovs), names(speciesCovs))))
+
+  state_vars_sc <- state_vars[state_vars %in% names(siteCovs)]
+  for (i in state_vars_sc){
     stateformula <- addBracketToFormula(stateformula, str2lang(i), "[1:M]")
   }
-  site_sub <- siteCovs[state_vars]
+  site_sub <- siteCovs[state_vars_sc]
   # TODO: Check factors here?
   check_site <- sapply(site_sub, function(x){
     is.vector(x) & length(x) == M
@@ -70,14 +76,26 @@ nimbleOccu <- function(stateformula, detformula,
   stopifnot(all(check_site))
   constants <- c(constants, site_sub)
 
+  state_vars_sp <- state_vars[state_vars %in% names(speciesCovs)]
+  for (i in state_vars_sp){
+    stateformula <- addBracketToFormula(stateformula, str2lang(i), "[1:S]")
+  }
+  sp_sub <- speciesCovs[state_vars_sp]
+  # TODO: Check factors here?
+  check_sp <- sapply(sp_sub, function(x){
+    is.vector(x) & length(x) == S
+  })
+  stopifnot(all(check_sp))
+  constants <- c(constants, sp_sub)
+
   # Process obs covariates
   obs_vars <- all.vars(detformula)
-  stopifnot(all(obs_vars %in% c(names(obsCovs), names(siteCovs))))
+  stopifnot(all(obs_vars %in% c(names(obsCovs), names(siteCovs), names(speciesCovs))))
   
   # Find covariates in the detection model that are actually site-level
   # modify formula and add to constants
   obs_in_site <- obs_vars[obs_vars %in% names(siteCovs)]
-  obs_in_site <- obs_in_site[!obs_in_site %in% state_vars]
+  #obs_in_site <- obs_in_site[!obs_in_site %in% state_vars] # TODO: I think this check is wrong
   if(length(obs_in_site) > 0){
     obs_site_sub <- siteCovs[obs_in_site]
     # Add required bracket ([1:M]) to the formula components
@@ -88,12 +106,30 @@ nimbleOccu <- function(stateformula, detformula,
       is.vector(x) & length(x) == M
     })
     stopifnot(all(check_site_obs))
+    obs_site_sub <- obs_site_sub[!names(obs_site_sub) %in% names(constants)]
     constants <- c(constants, obs_site_sub)
+  }
+
+  # Find covariates in the detection model that are actually species-level
+  # modify formula and add to constants
+  obs_in_sp <- obs_vars[obs_vars %in% names(speciesCovs)]
+  if(length(obs_in_sp) > 0){
+    obs_sp_sub <- speciesCovs[obs_in_sp]
+    # Add required bracket ([1:S]) to the formula components
+    for (i in obs_in_sp){
+      detformula <- addBracketToFormula(detformula, str2lang(i), "[1:S]")
+    }
+    check_sp_obs <- sapply(obs_sp_sub, function(x){
+      is.vector(x) & length(x) == S
+    })
+    stopifnot(all(check_sp_obs))
+    obs_sp_sub <- obs_sp_sub[!names(obs_sp_sub) %in% names(constants)]
+    constants <- c(constants, obs_sp_sub)
   }
 
   # Find covariates in the detection model that are observation-level
   # modify formula and add to constants
-  obs_vars <- obs_vars[!obs_vars %in% names(siteCovs)]
+  obs_vars <- obs_vars[obs_vars %in% names(obsCovs)]
   if(length(obs_vars) > 0){
     obs_sub <- obsCovs[obs_vars]
     # Add required bracket ([1:M, 1:J])
