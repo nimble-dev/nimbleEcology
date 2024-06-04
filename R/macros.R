@@ -65,10 +65,10 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     
     # Code to calculate parameters psi and p
     param_code <- substitute({
-      psi[SITEDIM] <- linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
+      psi[SITEDIM] <- nimbleMacros::linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
                                 sdPrefix=STATEPREFIX, priorSettings=STATEPRIOR, 
                                 centerVar=CENTVAR)  
-      p[SITEDIM, OBSDIM] <- linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
+      p[SITEDIM, OBSDIM] <- nimbleMacros::linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
                                       sdPrefix=DETPREFIX, priorSettings=DETPRIOR, 
                                       centerVar=CENTVAR)
       }, 
@@ -82,8 +82,8 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     if(!marginalized){
       # Latent model
       ymod_code <- substitute({  
-        z[SITEDIM] ~ forLoop(dbern(psi[SITEDIM]))
-        Y ~ forLoop(dbern(p[SITEDIM, OBSDIM]*z[SITEDIM]))
+        z[SITEDIM] ~ nimbleMacros::forLoop(dbern(psi[SITEDIM]))
+        Y ~ nimbleMacros::forLoop(dbern(p[SITEDIM, OBSDIM]*z[SITEDIM]))
         }, 
         list(Y=LHS, SITEDIM=site_dim, OBSDIM=obs_dim)
       )
@@ -147,9 +147,9 @@ check_nimbleMacros_installed <- function(){
   if(!check){
     stop("Install nimbleMacros package", call.=FALSE)
   }
-  assign("forLoop", nimbleMacros::forLoop, envir = globalenv())
-  assign("linPred", nimbleMacros::linPred, envir = globalenv())
-  assign("priors", nimbleMacros::priors, envir = globalenv())
+  #assign("forLoop", nimbleMacros::forLoop, envir = globalenv())
+  #assign("linPred", nimbleMacros::linPred, envir = globalenv())
+  #assign("priors", nimbleMacros::priors, envir = globalenv())
   invisible()
 }
 
@@ -272,10 +272,10 @@ function(stoch, LHS, stateformula, detformula,
 
     # Code for calculating occupancy and detection parameters
     param_code <- substitute({
-      psi[SITEDIM, SPDIM] <- linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
+      psi[SITEDIM, SPDIM] <- nimbleMacros::linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
                                      sdPrefix=STATEPREFIX, priorSettings=STATEPRIOR, 
                                      center=SPID)  
-      p[SITEDIM, OBSDIM, SPDIM] <- linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
+      p[SITEDIM, OBSDIM, SPDIM] <- nimbleMacros::linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
                                            sdPrefix=DETPREFIX, priorSettings=DETPRIOR, 
                                            center=SPID)
     }, 
@@ -289,9 +289,9 @@ function(stoch, LHS, stateformula, detformula,
     if(!marginalized){
       # Latent state model    
       ymod_code <- substitute({
-        z[SITEDIM, SPDIM] ~ forLoop(dbern(psi[SITEDIM, SPDIM]))
+        z[SITEDIM, SPDIM] ~ nimbleMacros::forLoop(dbern(psi[SITEDIM, SPDIM]))
 
-        RESP ~ forLoop(dbern(p[SITEDIM, OBSDIM, SPDIM]*z[SITEDIM, SPDIM]))
+        RESP ~ nimbleMacros::forLoop(dbern(p[SITEDIM, OBSDIM, SPDIM]*z[SITEDIM, SPDIM]))
         }, 
         list(RESP=LHS, SITEDIM=site_dim, OBSDIM=obs_dim, SPDIM=sp_dim)
       )
