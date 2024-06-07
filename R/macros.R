@@ -63,6 +63,24 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     site_dim <- LHS[[3]] # e.g. 1:M
     obs_dim <- LHS[[4]]  # e.g. 1:J
     
+    if(marginalized){
+      yraw <- eval(LHS[[2]], envir=modelInfo$constants)
+      yrng <- eval(site_dim, envir=modelInfo$constants)
+      nsamp <- apply(yraw, 1, function(x) sum(!is.na(x)))
+      if(any(nsamp == 1)){
+        split_sites <- TRUE
+        modelInfo$constants$sidx1 <- yrng[which(nsamp > 1)]
+        modelInfo$constants$M1 <- length(modelInfo$constants$sidx1)
+        modelInfo$constants$sidx2 <- yrng[which(nsamp == 1)]
+        modelInfo$constants$M2 <- length(modelInfo$constants$sidx2)
+        # After sorting NAs this won't be needed (?)
+        modelInfo$constants$vidx <- apply(yraw[nsamp==1,,drop=FALSE], 1, function(x) which(!is.na(x))) 
+        single_site_loop <- substitute({
+          Y[sidx2[1:M2], vidx[1:M2]] ~ nimbleMacros::forLoop(dbern(psi[sidx2[1:M2]] * p[sidx2[1:M2], vidx[1:M2]]))
+        }, list(Y=LHS[[2]], OBSDIM=obs_dim))
+      }
+    }
+    
     # Code to calculate parameters psi and p
     param_code <- substitute({
       psi[SITEDIM] <- nimbleMacros::linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
@@ -107,6 +125,12 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
 
       # New index variable for site loop
       site_idx <- as.name(modelInfo$indexCreator())
+      site_idx2 <- site_idx
+
+      if(split_sites){
+        site_dim <- quote(1:M1)
+        site_idx2 <- substitute(sidx1[IDX], list(IDX=site_idx))
+      }
 
       # Get observation range (e.g. 1:J)
       obs_dim2 <- replaceIndex(obs_dim, site_dim, site_idx) 
@@ -115,16 +139,20 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
 
       ymod_code <- substitute({  
         for (SITEIDX in SITEDIM){
-          Y[SITEIDX, OBSDIM2] ~ dOcc_v(
-            probOcc = psi[SITEIDX],
-            probDetect = p[SITEIDX, OBSDIM2],
+          Y[SITEIDX2, OBSDIM2] ~ dOcc_v(
+            probOcc = psi[SITEIDX2],
+            probDetect = p[SITEIDX2, OBSDIM2],
             len = NSAMP
             )
         }
         }, 
         list(Y=LHS[[2]], SITEDIM=site_dim, OBSDIM=obs_dim,
-             SITEIDX=site_idx, OBSDIM2=obs_dim2, NSAMP=nsamples)
+             SITEIDX=site_idx, SITEIDX2=site_idx2, OBSDIM2=obs_dim2, NSAMP=nsamples)
       )
+
+      if(split_sites){
+        ymod_code <- embedLinesInCurlyBrackets(list(ymod_code, single_site_loop))
+      }
     }
 
     code <- embedLinesInCurlyBrackets(list(param_code, ymod_code))
