@@ -2,8 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-context("Testing dOcc-related functions.")
-
 # Test scalar-scalar version
 test_that("dOcc_s and rOcc_s work", {
   x <- c(1,0,1,1,0)
@@ -25,7 +23,17 @@ test_that("dOcc_s and rOcc_s work", {
   lCorrectProbX <- log(correctProbX)
   expect_equal(lProbX, lCorrectProbX)
 
-  CdOcc_s <- compileNimble(dOcc_s)
+  # we must wrap the call to avoid the error that
+  # dOcc_s has no setup code but buildDerivs=TRUE so can't be compiled alone
+  call_dOcc_s <- nimbleFunction(
+    run = function(x = double(1), probOcc=double(),
+                   probDetect=double(),
+                   log = integer(0, default = 0)) {
+      return(dOcc_s(x, probOcc, probDetect, 0, log))
+      returnType(double())
+    }
+  )
+  CdOcc_s <- compileNimble(call_dOcc_s)
   CprobX <- CdOcc_s(x, probOcc, probDetect)
   expect_equal(CprobX, probX)
 
@@ -91,7 +99,6 @@ test_that("dOcc_s and rOcc_s work", {
   cmNA$mNA_MCMC$run(10)
 # Did the imputed values come back?
   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
-
 })
 
 
@@ -118,7 +125,18 @@ test_that("dOcc_v works", {
   lCorrectProbX <- log(correctProbX)
   expect_equal(lProbX, lCorrectProbX)
 
-  CdOcc_v <- compileNimble(dOcc_v)
+  # we must wrap the call to avoid the error that
+  # dOcc_v has no setup code but buildDerivs=TRUE so can't be compiled alone
+  call_dOcc_v <- nimbleFunction(
+    run = function(x = double(1), probOcc=double(0),
+                   probDetect=double(1),
+                   log = integer(0, default = 0)) {
+      return(dOcc_v(x, probOcc, probDetect, 0, log))
+      returnType(double())
+    }
+  )
+
+  CdOcc_v <- compileNimble(call_dOcc_v)
   CprobX <- CdOcc_v(x, probOcc, probDetect)
   expect_equal(CprobX, probX)
 
@@ -205,9 +223,29 @@ test_that("Checking errors", {
   )
 
 
-### Compiled errors
-  CdOcc_s <- compileNimble(dOcc_s)
-  CdOcc_v <- compileNimble(dOcc_v)
+  ### Compiled errors
+  # we must wrap the call to avoid the error that
+  # dOcc_[s,v] has no setup code but buildDerivs=TRUE so can't be compiled alone
+  call_dOcc_s <- nimbleFunction(
+    run = function(x = double(1), probOcc=double(),
+                   probDetect=double(),
+                   len = integer(0),
+                   log = integer(0, default = 0)) {
+      return(dOcc_s(x, probOcc, probDetect, len, log))
+      returnType(double())
+    }
+  )
+  call_dOcc_v <- nimbleFunction(
+    run = function(x = double(1), probOcc=double(0),
+                   probDetect=double(1),
+                   len = integer(0),
+                   log = integer(0, default = 0)) {
+      return(dOcc_v(x, probOcc, probDetect, len, log))
+      returnType(double())
+    }
+  )
+  CdOcc_s <- compileNimble(call_dOcc_s)
+  CdOcc_v <- compileNimble(call_dOcc_v)
 
   expect_error(
     CdOcc_s(x = c(0,1,0,0), probOcc = 0.4, probDetect = 0.5, len = 3)

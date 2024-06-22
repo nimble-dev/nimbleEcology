@@ -122,6 +122,20 @@
 #' probPersist = persistence_prob,
 #' probColonize = colonization_prob[1:(T-1)], p = p[1:T, 1:O])}
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dDynOcc_***} distributions should all work for models and
+#' algorithms that use nimble's automatic differentiation (AD) system. In that
+#' system, some kinds of values are "baked in" (cannot be changed) to the AD
+#' calculations from the first call, unless and until the AD calculations are
+#' reset. For the \code{dDynOcc_***} distributions, the lengths or dimensions of
+#' vector and/or matrix inputs and the \code{start} and \code{end} values
+#' themselves are baked in. These can be different for different iterations
+#' through a for loop (or nimble model declarations with different indices, for
+#' example), but the for each specific iteration will be "baked in" after the
+#' first call. \bold{It is safest if one can assume that \code{x} are data and
+#' are not going to change.}
+#'
 #' @return
 #' For \code{dDynOcc_***}: the probability (or likelihood) or log probability
 #' of observation vector \code{x}.

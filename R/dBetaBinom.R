@@ -63,10 +63,11 @@ nimBetaFun <- nimbleFunction(
   run = function(a = double(0),
                  b = double(0),
                  log = logical(0)) {
-    if (log) return(lgamma(a) + lgamma(b) - lgamma(a + b))
-    else return(exp(lgamma(a) + lgamma(b) - lgamma(a + b)))
+    log_ans <- lgamma(a) + lgamma(b) - lgamma(a + b)
+    if (log) return(log_ans)
+    else return(exp(log_ans))
     returnType(double(0))
-  })
+  }, buildDerivs=list(run=list()))
 
 #' @rdname dBetaBinom
 #' @export
@@ -77,17 +78,19 @@ dBetaBinom <- nimbleFunction(
                  shape2 = double(1),
                  log = integer(0, default = 0)) {
     logprob <- 0
+    lgNp1 <- lgamma(N+1)
     for (i in 1:length(x)) {
       logprob <- logprob +
         nimBetaFun(a = x[i] + shape1[i], b = N - x[i] + shape2[i], log = TRUE) -
         nimBetaFun(a = shape1[i], b = shape2[ i], log = TRUE) +
-        lgamma(N+1) - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
+        lgNp1 - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
     }
 
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
-  }
+  },
+  buildDerivs = list(run = list(ignore = 'i'))
 )
 
 #' @rdname dBetaBinom
@@ -107,12 +110,14 @@ dBetaBinom_One <- nimbleFunction(
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
-  }
+  },
+  buildDerivs = list(run=list())
 )
 
 
 #' @rdname dBetaBinom
 #' @export
+#' @importFrom stats rbeta
 rBetaBinom <- nimbleFunction(
   run = function(n = double(0),
                  N = double(0),
@@ -129,6 +134,7 @@ rBetaBinom <- nimbleFunction(
 
 #' @rdname dBetaBinom
 #' @export
+#' @importFrom stats rbeta
 rBetaBinom_One <- nimbleFunction(
   run = function(n = double(0),
                  N = double(0),

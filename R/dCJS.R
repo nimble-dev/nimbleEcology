@@ -92,6 +92,19 @@
 #'
 #' and so on for each combination of time-dependent and time-independent parameters.
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dCJS_**} distributions should all work for models and algorithms
+#' that use nimble's automatic differentiation (AD) system. In that system,
+#' some kinds of values are "baked in" (cannot be changed) to the AD calculations
+#' from the first call, unless and until the AD calculations are reset. For
+#' the \code{dCJS_**} distributions, the lengths of vector inputs and the data
+#' (\code{x}) values themselves are baked in. These can be different for different
+#' iterations through a for loop (or nimble model declarations with different indices,
+#' for example), but the lengths and data values for each specific iteration
+#' will be "baked in" after the first call. \bold{In other words, it is assumed that
+#' \code{x} are data and are not going to change.}
+#'
 #' @return
 #'
 #' For \code{dCJS_**}: the probability (or likelihood) or log probability of observation vector \code{x}.

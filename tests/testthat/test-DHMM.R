@@ -2,9 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-# Set the context for testthat
-context("Testing dDHMM-related functions.")
-
 # -----------------------------------------------------------------------------
 # 1. Test dDHMM, distribution for Dynamic Hidden Markov Model
 test_that("Testing dDHMM", {
@@ -76,8 +73,17 @@ test_that("Testing dDHMM", {
   expect_equal(lProbX1, log(correctProbX1))
   expect_equal(lProbX2, log(correctProbX2))
 
+  call_dDHMM <- nimbleFunction(
+    run = function(x=double(1), init=double(1), probObs=double(2),
+                   probTrans=double(3), len=integer(0,default=0),
+                   checkRowSums = integer(0,default=1),
+                   log=integer(0, default=0)) {
+      return(dDHMM(x,init,probObs,probTrans,len,checkRowSums,log))
+      returnType(double())
+    })
+
   # Repeat for the compiled function
-  CdDHMM <- compileNimble(dDHMM)
+  CdDHMM <- compileNimble(call_dDHMM)
   CprobX1 <- CdDHMM(x = x1, init = init,
                     probObs = probObs, probTrans = probTrans,
                     len = len, log = F)
@@ -232,7 +238,16 @@ test_that("Testing dDHMMo", {
   expect_equal(lProbX2, log(correctProbX2))
 
   # Repeat for the compiled function
-  CdDHMMo <- compileNimble(dDHMMo)
+  call_dDHMMo <- nimbleFunction(
+    run = function(x=double(1), init=double(1), probObs=double(3),
+                   probTrans=double(3), len=integer(0,default=0),
+                   checkRowSums = integer(0,default=1),
+                   log=integer(0, default=0)) {
+      return(dDHMMo(x,init,probObs,probTrans,len,checkRowSums,log))
+      returnType(double())
+    })
+
+  CdDHMMo <- compileNimble(call_dDHMMo)
   CprobX1 <- CdDHMMo(x = x1, init = init,
                      probObs = probObs, probTrans = probTrans,
                      len = len, log = F)

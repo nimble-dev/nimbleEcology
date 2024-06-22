@@ -27,8 +27,9 @@ Collate:
   dHMM.R
   dOcc.R
   dNmixture.R
+  dNmixtureAD.R
   zzz.R
-RoxygenNote: 7.2.0
+RoxygenNote: 7.3.1
 Suggests: 
     rmarkdown,
     knitr,

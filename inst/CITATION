@@ -46,3 +46,15 @@ bibentry(
  textVersion = "Ponisio, L., P. de Valpine, N. Michaud, and D. Turek. 2020. One size does not fit all: Customizing MCMC methods for hierarchical models using NIMBLE. Ecology and Evolution 10: 2385–2416. <DOI:10.1002/ece3.6053>."
 )
 
+bibentry(
+  bibtype = "article",
+  title = "Comparing {N-mixture} Models and {GLMMs} for Relative Abundance Estimation in a Citizen Science Dataset",
+  journal = "Scientific Reports",
+  volume = "12",
+  pages = "12276",
+  year = "2022",
+  author = c(person("B.R.", "Goldstein"),
+             person("P.", "de Valpine")),
+  doi = "10.1038/s41598-022-16368-z",
+  textVersion = "Goldstein, B.R., and P. de Valpine. 2022. Comparing N-mixture Models and GLMMs for Relative Abundance Estimation in a Citizen Science Dataset. Scientific Reports 12: 12276. <DOI:10.1038/s41598-022-16368-z>"
+)

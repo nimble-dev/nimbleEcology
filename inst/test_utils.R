@@ -1314,7 +1314,7 @@ derivsNimbleFunctionMeta <- nimbleFunction(
   setup = function(model, calcNodes, wrt, reset = FALSE) {
     innerWrtVec <- seq_along(model$expandNodeNames(wrt, returnScalarComponents = TRUE))
     d <- length(innerWrtVec)
-    derivsInfo <- makeDerivsInfo(model, wrt, calcNodes)
+    derivsInfo <- makeModelDerivsInfo(model, wrt, calcNodes)
     updateNodes <- derivsInfo$updateNodes
     constantNodes <- derivsInfo$constantNodes
   },
@@ -1375,7 +1375,7 @@ derivsNimbleFunctionParamTransform <- nimbleFunction(
     my_parameterTransform <- parameterTransform(model, wrtNodesAsScalars)
     d <- my_parameterTransform$getTransformedLength()
     nimDerivs_wrt <- 1:d
-    derivsInfo <- makeDerivsInfo(model, wrt, calcNodes)
+    derivsInfo <- makeModelDerivsInfo(model, wrt, calcNodes)
     updateNodes   <- derivsInfo$updateNodes
     constantNodes <- derivsInfo$constantNodes
   },
@@ -1407,7 +1407,7 @@ derivsNimbleFunctionParamTransformMeta <- nimbleFunction(
     my_parameterTransform <- parameterTransform(model, wrtNodesAsScalars)
     d <- my_parameterTransform$getTransformedLength()
     nimDerivs_wrt <- 1:d
-    derivsInfo <- makeDerivsInfo(model, wrt, calcNodes)
+    derivsInfo <- makeModelDerivsInfo(model, wrt, calcNodes)
     updateNodes   <- derivsInfo$updateNodes
     constantNodes <- derivsInfo$constantNodes
   },
@@ -1811,7 +1811,7 @@ test_ADModelCalculate_internal <- function(model, name = 'unknown', xOrig = NULL
       if(!is.null(d) && length(d) == 2 && d[1] == d[2]) return(TRUE) else return(FALSE)
     }
 
-    derivsInfo <- makeDerivsInfo(model, wrt, calcNodes)
+    derivsInfo <- makeModelDerivsInfo(model, wrt, calcNodes)
     updateNodes <- derivsInfo$updateNodes
     constantNodes <- derivsInfo$constantNodes
 

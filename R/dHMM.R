@@ -109,6 +109,19 @@
 #'   \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S,
 #'   1:O, 1:T], transitionProbs[1:S, 1:S], 1, T)}
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dHMM[o]} distributions should work for models and algorithms that
+#' use nimble's automatic differentiation (AD) system. In that system, some
+#' kinds of values are "baked in" (cannot be changed) to the AD calculations
+#' from the first call, unless and until the AD calculations are reset. For the
+#' \code{dHMM[o]} distributions, the sizes of the inputs and the data (\code{x})
+#' values themselves are baked in. These can be different for different
+#' iterations through a for loop (or nimble model declarations with different
+#' indices, for example), but the sizes and data values for each specific
+#' iteration will be "baked in" after the first call. \bold{In other words, it
+#' is assumed that \code{x} are data and are not going to change.}
+#'
 #' @return For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or
 #'   log probability of observation vector \code{x}.
 #'

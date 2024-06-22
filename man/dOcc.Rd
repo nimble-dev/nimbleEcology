@@ -104,6 +104,20 @@ If the detection probabilities are time-dependent, use:
 \code{detections[i, 1:T] ~ dOcc_v(occupancyProbability,
 detectionProbability[1:T], len = T)}
 }
+\section{Notes for use with automatic differentiation}{
+
+
+The \code{dOcc_*} distributions should all work for models and algorithms
+that use nimble's automatic differentiation (AD) system. In that system, some
+kinds of values are "baked in" (cannot be changed) to the AD calculations
+from the first call, unless and until the AD calculations are reset. For the
+\code{dOcc_*} distributions, the lengths of vector inputs are baked in. These
+can be different for different iterations through a for loop (or nimble model
+declarations with different indices, for example), but the lengths for each
+specific iteration will be "baked in" after the first call. \bold{It is
+safest if one can assume that \code{x} are data and are not going to change.}
+}
+
 \examples{
 # Set up constants and initial values for defining the model
 dat <- c(1,1,0,0) # A vector of observations
