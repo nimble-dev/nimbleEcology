@@ -156,12 +156,11 @@ automatic defaults for these.
 In the AD system some kinds of values are "baked in" (cannot be changed) to
 the AD calculations from the first call, unless and until the AD calculations
 are reset. For all variants of the \code{dNmixtureAD} distributions, the
-sizes of the inputs and the data values themselves are baked in. These can be
-different for different iterations through a for loop (or nimble model
-declarations with different indices, for example), but the sizes and data
-values for each specific iteration will be "baked in" after the first call.
-\bold{In other words, it is assumed that \code{x} are data and are not going
-to change.}
+sizes of the inputs as well as \code{Nmin} and \code{Nmax} are baked in.
+These can be different for different iterations through a for loop (or nimble
+model declarations with different indices, for example), but the sizes and
+\code{Nmin} and \code{Nmax} values for each specific iteration will be
+"baked in" after the first call.
 }
 \author{
 Ben Goldstein, Lauren Ponisio, and Perry de Valpine

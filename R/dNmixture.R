@@ -450,7 +450,7 @@ dNmixture_BBP_v <- nimbleFunction(
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
-                                   dBetaBinom(x, Nmin, alpha, beta, log = TRUE))
+                                   dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -484,7 +484,7 @@ dNmixture_BBP_s <- nimbleFunction(
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
-                                   dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE))
+                                   dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -537,7 +537,7 @@ dNmixture_BBNB_v <- nimbleFunction(
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom(x, Nmin, alpha, beta, log = TRUE))
+                                    dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -575,7 +575,7 @@ dNmixture_BBNB_s <- nimbleFunction(
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE))
+                                    dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -703,7 +703,7 @@ rNmixture_BBP_v <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_v(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -727,8 +727,8 @@ rNmixture_BBP_s <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN,
-                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
+    ans <- rBetaBinom_s(n = 1, N = trueN,
+                      shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -751,9 +751,9 @@ rNmixture_BBP_oneObs <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_s(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = 1)
 
-    return(ans)
+    return(ans[1])
     returnType(double())
   })
 
@@ -778,7 +778,7 @@ rNmixture_BBNB_v <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_v(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -805,8 +805,8 @@ rNmixture_BBNB_s <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN,
-                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
+    ans <- rBetaBinom_s(n = 1, N = trueN,
+                      shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -832,7 +832,7 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
-    return(ans)
+    ans <- rBetaBinom_s(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = 1)
+    return(ans[1])
     returnType(double())
   })

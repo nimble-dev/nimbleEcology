@@ -50,12 +50,11 @@
 #' In the AD system some kinds of values are "baked in" (cannot be changed) to
 #' the AD calculations from the first call, unless and until the AD calculations
 #' are reset. For all variants of the \code{dNmixtureAD} distributions, the
-#' sizes of the inputs and the data values themselves are baked in. These can be
-#' different for different iterations through a for loop (or nimble model
-#' declarations with different indices, for example), but the sizes and data
-#' values for each specific iteration will be "baked in" after the first call.
-#' \bold{In other words, it is assumed that \code{x} are data and are not going
-#' to change.}
+#' sizes of the inputs as well as \code{Nmin} and \code{Nmax} are baked in.
+#' These can be different for different iterations through a for loop (or nimble
+#' model declarations with different indices, for example), but the sizes and
+#' \code{Nmin} and \code{Nmax} values for each specific iteration will be
+#' "baked in" after the first call.
 #'
 #' @return The probability (or likelihood) or log probability of an observation
 #'   vector \code{x}.
@@ -258,7 +257,7 @@ dNmixtureAD_BBP_v <- nimbleFunction(
     }
     Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
-                                   dBetaBinom(x, Nmin, alpha, beta, log = TRUE))
+                                   dBetaBinom_v(x, Nmin, alpha, beta, len = len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -286,11 +285,11 @@ dNmixtureAD_BBP_s <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Clen <- 0L
-    Clen <- ADbreak(len)
+    #Clen <- 0L
+    #Clen <- ADbreak(len)
     Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
-                                   dBetaBinom(x, Nmin, rep(alpha, Clen), rep(beta, Clen), log = TRUE))
+                                   dBetaBinom_v(x, Nmin, alpha, beta, len = len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -342,7 +341,7 @@ dNmixtureAD_BBNB_v <- nimbleFunction(
     }
     Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom(x, Nmin, alpha, beta, log = TRUE))
+                                    dBetaBinom_v(x, Nmin, alpha, beta, len = len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -376,11 +375,11 @@ dNmixtureAD_BBNB_s <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Clen <- 0L
-    Clen <- ADbreak(len)
+#    Clen <- 0L
+#    Clen <- ADbreak(len)
     Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom(x, Nmin, rep(alpha, Clen), rep(beta, Clen), log = TRUE))
+                                    dBetaBinom_s(x, Nmin, alpha, beta, len = len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())

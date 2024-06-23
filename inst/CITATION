@@ -1,5 +1,8 @@
-citHeader("In published work that uses or mentions nimbleEcology, please cite 
- the package (Goldstein et al. 2020), including the version used. When using dCJS, dHMM and/or dDHMM, please also cite Turek et al. (2016). When using dOcc, dDynOcc and/or dNmixture, please also cite Ponisio et al. (2020).")
+citHeader("In published work that uses or mentions nimbleEcology, please cite the
+package (Goldstein et al. 2020), including the version used. When using cases of dCJS, dHMM
+ and/or dDHMM, please also cite Turek et al. (2016). When using cases of dOcc and/or dDynOcc,
+please also cite Ponisio et al. (2020). When using cases of dNmixture, please also cite
+Goldstein and de Valpine (2022).")
 
 year <- sub("-.*", "", meta$Date)
 note <- sprintf("{R} package version %s", meta$Version)

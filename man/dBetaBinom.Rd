@@ -3,25 +3,26 @@
 \name{dBetaBinom}
 \alias{dBetaBinom}
 \alias{nimBetaFun}
-\alias{dBetaBinom_One}
-\alias{rBetaBinom}
-\alias{rBetaBinom_One}
+\alias{dBetaBinom_v}
+\alias{dBetaBinom_s}
+\alias{rBetaBinom_v}
+\alias{rBetaBinom_s}
 \title{A beta binomial distribution and beta function for use in \code{nimble} models}
 \usage{
 nimBetaFun(a, b, log)
 
-dBetaBinom(x, N, shape1, shape2, log = 0)
+dBetaBinom_v(x, N, shape1, shape2, len, log = 0)
 
-dBetaBinom_One(x, N, shape1, shape2, log = 0)
+dBetaBinom_s(x, N, shape1, shape2, len, log = 0)
 
-rBetaBinom(n, N, shape1, shape2)
+rBetaBinom_v(n, N, shape1, shape2, len)
 
-rBetaBinom_One(n, N, shape1, shape2)
+rBetaBinom_s(n, N, shape1, shape2, len)
 }
 \arguments{
-\item{a}{shape1 argument of the beta function nimBetaFun.}
+\item{a}{shape1 argument of the beta function.}
 
-\item{b}{shape2 argument of the beta function nimBetaFun.}
+\item{b}{shape2 argument of the beta function.}
 
 \item{log}{TRUE or 1 to return log probability. FALSE or 0 to return
 probability.}
@@ -30,46 +31,49 @@ probability.}
 
 \item{N}{number of trials, sometimes called "size".}
 
-\item{shape1}{shape1 parameter of the beta-binomial distribution.}
+\item{shape1}{shape1 parameter of the beta distribution.}
 
-\item{shape2}{shape2 parameter of the beta-binomial distribution.}
+\item{shape2}{shape2 parameter of the beta distribution.}
+
+\item{len}{length of \code{x}.}
 
 \item{n}{number of random draws, each returning a vector of length
 \code{len}. Currently only \code{n = 1} is supported, but the argument
 exists for standardization of "\code{r}" functions.}
 }
 \description{
-\code{dBetaBinom} and \code{dBetaBinom_One} provide a beta binomial
+\code{dBetaBinom_v} and \code{dBetaBinom_s} provide a beta binomial
 distribution that can be used directly from R or in \code{nimble}
 models. These are also used by beta binomial variations of dNmixture distributions.
 \code{nimBetaFun} is the beta function.
 }
 \details{
-These nimbleFunctions provide distributions that can be
-    used directly in R or in \code{nimble} hierarchical models (via
-    \code{\link[nimble]{nimbleCode}} and
-    \code{\link[nimble]{nimbleModel}}). They were originally written for
-    the beta binomial N-mixture extensions.
+These nimbleFunctions provide distributions that can be used
+  directly in R or in \code{nimble} hierarchical models (via
+  \code{\link[nimble]{nimbleCode}} and \code{\link[nimble]{nimbleModel}}).
+  They are used by the beta-binomial variants of the N-mixture distributions
+  (\code{\link{dNmixture}}).
 
-The beta binomial distribution is equivalent to a binomial distribution whose
-probability is itself a beta distributed random variable.
+The beta binomial is the marginal distribution of a  binomial distribution whose
+probability follows a  beta distribution.
 
 The probability mass function of the beta binomial is
 \code{choose(N, x) * B(x + shape1, N - x + shape2) /
 B(shape1, shape2)}, where \code{B(shape1, shape2)} is the beta function.
 
-The beta binomial distribution is provided in two forms. \code{dBetaBinom} and
-\code{rBetaBinom} are used when \code{x} is a vector (i.e. \code{length(x) > 1}),
-in which case the parameters \code{alpha} and \code{beta} must also be vectors.
-When \code{x} is scalar, \code{dBetaBinom_One} and \code{rBetaBinom_One} are
-used.
+\code{nimBetaFun(shape1, shape2)} calculates \code{B(shape1, shape2)}.
+
+The beta binomial distribution is provided in two forms. \code{dBetaBinom_v} and
+is when \code{shape1} and \code{shape2} are vectors.
+\code{dBetaBinom_s} is used when \code{shape1} and \code{shape2} are scalars.
+In both cases, \code{x} is a vector.
 }
 \examples{
-# Calculate a beta binomial probability
-dBetaBinom(x = c(4, 0, 0, 3), N = 10,
+# Calculate a beta binomial probability with different shape1 and shape2 for each x[i]
+dBetaBinom_v(x = c(4, 0, 0, 3), N = 10,
   shape1 = c(0.5, 0.5, 0.3, 0.5), shape2 = c(0.2, 0.4, 1, 1.2))
-# Same for case with one observation
-dBetaBinom_One(x = 3, N = 10, shape1 = 0.5, shape2 = 0.5, log = TRUE)
+# or with constant shape1 and shape2
+dBetaBinom_s(x = c(4, 0, 0, 3), N = 10, shape1 = 0.5, shape2 = 0.5, log = TRUE)
 }
 \seealso{
 For beta binomial N-mixture models, see \code{\link{dNmixture}}.

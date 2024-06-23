@@ -100,9 +100,9 @@ test_that("Testing dDHMM", {
                    probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkRowSums = 1)
   })
 
-  m <- nimbleModel(nc, data = list(x = x1),
+  m <- suppressWarnings(nimbleModel(nc, data = list(x = x1),
                    inits = list(init = init, probObs = probObs,
-                                probTrans = probTrans))
+                                probTrans = probTrans)))
     # Calculate probability of x from the model
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -264,9 +264,9 @@ test_that("Testing dDHMMo", {
                     probTrans = probTrans[1:3, 1:3, 1:4], len = 5, checkRowSums = 1)
   })
 
-  m <- nimbleModel(nc, data = list(x = x1),
+  m <- suppressWarnings(nimbleModel(nc, data = list(x = x1),
                    inits = list(init = init, probObs = probObs,
-                                probTrans = probTrans))
+                                probTrans = probTrans)))
   # Calculate probability of x from the model
   m$calculate()
   MlProbX <- m$getLogProb("x")
@@ -363,6 +363,7 @@ test_that("dDHMM and dDHMMo compatibility", {
 
 
 test_that("dDHMM errors where expected", {
+  message("2 error messages are expected.")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
@@ -438,6 +439,7 @@ test_that("dDHMM errors where expected", {
 
 
 test_that("dDHMMo errors where expected", {
+  message("6 more error messages are expected.")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
@@ -535,6 +537,7 @@ test_that("dDHMMo errors where expected", {
 
 
 test_that("rDHMM errors where expected", {
+  message("2 error messages are expected")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
@@ -605,6 +608,7 @@ test_that("rDHMM errors where expected", {
 
 
 test_that("rDHMMo errors where expected", {
+  message("6 more error messages are expected")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)

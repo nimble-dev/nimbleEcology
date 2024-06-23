@@ -379,7 +379,7 @@ rCJS_sv <- nimbleFunction(
                  len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
-      stop("len must be non-negative.")
+      stop("len must be greater than 1.")
     if (length(probCapture) != len)
       stop("Length of probCapture is not the same as len.")
     ans <- numeric(length = len, init = FALSE)

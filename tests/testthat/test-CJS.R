@@ -28,7 +28,7 @@ test_that("dCJS_ss works",
   expect_equal(lProbX, lCorrectProbX)
 
   # Compilation and compiled calculations
-  call_ dCJS_ss <- nimbleFunction(
+  call_dCJS_ss <- nimbleFunction(
     run = function(x = double(1),
                    probSurvive = double(),
                    probCapture = double(),
