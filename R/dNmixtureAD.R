@@ -289,7 +289,7 @@ dNmixtureAD_BBP_s <- nimbleFunction(
     #Clen <- ADbreak(len)
     Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
     logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
-                                   dBetaBinom_v(x, Nmin, alpha, beta, len = len, log = TRUE))
+                                   dBetaBinom_s(x, Nmin, alpha, beta, len = len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())

@@ -115,7 +115,7 @@ dBetaBinom_s <- nimbleFunction(
     return(exp(logprob))
     returnType(double(0))
   },
-  buildDerivs = list(run=list())
+  buildDerivs = list(run=list(ignore = 'i'))
 )
 
 #' @rdname dBetaBinom
