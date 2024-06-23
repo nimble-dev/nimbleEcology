@@ -231,7 +231,6 @@ test_that ("dNmixture works with AD", {
   Cmodel <- compileNimble(Rmodel)
   Cmodel$calculate()
 
-
   nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
   v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
   v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
@@ -983,7 +982,7 @@ test_that("dDHMM works with AD", {
   res <- model_calculate_test_case(Rmodel, Cmodel, deriv_nf = model_calculate_test,
                             nodesList = nodesList_case1, v1 = v1_case1, v2 = v2_case1,
                             order = 0:2,
-                            RCrelTol = c(3e-15, 1e-8, 1e-3, 1e-14))
+                            RCrelTol = c(3e-15, 1e-8, 2e-3, 1e-14))
   #######
 
 

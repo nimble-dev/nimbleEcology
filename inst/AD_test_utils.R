@@ -290,15 +290,17 @@ test_AD2_oneCall <- function(Robj, Cobj,
                              c("C", "R")[as.integer(grepl("^R", names(ansSet)))+1])
         RansSet <- splitAnsSet[["R"]]
         CansSet <- splitAnsSet[["C"]]
+        if(pass)
         if(length(RansSet) > 1) {
           pass <- pass && all_equal_list(RansSet[[1]], RansSet[-1], tol = RRrelTol[[o]],
                                          abs_threshold = RRabsThresh,
                                          info = paste0("(RR order ", o,")"))
           if(!pass) {
             cat(paste('Some R-to-R derivatives do not match for order',o))
-            browser()
+            # browser()
           }
         }
+        if(pass)
         if(length(RansSet) > 0 && length(CansSet) > 0) {
           pass <- pass && all_equal_list(RansSet[[1]], CansSet, tol = RCrelTol[[o]],
                                          abs_threshold = RCabsThresh,
@@ -308,6 +310,7 @@ test_AD2_oneCall <- function(Robj, Cobj,
             browser()
           }
         }
+        if(pass)
         if(length(CansSet) > 1) {
           pass <- pass && all_equal_list(CansSet[[1]], CansSet[-1], CCrelTol[[o]],
                                          abs_threshold = CCabsThresh,
