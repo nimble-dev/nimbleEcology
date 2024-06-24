@@ -112,7 +112,9 @@ For \code{rNmixture_s} and \code{rNmixture_v}: a simulated detection history, \c
 \description{
 \code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture
 distributions of abundance ("N-mixture") for use in \code{nimble} models.
-Overdispersion alternatives are also provided .
+Overdispersion alternatives using the negative binomial distribution (for
+the abundance submodel) and the beta binomial distribution (for the detection
+submodel) are also provided.
 }
 \details{
 These nimbleFunctions provide distributions that can be
@@ -157,8 +159,8 @@ the site (so both x and prob are scalar).
 Beta-binomial-Poisson: BBP N-mixture uses a beta binomial distribution for
 detection probabilities and a Poisson distribution for abundance. The beta
 binomial distribution has scalar overdispersion parameter s (0-Inf). We
-parameterize such that the variance of the beta binomial is \code{N \* prob
-\* (1-prob) \* (N + s) / (s + 1)}, with greater s indicating less variance
+parameterize such that the variance of the beta binomial is \code{N * prob
+* (1-prob) * (N + s) / (s + 1)}, with greater s indicating less variance
 (greater-than-binomial relatedness between observations at the site) and s ->
 0 indicating the binomial. The BBP is available in three suffixed forms:
 \code{dNmixture_BBP_v} is used if \code{prob} varies between observations,

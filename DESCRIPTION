@@ -4,9 +4,10 @@ Title: Distributions for Ecological Models in 'nimble'
 Version: 0.5.0
 Maintainer: Benjamin R. Goldstein <ben.goldstein@berkeley.edu>
 Authors@R: c(person("Benjamin R.", "Goldstein", role = c("aut", "cre"),
-                     email = "ben.goldstein@berkeley.edu"),
+                     email = "bgoldst2@ncsu.edu"),
               person("Daniel", "Turek", role = "aut"),
               person("Lauren", "Ponisio", role = "aut"),
+              person("Wei", "Zhang", role = "ctb"),
               person("Perry", "de Valpine", role = "aut"))
 Date: 2024-06-24
 Description: Common ecological distributions for 'nimble' models in the form of nimbleFunction objects. 
