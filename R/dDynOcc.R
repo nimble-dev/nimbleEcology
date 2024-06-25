@@ -122,6 +122,20 @@
 #' probPersist = persistence_prob,
 #' probColonize = colonization_prob[1:(T-1)], p = p[1:T, 1:O])}
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dDynOcc_***} distributions should all work for models and
+#' algorithms that use nimble's automatic differentiation (AD) system. In that
+#' system, some kinds of values are "baked in" (cannot be changed) to the AD
+#' calculations from the first call, unless and until the AD calculations are
+#' reset. For the \code{dDynOcc_***} distributions, the lengths or dimensions of
+#' vector and/or matrix inputs and the \code{start} and \code{end} values
+#' themselves are baked in. These can be different for different iterations
+#' through a for loop (or nimble model declarations with different indices, for
+#' example), but the for each specific iteration will be "baked in" after the
+#' first call. \bold{It is safest if one can assume that \code{x} are data and
+#' are not going to change.}
+#'
 #' @return
 #' For \code{dDynOcc_***}: the probability (or likelihood) or log probability
 #' of observation vector \code{x}.
@@ -188,7 +202,7 @@ dDynOcc_vvm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -200,16 +214,17 @@ dDynOcc_vvm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t, start[t]:end[t]])
-          if (is.na(numObs)) numObs <- 0
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -229,7 +244,7 @@ dDynOcc_vvm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -244,7 +259,7 @@ dDynOcc_vsm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -256,15 +271,17 @@ dDynOcc_vsm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -284,7 +301,7 @@ dDynOcc_vsm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -299,7 +316,7 @@ dDynOcc_svm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
     if (dim(p)[2] != dim(x)[2]) stop("Dimension mismatch between x and p matrices.")
@@ -310,15 +327,17 @@ dDynOcc_svm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -338,7 +357,7 @@ dDynOcc_svm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -353,7 +372,7 @@ dDynOcc_ssm <- nimbleFunction(
                  p = double(2),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     # if (length(probColonize) != 1) stop("In dDynOcc_vs probColonize must be scalar")
     # if (length(probPersist) != 1) stop("In dDynOcc_vs probPersist must be scalar")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x and p matrices.")
@@ -365,15 +384,17 @@ dDynOcc_ssm <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
-                             size = 1, prob = p[t,start[t]:end[t]], log = 1)))
+              exp(sum(dbinom(x[t, istart:iend],
+                             size = 1, prob = p[t, istart:iend], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
           ProbOccGivenCount <- ProbOccAndCount / ProbCount
@@ -393,7 +414,7 @@ dDynOcc_ssm <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -521,7 +542,7 @@ dDynOcc_vvv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -532,14 +553,16 @@ dDynOcc_vvv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -560,7 +583,7 @@ dDynOcc_vvv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -575,7 +598,7 @@ dDynOcc_vsv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -586,14 +609,16 @@ dDynOcc_vsv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -614,7 +639,7 @@ dDynOcc_vsv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -629,7 +654,7 @@ dDynOcc_svv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
 
@@ -639,14 +664,16 @@ dDynOcc_svv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -667,7 +694,7 @@ dDynOcc_svv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -682,7 +709,7 @@ dDynOcc_ssv <- nimbleFunction(
                  p = double(1),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     # if (length(probColonize) != 1) stop("In dDynOcc_vs probColonize must be scalar")
     # if (length(probPersist) != 1) stop("In dDynOcc_vs probPersist must be scalar")
     if (dim(p)[1] != dim(x)[1]) stop("Dimension mismatch between x matrix and p vector.")
@@ -693,14 +720,16 @@ dDynOcc_ssv <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t, istart:iend],
                              size = 1, prob = p[t], log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -721,7 +750,7 @@ dDynOcc_ssv <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 
@@ -764,10 +793,10 @@ rDynOcc_vsv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist[t - 1])
       } else {
@@ -792,10 +821,10 @@ rDynOcc_svv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist)
       } else {
@@ -820,10 +849,10 @@ rDynOcc_ssv <- nimbleFunction(
                  start = double(1),
                  end = double(1)) {
     occupied <- rbinom(1, 1, init)
-    val <- matrix(-1, nrow = dim(p)[1], ncol = max(end))
+    val <- matrix(-1, nrow = length(p), ncol = max(end))
     val[1, start[1]:end[1]] <- occupied * rbinom(end[1] - start[1] + 1, 1, p[1])
 
-    for (t in 2:dim(p)[1]) {
+    for (t in 2:length(p)) {
       if (occupied == 1) {
         occupied <- rbinom(1, 1, probPersist)
       } else {
@@ -851,7 +880,7 @@ dDynOcc_vvs <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
@@ -861,14 +890,17 @@ dDynOcc_vvs <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -889,7 +921,7 @@ dDynOcc_vvs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -904,7 +936,7 @@ dDynOcc_vss <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     if (length(probPersist) < dim(x)[1] - 1) stop("Length of probPersist vector must be at least length(x) - 1.")
 
@@ -914,14 +946,16 @@ dDynOcc_vss <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+      istart <- ADbreak(start[t])
+      iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t,istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -942,7 +976,7 @@ dDynOcc_vss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -957,7 +991,7 @@ dDynOcc_svs <- nimbleFunction(
                  p = double(),
                  start = double(1),
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
     if (length(probColonize) < dim(x)[1] - 1) stop("Length of probColonize vector must be at least length(x) - 1.")
 
     ## x is a year by rep matix
@@ -966,14 +1000,16 @@ dDynOcc_svs <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t, istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -994,7 +1030,7 @@ dDynOcc_svs <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
 
 #' @rdname dDynOcc
@@ -1007,9 +1043,9 @@ dDynOcc_sss <- nimbleFunction(
                  probPersist = double(),
                  probColonize = double(),
                  p = double(),
-                 start = double(1),
+                 start = double(1), # These end up being a problem
                  end = double(1),
-                 log = double(0, default = 0)) {
+                 log = integer(0, default = 0)) {
 
     ## x is a year by rep matix
     ProbOccNextTime <- init
@@ -1017,14 +1053,16 @@ dDynOcc_sss <- nimbleFunction(
     nyears <- dim(x)[1]
     if (nyears >= 1) {
       for (t in 1:nyears) {
-        if (end[t] - start[t] + 1 > 0) {
-          numObs <- sum(x[t,start[t]:end[t]])
+        istart <- ADbreak(start[t])
+        iend <- ADbreak(end[t])
+        if (iend - istart + 1 > 0) {
+          numObs <- sum(x[t,istart:iend])
           if (numObs < 0) {
             print("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
             stop("Error in dDynamicOccupancy: numObs < 0 but number of obs in start/end > 0\n")
           }
           ProbOccAndCount <- ProbOccNextTime *
-              exp(sum(dbinom(x[t,start[t]:end[t]],
+              exp(sum(dbinom(x[t,istart:iend],
                              size = 1, prob = p, log = 1)))
           ProbUnoccAndCount <- (1 - ProbOccNextTime) * (numObs == 0)
           ProbCount <- ProbOccAndCount + ProbUnoccAndCount
@@ -1045,9 +1083,8 @@ dDynOcc_sss <- nimbleFunction(
     if (log) return(ll)
     else return(exp(ll))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('t', 'istart', 'iend')))
 )
-
 
 #' @rdname dDynOcc
 #' @export

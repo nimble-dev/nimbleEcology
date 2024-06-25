@@ -1,5 +1,8 @@
-citHeader("In published work that uses or mentions nimbleEcology, please cite 
- the package (Goldstein et al. 2020), including the version used. When using dCJS, dHMM and/or dDHMM, please also cite Turek et al. (2016). When using dOcc, dDynOcc and/or dNmixture, please also cite Ponisio et al. (2020).")
+citHeader("In published work that uses or mentions nimbleEcology, please cite the
+package (Goldstein et al. 2020), including the version used. When using cases of dCJS, dHMM
+ and/or dDHMM, please also cite Turek et al. (2016). When using cases of dOcc and/or dDynOcc,
+please also cite Ponisio et al. (2020). When using cases of dNmixture, please also cite
+Goldstein and de Valpine (2022).")
 
 year <- sub("-.*", "", meta$Date)
 note <- sprintf("{R} package version %s", meta$Version)
@@ -46,3 +49,15 @@ bibentry(
  textVersion = "Ponisio, L., P. de Valpine, N. Michaud, and D. Turek. 2020. One size does not fit all: Customizing MCMC methods for hierarchical models using NIMBLE. Ecology and Evolution 10: 2385–2416. <DOI:10.1002/ece3.6053>."
 )
 
+bibentry(
+  bibtype = "article",
+  title = "Comparing {N-mixture} Models and {GLMMs} for Relative Abundance Estimation in a Citizen Science Dataset",
+  journal = "Scientific Reports",
+  volume = "12",
+  pages = "12276",
+  year = "2022",
+  author = c(person("B.R.", "Goldstein"),
+             person("P.", "de Valpine")),
+  doi = "10.1038/s41598-022-16368-z",
+  textVersion = "Goldstein, B.R., and P. de Valpine. 2022. Comparing N-mixture Models and GLMMs for Relative Abundance Estimation in a Citizen Science Dataset. Scientific Reports 12: 12276. <DOI:10.1038/s41598-022-16368-z>"
+)
