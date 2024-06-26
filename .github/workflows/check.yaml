@@ -75,11 +75,6 @@ jobs:
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "18.04"))')
           sudo apt-get install libcurl4-openssl-dev  # needed for R pkg curl -> covr
 
-      - name: Install R dependencies
-        run: |
-          install.packages("remotes")
-          remotes::install_version("cli", version = "2.0.2")
-
       - name: Install package dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
