@@ -4,6 +4,7 @@
 #
 # For help debugging build failures open an issue on the RStudio community with the 'github-actions' tag.
 # https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions
+
 on:
   push:
     branches:
@@ -28,12 +29,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macOS-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}#, http-user-agent: "R/4.0.0 (ubuntu-18.04) R (4.0.0 x86_64-pc-linux-gnu x86_64 linux-gnu) on GitHub Actions" }
+          - {os: macOS-latest,    r: 'release'}
+          - {os: ubuntu-latest,   r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
           - {os: ubuntu-latest,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
           - {os: ubuntu-latest,   r: 'oldrel',  rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
-          - {os: ubuntu-latest,   r: '3.5',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
-          - {os: ubuntu-latest,   r: '3.4',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
+          - {os: macOS-latest,    r: '3.5',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
+          - {os: macOS-latest,    r: '3.4',     rspm: "https://packagemanager.rstudio.com/cran/__linux__/bionic/latest"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -74,14 +75,15 @@ jobs:
           done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "18.04"))')
           sudo apt-get install libcurl4-openssl-dev  # needed for R pkg curl -> covr
 
-      - name: Install dependencies
+      - name: Install R dependencies
+        run: |
+          install.packages("remotes")
+          remotes::install_version("cli", version = "2.0.2")
+
+      - name: Install package dependencies
         run: |
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
-          # install.packages('devtools')
-          # install.packages('pracma')
-          # install.packages('numDeriv')
-          #  devtools::install_github("nimble-dev/nimble", ref = "ADoak", subdir = "packages/nimble") # Remove this line once AD is released in NIMBLE
         shell: Rscript {0}
 
       - name: Session info
