@@ -219,7 +219,7 @@ optim(c(0.5, 0.5), COccLogLik$run, control = list(fnscale = -1))$par
 
 ## Support for automatic differentiation with `nimbleEcology`.
 
-As of `nimble` version 1.0.0, there is a system for automatic (or algorithmic) differentiation, known as AD. This is used by algorithms such as Hamiltonian Monte Carlo (see package [`nimbleHMC`](https://cran.r-project.org/web/packages/nimbleHMC/index.html)) and Laplace approximation (`buildLaplace` in `nimble`).
+As of `nimble` version 1.0.0, there is a system for automatic (or algorithmic) differentiation, known as AD. This is used by algorithms such as Hamiltonian Monte Carlo (see package [`nimbleHMC`](https://cran.r-project.org/package=nimbleHMC)) and Laplace approximation (`buildLaplace` in `nimble`).
 
 The distributions provided in `nimbleEcology` support AD as much as possible. There are three main points to keep in mind:
 

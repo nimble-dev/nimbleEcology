@@ -2,7 +2,7 @@ Package: nimbleEcology
 Type: Package
 Title: Distributions for Ecological Models in 'nimble'
 Version: 0.5.0
-Maintainer: Benjamin R. Goldstein <ben.goldstein@berkeley.edu>
+Maintainer: Benjamin R. Goldstein <bgoldst2@ncsu.edu>
 Authors@R: c(person("Benjamin R.", "Goldstein", role = c("aut", "cre"),
                      email = "bgoldst2@ncsu.edu"),
               person("Daniel", "Turek", role = "aut"),
