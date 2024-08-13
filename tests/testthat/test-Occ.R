@@ -40,6 +40,29 @@ test_that("dOcc_s and rOcc_s work", {
   ClProbX <- CdOcc_s(x, probOcc, probDetect, log = TRUE)
   expect_equal(ClProbX, lProbX)
 
+  # Test missing value handling
+  x3 <- c(1, NA, 0, 1, 0)
+  probX3 <- dOcc_s(x3, probOcc, probDetect)
+  correctProbX3 <-
+    probOcc * probDetect^2 *
+    (1 - probDetect)^2
+  expect_equal(probX3, correctProbX3)
+  CprobX3 <- CdOcc_s(x3, probOcc, probDetect)
+  expect_equal(CprobX3, correctProbX3)
+
+  x4 <- c(1, NA, NA, NA, NA) # single-visit
+  probX4 <- dOcc_s(x4, probOcc, probDetect)
+  correctProbX4 <- probOcc * probDetect
+  expect_equal(probX4, correctProbX4)
+  CprobX4 <- CdOcc_s(x4, probOcc, probDetect)
+  expect_equal(CprobX4, correctProbX4)
+
+  x5 <- as.numeric(c(NA, NA, NA, NA, NA)) # all missing (as.numeric necessary!)
+  probX5 <- dOcc_s(x5, probOcc, probDetect)
+  expect_equal(probX5, 1)
+  CprobX5 <- CdOcc_s(x5, probOcc, probDetect)
+  expect_equal(CprobX5, 1)
+
   set.seed(1)
   nSim <- 10
   xSim <- matrix(nrow = nSim, ncol = 5)
@@ -142,6 +165,29 @@ test_that("dOcc_v works", {
 
   ClProbX <- CdOcc_v(x, probOcc, probDetect, log = TRUE)
   expect_equal(ClProbX, lProbX)
+
+  # Test missing value handling
+  x3 <- c(1, NA, 0, 1, 0)
+  probX3 <- dOcc_v(x3, probOcc, probDetect)
+  correctProbX3 <-
+    probOcc * prod(probDetect[which(!is.na(x3) & x3 == 1)]) *
+    prod(1 - probDetect[which(!is.na(x3) & x3 == 0)])
+  expect_equal(probX3, correctProbX3)
+  CprobX3 <- CdOcc_v(x3, probOcc, probDetect)
+  expect_equal(CprobX3, correctProbX3)
+
+  x4 <- c(1, NA, NA, NA, NA) # single-visit
+  probX4 <- dOcc_v(x4, probOcc, probDetect)
+  correctProbX4 <- probOcc[1] * probDetect[1]
+  expect_equal(probX4, correctProbX4)
+  CprobX4 <- CdOcc_v(x4, probOcc, probDetect)
+  expect_equal(CprobX4, correctProbX4)
+
+  x5 <- as.numeric(c(NA, NA, NA, NA, NA)) # all missing (as.numeric necessary!)
+  probX5 <- dOcc_v(x5, probOcc, probDetect)
+  expect_equal(probX5, 1)
+  CprobX5 <- CdOcc_v(x5, probOcc, probDetect)
+  expect_equal(CprobX5, 1)
 
   set.seed(1)
   nSim <- 10
