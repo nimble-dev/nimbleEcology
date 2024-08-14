@@ -1,4 +1,4 @@
-
+skip_on_cran()
 nimbleMacros_installed <- requireNamespace("nimbleMacros")
 skip_if_not(nimbleMacros_installed)
 
@@ -6,7 +6,7 @@ macro_setting <- nimbleOptions("enableModelMacros")
 comm_setting <- nimbleOptions("enableMacroComments")
 nimbleOptions(enableModelMacros = TRUE)
 
-# Simulate occupancy dataset
+# Simulate OCCUPANCY dataset
 set.seed(123)
 
 M <- 100
@@ -27,6 +27,10 @@ for (i in 1:M){
     y[i,j] <- rbinom(1, 1, p[i,j]*z[i])
   }
 }
+# Add some NAs
+y[1,1] <- NA
+y[2,2:3] <- NA
+y[3,] <- NA
 
 # the macro really needs to be able to modify data...
 
@@ -47,11 +51,11 @@ oc <- list(x2 = x2)
 mod <- nimbleOccu(~1, ~1, y=y, returnModel = TRUE)
 nimbleOptions(enableMacroComments = FALSE)
 
-test_that("Latent-state occupancy macro works", {
+test_that("Latent-state OCCUPANCY macro works", {
 
   # Latent state, no covariates
   code <- nimbleCode({
-    y[1:M, 1:J] ~ occupancy(~1, ~1)
+    y[1:M, 1:J] ~ OCCUPANCY(~1, ~1)
   })
 
   mod <- nimbleModel(code, constants=const)
@@ -80,11 +84,11 @@ test_that("Latent-state occupancy macro works", {
   expect_equal(mod$getCode(), code_ref)
 
   # Make sure z is properly initialized
-  expect_equal(mod$z, apply(const$y, 1, max, na.rm=TRUE))
+  expect_equal(mod$z, apply(const$y, 1, function(x) if(all(is.na(x))) return(0) else max(x, na.rm=TRUE)))
 
   # With covariates (unbracketed)
   code <- nimbleCode({
-    y[1:M, 1:J] ~ occupancy(~x, ~x2)
+    y[1:M, 1:J] ~ OCCUPANCY(~x, ~x2)
   })
 
   code_ref <- quote({
@@ -117,7 +121,7 @@ test_that("Latent-state occupancy macro works", {
 
   # With covariates (bracketed)
   code <- nimbleCode({
-    y[1:M, 1:J] ~ occupancy(~x[1:M], ~x2[1:M,1:J])
+    y[1:M, 1:J] ~ OCCUPANCY(~x[1:M], ~x2[1:M,1:J])
   })
   
   mod <- nimbleModel(code, constants=const)
@@ -127,10 +131,10 @@ test_that("Latent-state occupancy macro works", {
 })
 
 
-test_that("Marginalized occupancy macro works", {
+test_that("Marginalized OCCUPANCY macro works", {
   # Marginalized version of the model
   code <- nimbleCode({
-    y[1:M, 1:J] ~ occupancy(~x, ~x2, marginalized=TRUE)
+    y[1:M, 1:J] ~ OCCUPANCY(~x, ~x2, marginalized=TRUE)
   })
 
   code_ref <- quote({
@@ -162,7 +166,7 @@ test_that("Marginalized occupancy macro works", {
 test_that("partially centered random effect works", {
 
   code <- nimbleCode({
-    y[1:M, 1:J] ~ occupancy(~x + (1|g), ~x2, centerVar=g)
+    y[1:M, 1:J] ~ OCCUPANCY(~x + (1|g), ~x2, centerVar=g)
   })
 
   code_ref <- quote({
@@ -203,7 +207,7 @@ test_that("varying sampling occasions works", {
   K <- rep(J, M)
   const <- list(y=y, x=x, x2=x2, M=M, K=K, g = g)
   code <- nimbleCode({
-    y[1:M, 1:K[1:M]] ~ occupancy(~1, ~x2[1:M, 1:K[1:M]])
+    y[1:M, 1:K[1:M]] ~ OCCUPANCY(~1, ~x2[1:M, 1:K[1:M]])
   })
 
   code_ref <- quote({
@@ -318,7 +322,7 @@ test_that("nimbleOccu works", {
   expect_error(nimbleOccu(~1, ~1, y, siteCovs=sc, obsCovs=oc, speciesCovs=sp, returnModel=TRUE))
 })
 
-# Multispecies occupancy-------------------------------------------------------
+# MULTISPECIESOCCUPANCY--------------------------------------------------------
 
 # Simulate data
 M <- 100
@@ -409,11 +413,15 @@ code_ref <- quote({
   }
 })
 
+# Add missing values
+y[1,1,] <- NA
+y[2,2:5,] <- NA
+y[3,,] <- NA
 
 test_that("latent multispecies model works", {
 
   code <- nimbleCode({
-    y[1:M,1:J,1:S] ~ multispeciesOccupancy(~x1[1:M], ~x2[1:M,1:J])
+    y[1:M,1:J,1:S] ~ MULTISPECIESOCCUPANCY(~x1[1:M], ~x2[1:M,1:J])
   })
 
   mod <- nimbleModel(code, constants = constants)
@@ -426,7 +434,7 @@ test_that("latent multispecies model works", {
 test_that("marginalized multispecies model works", {
 
   code <- nimbleCode({
-    y[1:M,1:J,1:S] ~ multispeciesOccupancy(~x1[1:M], ~x2[1:M,1:J], marginalized = TRUE)
+    y[1:M,1:J,1:S] ~ MULTISPECIESOCCUPANCY(~x1[1:M], ~x2[1:M,1:J], marginalized = TRUE)
   })
 
   code_ref <- quote({

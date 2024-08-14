@@ -4,7 +4,7 @@
 #' Covariates can be specified for both the detection and occupancy (state)
 #' submodels using R formulas.
 #'
-#' @name occupancy
+#' @name OCCUPANCY
 #' @author Ken Kellner
 #' 
 #' @param stateformula An R formula for the occupancy/state model, possibly with the 
@@ -28,12 +28,7 @@
 #'  (it doesn't matter if you use <- or ~). The left-hand side must be a
 #'  matrix of detection-nondetection data with dimensions M x J, where
 #'  M is sites and J is occasions. This matrix may contain
-#'  missing values (e.g. if you have different numbers of occasions by site). However,
-#'  to use the marginalized form of the model, the missing values for site M
-#'  must come at the end of the row of occasion data 1:J. For example
-#'  if you have J = 5 but the first site was only sampled 3 times, the 
-#'  corresponding row of the matrix should be [1, 1, 1, NA, NA] rather than
-#'  for example [1, NA, 1, 1, NA].
+#'  missing values (e.g. if you have different numbers of occasions by site)
 #'
 #' @examples
 #' nimbleOptions(enableModelMacros = TRUE)
@@ -50,7 +45,7 @@
 NULL
 
 #' @export
-occupancy <- nimble::model_macro_builder(
+OCCUPANCY <- nimble::model_macro_builder(
 function(stoch, LHS, stateformula = ~1, detformula = ~1,
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)"), 
@@ -65,10 +60,10 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     
     # Code to calculate parameters psi and p
     param_code <- substitute({
-      psi[SITEDIM] <- nimbleMacros::linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
+      psi[SITEDIM] <- nimbleMacros::LINPRED(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
                                 sdPrefix=STATEPREFIX, priorSettings=STATEPRIOR, 
                                 centerVar=CENTVAR)  
-      p[SITEDIM, OBSDIM] <- nimbleMacros::linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
+      p[SITEDIM, OBSDIM] <- nimbleMacros::LINPRED(DETFORM, link=logit, coefPrefix=DETPREFIX, 
                                       sdPrefix=DETPREFIX, priorSettings=DETPRIOR, 
                                       centerVar=CENTVAR)
       }, 
@@ -82,8 +77,8 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     if(!marginalized){
       # Latent model
       ymod_code <- substitute({  
-        z[SITEDIM] ~ nimbleMacros::forLoop(dbern(psi[SITEDIM]))
-        Y ~ nimbleMacros::forLoop(dbern(p[SITEDIM, OBSDIM]*z[SITEDIM]))
+        z[SITEDIM] ~ nimbleMacros::FORLOOP(dbern(psi[SITEDIM]))
+        Y ~ nimbleMacros::FORLOOP(dbern(p[SITEDIM, OBSDIM]*z[SITEDIM]))
         }, 
         list(Y=LHS, SITEDIM=site_dim, OBSDIM=obs_dim)
       )
@@ -95,7 +90,7 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
             call.=FALSE)
       }
       y <- modelInfo$constants[[yname]]
-      z <- apply(y, 1, max, na.rm=TRUE)
+      z <- apply(y, 1, function(x) if(all(is.na(x))) return(0) else max(x, na.rm=TRUE))
       #z[z == 0] <- NA
       #modelInfo$constants$z <- z
       modelInfo$inits <- list(z = z)
@@ -103,7 +98,7 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     } else {
       # Marginalized model
       # Because of the way the dOcc_v function works we can't use 
-      # the forLoop macro, so have to write the loop code manually
+      # the FORLOOP macro, so have to write the loop code manually
 
       # New index variable for site loop
       site_idx <- as.name(modelInfo$indexCreator())
@@ -135,7 +130,6 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
 use3pieces=TRUE,
 unpackArgs=TRUE
 )
-class(occupancy) <- "model_macro"
 
 setPriors <- function(...){
   check_nimbleMacros_installed()
@@ -147,8 +141,8 @@ check_nimbleMacros_installed <- function(){
   if(!check){
     stop("Install nimbleMacros package", call.=FALSE)
   }
-  #assign("forLoop", nimbleMacros::forLoop, envir = globalenv())
-  #assign("linPred", nimbleMacros::linPred, envir = globalenv())
+  #assign("FORLOOP", nimbleMacros::FORLOOP, envir = globalenv())
+  #assign("LINPRED", nimbleMacros::LINPRED, envir = globalenv())
   #assign("priors", nimbleMacros::priors, envir = globalenv())
   invisible()
 }
@@ -202,7 +196,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 #' Covariates can be specified for both the detection and occupancy (state)
 #' submodels using R formulas.
 #'
-#' @name multispeciesOccupancy
+#' @name MULTISPECIESOCCUPANCY
 #' @author Ken Kellner
 #' 
 #' @param stateformula An R formula for the occupancy/state model, possibly with the 
@@ -225,12 +219,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 #'  (it doesn't matter if you use <- or ~). The left-hand side must be an
 #'  array of detection-nondetection data with dimensions M x J x S, where
 #'  M is sites, J is occasions, and S is species.  This array may contain
-#'  missing values (e.g. if you have different numbers of occasions by site). However,
-#'  to use the marginalized form of the model, the missing values for site M
-#'  and species S must come at the end of the occasion data 1:J. For example
-#'  if you have J = 5 but the first site was only sampled 3 times, the 
-#'  corresponding row of the array should be [1, 1, 1, NA, NA] rather than
-#'  for example [1, NA, 1, 1, NA].
+#'  missing values (e.g. if you have different numbers of occasions by site).
 #'
 #' @examples
 #' nimbleOptions(enableModelMacros = TRUE)
@@ -243,7 +232,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 #' const <- list(M=M, J=J, S=S, y=y, x=x)
 #'
 #' code <- nimbleCode({
-#'   y[1:M, 1:J, 1:S] ~ multispeciesOccupancy(~x[1:M], ~1)
+#'   y[1:M, 1:J, 1:S] ~ MULTISPECIESOCCUPANCY(~x[1:M], ~1)
 #' })
 #'
 #' mod <- nimbleModel(code, constants=const)
@@ -251,7 +240,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 NULL
 
 #' @export
-multispeciesOccupancy <- nimble::model_macro_builder(
+MULTISPECIESOCCUPANCY <- nimble::model_macro_builder(
 function(stoch, LHS, stateformula, detformula, 
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
@@ -272,10 +261,10 @@ function(stoch, LHS, stateformula, detformula,
 
     # Code for calculating occupancy and detection parameters
     param_code <- substitute({
-      psi[SITEDIM, SPDIM] <- nimbleMacros::linPred(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
+      psi[SITEDIM, SPDIM] <- nimbleMacros::LINPRED(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
                                      sdPrefix=STATEPREFIX, priorSettings=STATEPRIOR, 
                                      center=SPID)  
-      p[SITEDIM, OBSDIM, SPDIM] <- nimbleMacros::linPred(DETFORM, link=logit, coefPrefix=DETPREFIX, 
+      p[SITEDIM, OBSDIM, SPDIM] <- nimbleMacros::LINPRED(DETFORM, link=logit, coefPrefix=DETPREFIX, 
                                            sdPrefix=DETPREFIX, priorSettings=DETPRIOR, 
                                            center=SPID)
     }, 
@@ -289,15 +278,15 @@ function(stoch, LHS, stateformula, detformula,
     if(!marginalized){
       # Latent state model    
       ymod_code <- substitute({
-        z[SITEDIM, SPDIM] ~ nimbleMacros::forLoop(dbern(psi[SITEDIM, SPDIM]))
+        z[SITEDIM, SPDIM] ~ nimbleMacros::FORLOOP(dbern(psi[SITEDIM, SPDIM]))
 
-        RESP ~ nimbleMacros::forLoop(dbern(p[SITEDIM, OBSDIM, SPDIM]*z[SITEDIM, SPDIM]))
+        RESP ~ nimbleMacros::FORLOOP(dbern(p[SITEDIM, OBSDIM, SPDIM]*z[SITEDIM, SPDIM]))
         }, 
         list(RESP=LHS, SITEDIM=site_dim, OBSDIM=obs_dim, SPDIM=sp_dim)
       )
 
       # Create initial values for z
-      z <- apply(y, c(1,3), max, na.rm=TRUE)
+      z <- apply(y, c(1,3), function(x) if(all(is.na(x))) return(0) else max(x, na.rm=TRUE))
       #z[z == 0] <- NA
       #modelInfo$constants$z <- z
       modelInfo$inits <- list(z = z)
@@ -337,7 +326,6 @@ function(stoch, LHS, stateformula, detformula,
 use3pieces=TRUE,
 unpackArgs=TRUE
 )
-class(multispeciesOccupancy) <- "model_macro"
 
 multispeciesFormula <- function(form, sp_idx, sp_vec){
   bars <- "||"

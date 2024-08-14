@@ -48,9 +48,9 @@ nimbleOccu <- function(stateformula, detformula,
   # Add z if latent model
   if(!marginalized){
     if(S == 1){
-      z <- apply(y, 1, max, na.rm=TRUE)
+      z <- apply(y, 1, function(x) if(all(is.na(x))) return(0) else max(x, na.rm=TRUE))
     } else {
-      z <- apply(y, c(1,3), max, na.rm=TRUE)
+      z <- apply(y, c(1,3), function(x) if(all(is.na(x))) return(0) else max(x, na.rm=TRUE))
     }
     z[z==0] <- NA
     data$z <- z
@@ -148,11 +148,11 @@ nimbleOccu <- function(stateformula, detformula,
   if(S == 1){
     # single species case
     resp <- quote(y[1:M, 1:J])
-    macro <- quote(occupancy)
+    macro <- quote(OCCUPANCY)
   } else {
     # multispecies
     resp <- quote(y[1:M, 1:J, 1:S])
-    macro <- quote(multispeciesOccupancy)
+    macro <- quote(MULTISPECIESOCCUPANCY)
   }
 
   code <- substitute({
