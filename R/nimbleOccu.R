@@ -1,3 +1,39 @@
+#' Fit occupancy models with nimble
+#'
+#' Fit single or multi-species occupancy models with nimble. The state
+#' and detection models are defined with R formulas and data are supplied to
+#' the y, siteCovs, obsCovs, and speciesCovs arguments.
+#' You may either fit the model or return the model object for further processing..
+#'
+#' @name nimbleOccu
+#' @author Ken Kellner
+#'
+#' @param stateformula An R formula for the occupancy/state model, possibly with the 
+#'  parameters followed by brackets containing indices.
+#' @param detformula An R formula for the detection model, possibly with the 
+#'  parameters followed by brackets containing indices.
+#' @param y The detection/non-detection data. For single-species models this 
+#'  should be an MxJ matrix; for multi-species models it should be an MxJxS
+#'  array, where M is sites, J is occasions, and S is species.
+#' @param siteCovs A named list of site-level covariates. Each should be a vector of length M.
+#' @param obsCovs A named list of observation-level covariates. Each should be 
+#'  a matrix of dimensions MxJ.
+#' @param speciesCovs A named list of species-level covariates. Each should be
+#'  a vector of length S. Only used in multi-species model.
+#' @param statePriors Prior specifications for state model parameters, should be 
+#'  generated with nimbleMacros::setPriors()
+#' @param detPriors Prior specifications for det model parameters, should be generated 
+#'  with nimbleMacros::setPriors()
+#' @param marginalized Logical. If TRUE, fit the marginalized model using the
+#'  dOcc_v nimbleFunction
+#' @param returnModel Logical. If TRUE, the nimble model object is returned.
+#' @param sampler MCMC sampler to use. Currently only the nimble default sampler works.
+#' @param savePsi Save site-level occupancy probabilities in the output?
+#' @param saveP Save site x occasion level detection probabilities in the output?
+#' @param ... Arguments passed to \code{runMCMC} such as \code{nchains}.
+#'
+#' @return Either MCMC samples, or a nimble model object if \code{returnModel = TRUE}.
+#'
 #' @export
 nimbleOccu <- function(stateformula, detformula,
                        y, siteCovs = NULL, obsCovs = NULL, speciesCovs = NULL,
@@ -204,7 +240,7 @@ nimbleOccu <- function(stateformula, detformula,
 # found in a formula (inp)
 addBracketToFormula <- function(inp, target, bracket){
   out <- addBracketToFormulaRecursive(inp, target, bracket)
-  as.formula(as.call(out))
+  stats::as.formula(as.call(out))
 }
 
 addBracketToFormulaRecursive <- function(inp, target, bracket){

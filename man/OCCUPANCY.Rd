@@ -47,7 +47,7 @@ x <- rnorm(5)
 const <- list(y=y, x=x, M=nrow(y), J = ncol(y))
 
 code <- nimbleCode({
-  y[1:M, 1:J] ~ occupancy(~x[1:M], ~1)
+  y[1:M, 1:J] ~ OCCUPANCY(~x[1:M], ~1)
 })
 
 mod <- nimbleModel(code, constants=const)
