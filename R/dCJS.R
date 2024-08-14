@@ -92,6 +92,19 @@
 #'
 #' and so on for each combination of time-dependent and time-independent parameters.
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dCJS_**} distributions should all work for models and algorithms
+#' that use nimble's automatic differentiation (AD) system. In that system,
+#' some kinds of values are "baked in" (cannot be changed) to the AD calculations
+#' from the first call, unless and until the AD calculations are reset. For
+#' the \code{dCJS_**} distributions, the lengths of vector inputs and the data
+#' (\code{x}) values themselves are baked in. These can be different for different
+#' iterations through a for loop (or nimble model declarations with different indices,
+#' for example), but the lengths and data values for each specific iteration
+#' will be "baked in" after the first call. \bold{In other words, it is assumed that
+#' \code{x} are data and are not going to change.}
+#'
 #' @return
 #'
 #' For \code{dCJS_**}: the probability (or likelihood) or log probability of observation vector \code{x}.
@@ -138,7 +151,7 @@ dCJS_ss <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
 
@@ -158,8 +171,9 @@ dCJS_ss <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture
           probAliveGivenHistory <- 1
@@ -174,7 +188,7 @@ dCJS_ss <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double(0))
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS
@@ -183,7 +197,7 @@ dCJS_sv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(),
                  probCapture = double(1),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -204,8 +218,9 @@ dCJS_sv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture[t]
           probAliveGivenHistory <- 1
@@ -220,7 +235,7 @@ dCJS_sv <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 
@@ -230,7 +245,7 @@ dCJS_vs <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -252,8 +267,9 @@ dCJS_vs <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t - 1]
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture
           probAliveGivenHistory <- 1
@@ -268,7 +284,7 @@ dCJS_vs <- nimbleFunction(
     if (log) return(logProbData)
     return(exp(logProbData))
     returnType(double())
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 
@@ -282,7 +298,7 @@ dCJS_vv <- nimbleFunction(
   run = function(x = double(1),    ## standard name for the "data"
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double(0, default = 0),
+                 len = integer(0, default = 0),
                  log = integer(0, default = 0) ## required log argument
   ) {
     if (len != 0) {
@@ -304,8 +320,9 @@ dCJS_vv <- nimbleFunction(
       ## probAlive is P(Alive(t) | x(1)...x(t-1))
       ## probAliveGivenHistory is (Alive(t-1) | x(1)...x(t-1))
       probAlive <- probAliveGivenHistory * probSurvive[t - 1]
-      if (!is.na(x[t])) {
-        if (x[t] == 1) {
+      xt <- ADbreak(x[t])
+      if (!is.na(xt)) {
+        if (xt == 1) {
           ## ProbThisObs = P(x(t) | x(1)...x(t-1))
           probThisObs <- probAlive * probCapture[t]
           probAliveGivenHistory <- 1
@@ -322,7 +339,7 @@ dCJS_vv <- nimbleFunction(
     }
     return(exp(logProbData))
     returnType(double())
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
 
 #' @rdname dCJS
@@ -331,7 +348,7 @@ rCJS_ss <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")
@@ -359,10 +376,10 @@ rCJS_sv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(),
                  probCapture = double(1),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
-      stop("len must be non-negative.")
+      stop("len must be greater than 1.")
     if (length(probCapture) != len)
       stop("Length of probCapture is not the same as len.")
     ans <- numeric(length = len, init = FALSE)
@@ -389,7 +406,7 @@ rCJS_vs <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")
@@ -419,7 +436,7 @@ rCJS_vv <- nimbleFunction(
   run = function(n = integer(),
                  probSurvive = double(1),
                  probCapture = double(1),
-                 len = double(0, default = 0)) {
+                 len = integer(0, default = 0)) {
     if (n != 1) stop("rCJS only works for n = 1")
     if (len < 2)
       stop("len must be greater than 1.")

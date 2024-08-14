@@ -109,6 +109,19 @@
 #'   \code{observedStates[1:T] ~ dHMMo(initStates[1:S], observationProbs[1:S,
 #'   1:O, 1:T], transitionProbs[1:S, 1:S], 1, T)}
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The \code{dHMM[o]} distributions should work for models and algorithms that
+#' use nimble's automatic differentiation (AD) system. In that system, some
+#' kinds of values are "baked in" (cannot be changed) to the AD calculations
+#' from the first call, unless and until the AD calculations are reset. For the
+#' \code{dHMM[o]} distributions, the sizes of the inputs and the data (\code{x})
+#' values themselves are baked in. These can be different for different
+#' iterations through a for loop (or nimble model declarations with different
+#' indices, for example), but the sizes and data values for each specific
+#' iteration will be "baked in" after the first call. \bold{In other words, it
+#' is assumed that \code{x} are data and are not going to change.}
+#'
 #' @return For \code{dHMM} and \code{dHMMo}: the probability (or likelihood) or
 #'   log probability of observation vector \code{x}.
 #'
@@ -172,18 +185,19 @@ dHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMM: Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
     if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In dHMM: probTrans must be a square matrix.")
     if (abs(sum(init) - 1) > 1e-6) stop("In dHMM: Initial probabilities must sum to 1.")
 
-    if (checkRowSums) {
+    if (checkRowSums) { ## For AD, the checking will only be done in the taping call, once.
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        thisCheckSum <- sum(probTrans[i,])
+        thisCheckSumTemp <- sum(probTrans[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           ## Compilation doesn't support more than a simple string for stop()
           ## so we provide more detail using a print().
@@ -193,7 +207,8 @@ dHMM <- nimbleFunction(
       }
       obsCheckPasses <- TRUE
       for (i in 1:dim(probObs)[1]) {
-        thisCheckSum <- sum(probObs[i,])
+        thisCheckSumTemp <- sum(probObs[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           print("In dHMM: Problem with sum(probObs[i,]) with i = ", i, ". The sum should be 1 but is ", thisCheckSum)
           obsCheckPasses <- FALSE
@@ -211,16 +226,17 @@ dHMM <- nimbleFunction(
     logL <- 0
     nObsClasses <- dim(probObs)[2]
     for (t in 1:len) {
-      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMM: Invalid value of x[t].")
-      Zpi <- probObs[, x[t]] * pi # Vector of P(state) * P(observation class x[t] | state)
-      sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
-      logL <- logL + log(sumZpi)  # Accumulate log probabilities through time
-      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
+      xt <- ADbreak(x[t])
+      if (xt > nObsClasses | xt < 1) stop("In dHMM: Invalid value of x[t].")
+      Zpi <- probObs[, xt] * pi
+      sumZpi <- sum(Zpi)
+      logL <- logL + log(sumZpi)
+      if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ]
     }
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export
@@ -230,8 +246,8 @@ dHMMo <- nimbleFunction(
                  init = double(1),##
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0),## length of x (needed as a separate param for rDHMM)
-                 checkRowSums = double(0, default = 1),
+                 len = integer(0, default = 0),## length of x (needed as a separate param for rDHMM)
+                 checkRowSums = integer(0, default = 1),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("In dHMMo: Argument len must be length of x or 0.")
     if (dim(probObs)[1] != dim(probTrans)[1]) stop("In dHMMo: In dHMM: Length of dimension 1 in probObs must equal length of dimension 1 in probTrans.")
@@ -242,10 +258,14 @@ dHMMo <- nimbleFunction(
     }
     if (abs(sum(init) - 1) > 1e-6) stop("In dHMMo: Initial probabilities must sum to 1.")
 
+  ##  declare(i, integer())
+  ##  declare(k, integer())
+
     if (checkRowSums) {
       transCheckPasses <- TRUE
       for (i in 1:dim(probTrans)[1]) {
-        thisCheckSum <- sum(probTrans[i,])
+        thisCheckSumTemp <- sum(probTrans[i,])
+        thisCheckSum <- ADbreak(thisCheckSumTemp)
         if (abs(thisCheckSum - 1) > 1e-6) {
           ## Compilation doesn't support more than a simple string for stop()
           ## so we provide more detail using a print().
@@ -254,9 +274,17 @@ dHMMo <- nimbleFunction(
         }
       }
       obsCheckPasses <- TRUE
+
+      # declare(probObs_dim1, integer())
+      # declare(probObs_dim3, integer())
+
+      # probObs_dim1 <- dim(probObs)[1]
+      # probObs_dim3 <- dim(probObs)[3]
+
       for (i in 1:dim(probObs)[1]) {
         for (k in 1:dim(probObs)[3]) {
-          thisCheckSum <- sum(probObs[i,,k])
+          thisCheckSumTemp <- sum(probObs[i,,k])
+          thisCheckSum <- ADbreak(thisCheckSumTemp)
           if (abs(thisCheckSum - 1) > 1e-6) {
             print("In dHMMo: Problem with sum(probObs[i,,k]) with i = ", i, " k = " , k, ". The sum should be 1 but is ", thisCheckSum)
             obsCheckPasses <- FALSE
@@ -274,9 +302,12 @@ dHMMo <- nimbleFunction(
     pi <- init # State probabilities at time t=1
     logL <- 0
     nObsClasses <- dim(probObs)[2]
+    declare(t, integer())
     for (t in 1:len) {
-      if (x[t] > nObsClasses | x[t] < 1) stop("In dHMMo: Invalid value of x[t].")
-      Zpi <- probObs[,x[t],t] * pi # Vector of P(state) * P(observation class x[t] | state)
+      xt <- ADbreak(x[t])
+      if (xt > nObsClasses | xt < 1) stop("In dHMMo: Invalid value of x[t].")
+      thisProbObs <- probObs[,xt,]
+      Zpi <- thisProbObs[,t] * pi # Vector of P(state) * P(observation class x[t] | state)
       sumZpi <- sum(Zpi)    # Total P(observed as class x[t])
       logL <- logL + log(sumZpi)  # Accumulate log probabilities through timeÍ
       if (t != len) pi <- ((Zpi %*% probTrans) / sumZpi)[1, ] # State probabilities at t+1
@@ -284,7 +315,7 @@ dHMMo <- nimbleFunction(
     returnType(double())
     if (log) return(logL)
     return(exp(logL))
-  }
+  }, buildDerivs = list(run = list(ignore = c('i', 'k', 't', 'xt', 'thisCheckSum')))
 )
 
 #' @export
@@ -294,8 +325,8 @@ rHMM <- nimbleFunction(
                  init = double(1),
                  probObs = double(2),
                  probTrans = double(2),
-                 len = double(0, default = 0),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(0, default = 0),
+                 checkRowSums = integer(0, default = 1)) {
   returnType(double(1))
   if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMM: Number of cols in probObs must equal number of cols in probTrans.")
   if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMM: probTrans must be a square matrix.")
@@ -364,8 +395,8 @@ rHMMo <- nimbleFunction(
                  init = double(1),
                  probObs = double(3),
                  probTrans = double(2),
-                 len = double(0, default = 0),
-                 checkRowSums = double(0, default = 1)) {
+                 len = integer(0, default = 0),
+                 checkRowSums = integer(0, default = 1)) {
   returnType(double(1))
   if (dim(probObs)[1] != dim(probTrans)[1]) stop("In rHMMo: Number of cols in probObs must equal number of cols in probTrans.")
   if (dim(probTrans)[1] != dim(probTrans)[2]) stop("In rHMMo: probTrans must be a square matrix.")

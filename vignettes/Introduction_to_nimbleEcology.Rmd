@@ -49,14 +49,14 @@ The best way to seek user support is the nimble-users list.  Information on how 
 
 # The concept of using new distributions for ecological model components.
 
-The distributions provided in `nimbleEcology` let you simplify model code and the algorithms that use it, such as MCMC.  For the ecological models in `nimbleEcology`, the simplification comes from removing some discrete latent states from the model and instead doing the corresponding probability (or likelihood) calculations in a specialized distribution.
+The distributions provided in `nimbleEcology` let you simplify model code and the algorithms that use it, such as MCMC.  For the ecological models in `nimbleEcology`, the simplification comes from removing some discrete latent states from the model and instead doing the corresponding probability (or likelihood) calculations in a specialized distribution that marginalizes over the latent states.
 
-For each of the ecological model components provided by `nimbleEcology`, here are the discrete latent states that are replaced by use of a specialized distribution:
+For each of the ecological model components provided by `nimbleEcology`, here are the discrete latent states that are replaced by use of a marginalized distribution:
 
 - CJS (basic capture-recapture): Latent individual alive-or-dead state at each time.
 - HMM and DHMM: Latent individual state, such as location or breeding status, as well as alive-or-dead, at each time.
 - Occupancy: Latent occupancy status of a site.
-- Dynamic occupancy: latent occupancy status of a site at each time.
+- Dynamic occupancy: Latent occupancy status of a site at each time.
 - N-mixture: Latent number of individuals at a site.
 
 Before going further, let's illustrate how `nimbleEcology` can be used for a basic occupancy model.
@@ -120,7 +120,7 @@ We can run an MCMC for this model in the following steps:
 5. Run the MCMC.
 6. Extract the samples.
 
-The function `nimbleMCMC` does all of these steps for you.  The function `runMCMC` does steps 5-6 for you, with convenient management of options such as discarding burn-in samples.  The full set of steps allows great control over how you use a model and configure and use an MCMC.  We will go through the steps 1-4 and then use `runMCMC` for steps 5-6.  
+The function `nimbleMCMC` does all of these steps for you.  The function `runMCMC` does steps 5-6 for you, with convenient management of options such as discarding burn-in samples.  The full set of steps allows greater control over how you use a model and configure and use an MCMC.  We will go through the steps 1-4 and then use `runMCMC` for steps 5-6.  
 
 In this example, we also need simulated data.  We can use the same model to create simulated data, rather than writing separate R code for that purpose.
 
@@ -154,7 +154,7 @@ MCMC <- buildMCMC(occupancy_model)
 
 ```{r}
 ## These can be done in one step, but many people
-## find it convenient to do it in two steps.
+## find it convenient to do them in two steps.
 Coccupancy_model <- compileNimble(occupancy_model)
 CMCMC <- compileNimble(MCMC, project = occupancy_model)
 ```
@@ -217,6 +217,16 @@ COccLogLik <- compileNimble(OccLogLik, project = occupancy_model_new)
 optim(c(0.5, 0.5), COccLogLik$run, control = list(fnscale = -1))$par
 ```
 
+## Support for automatic differentiation with `nimbleEcology`.
+
+As of `nimble` version 1.0.0, there is a system for automatic (or algorithmic) differentiation, known as AD. This is used by algorithms such as Hamiltonian Monte Carlo (see package [`nimbleHMC`](https://cran.r-project.org/web/packages/nimbleHMC/index.html)) and Laplace approximation (`buildLaplace` in `nimble`).
+
+The distributions provided in `nimbleEcology` support AD as much as possible. There are three main points to keep in mind:
+
+1. It is not possible to take derivatives with respect to discrete values, and the "data" for the `nimbleEcology` distributions are all discrete values. It *is* possible to take derivatives with respect to continuous parameters of the distributions. If the "data" are marked as `data` in the model (and hence will not be sampled by MCMC, for example), there is no problem.
+2. Some values will be "baked in" to the AD calculations, meaning that the values first present will be used permanently in later AD calculations. In all cases of `nimbleEcology` distributions, the values "baked in" sizes of variables. In some cases (such ash dHMM and dDHMM) they also include the data values. See the help page for each distribution for more details (e.g. `help(dOcc)`). If the data are scientific data that do not need to be changed after creating the model and algorithm, there is no problem.
+3. For the N-mixture distributions only, one needs to use different distribution names. Every `dNmixture` portion of a distribution name below should be replaced with `dNmixtureAD`.
+
 # Distributions provided in `nimbleEcology`
 
 In this section, we introduce each of the `nimbleEcology` distributions in more detail.  We will summarize the calculations using mathematical notation and then describe how to use the distributions in a `nimble` model.
@@ -270,7 +280,7 @@ The usage for each is similar.  An example for `dCJS_vs` is:
 
 Note the following points:
 
-- `y[i, 1:T]` is a vector of capture history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.
+- `y[i, 1:T]` is a vector of the capture history.  It is written as if `i` indexes individual, but it could be any vector in any variable in the model.
 - Arguments to `dCJS_sv` are named.  As in R, this is optional but helpful.  Without names, the order matters.
 - `probSurvive` is provided as a scalar value, assuming there is a variable called `phi`.
 - In variants where `probSurvive` is a vector (`dOcc_vs` and `dOcc_vv`), the $t^{\mbox{th}}$ element of `probSurvive` is $\phi_t$ above, namely the probability of survival from occasion $t$ to $t+1$.
@@ -449,10 +459,10 @@ where $P(N | \lambda)$ is a Poisson probability and $P(y_t | N)$ is a binomial p
 
 In practice, the summation over $N$ can start at a value greater than 0 and must be truncated at some value less than infinity. Two options are provided for the range of summation:
 
-1. Start the summation at the largest value of $y_t$ (there must be at least this many individuals) and truncate it at a value of $maxN$ provided by the user.
-2. The following heuristic can be used.
+1. The user can provide values $Nmix$ and $Nmax$ to start and end the summation, respectively. A typical choice for $Nmin$ would be the largest value of $y_t$ (there must be at least this many individuals).
+2. The following heuristic can be used:
 
-If we consider a single $y_t$, then $N - y_t | y_t \sim \mbox{Poisson}(\lambda (1-p_t))$ (*See opening example of Royle and Dorazio*).  Thus, a natural upper end for the summation range of $N$ would be $y_t$ plus a very high quantile of The $\mbox{Poisson}(\lambda (1-p_t))$ distribution.  For a set of observations, a natural choice would be the maximum of such values across the observation times.  We use the 0.99999 quantile to be conservative.
+If we consider a single $y_t$, then $N - y_t | y_t \sim \mbox{Poisson}(\lambda (1-p_t))$ (*See opening example of [Royle and Dorazio, 2008](https://www.mbr-pwrc.usgs.gov/pubanalysis/roylebook/roylebook.html)*).  Thus, a natural upper end for the summation range of $N$ would be $y_t$ plus a very high quantile of The $\mbox{Poisson}(\lambda (1-p_t))$ distribution.  For a set of observations, a natural choice would be the maximum of such values across the observation times.  We use the 0.99999 quantile to be conservative.
 
 Correspondingly, the summation can begin at smallest of the 0.00001 quantiles of $N | y_t$. If $p_t$ is small, this can be considerably larger than the maximum value of $y_t$, allowing more efficient computation.
 
@@ -462,15 +472,15 @@ Standard (binomial-Poisson) N-mixture models are available in two distributions 
 
 An example is:
 
-`y[i, 1:T] ~ dNmixture_v(lambda = lambda, p = p[1:T], minN = minN, maxN = maxN, len = T)`
+`y[i, 1:T] ~ dNmixture_v(lambda = lambda, p = p[1:T], Nmin = Nmin, Nmax = Nmax, len = T)`
 
 - As in the examples above, this is written as if `i` indexes the individual site, but the variables could be arranged in other ways.
 - `lambda` is $\lambda$ above.
 - `p[1:T]` is $\mathbf{p}$ above. If $p$ were constant across visits, we would use `dNmixture_s` and a scalar value of `p`.
 - `len` is $T$.
-- `minN` and `maxN` provide the lower and upper bounds for the sum over Ns (option 1 above). If both are set to `-1`, bounds are chosen dynamically using quantiles of the Poisson distribution (option 2 above).
+- `Nmin` and `Nmax` provide the lower and upper bounds for the sum over Ns (option 1 above). If both are set to `-1`, bounds are chosen dynamically using quantiles of the Poisson distribution (option 2 above).
 
-Three variations of the N-mixture model are also available, in which the Poisson distribution is substituted for a negative binomial, the binomial is substituted for a beta binomial, or both are substituted. These are called `dNmixture_BNB_*`, `dNmixture_BBP_*`, and `dNmixture_BBNB_*`. Each has three suffixes: `_v` and `_s` correspond to the cases provided above, and `_oneObs` distributions are provided for the case where the data are scalar (i.e., only one observation at the site). No `_oneObs` observation is provided for the default `dNmixture` because `dNmixture(x[1:1], lambda, prob[1:1])` is equivalent to `dpois(x[1:1], lambda * prob[1:1])`.
+Three variations of the N-mixture model are also available, in which the Poisson distribution is replaced by negative binomial, the binomial is replaced by beta binomial, or both. These are called `dNmixture_BNB_*`, `dNmixture_BBP_*`, and `dNmixture_BBNB_*`, respectively. Each has three suffixes: `_v` and `_s` correspond to the cases provided above, and `_oneObs` distributions are provided for the case where the data are scalar (i.e., only one observation at the site). No `_oneObs` observation is provided for the default `dNmixture` because `dNmixture(x[1:1], lambda, prob[1:1])` is equivalent to `dpois(x[1:1], lambda * prob[1:1])`.
 
 These combinations lead to the following set of 11 N-mixture distributions:
 
@@ -486,3 +496,6 @@ These combinations lead to the following set of 11 N-mixture distributions:
 - `dNmixture_BBNB_s`
 - `dNmixture_BBNB_oneObs`
 
+If an N-mixture distribution needs to be used with AD (e.g. for HMC or Laplace approximation), replace `dNmixture` with `dNmixtureAD`. In that case, one must provide `Nmin` and `Nmax` values manually; the second (heuristic) option described above is not available.
+
+Further details on all the distributions in `nimbleEcology` can be found on the help pages within R, e.g. `help(dNmixture)`.

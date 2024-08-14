@@ -2,10 +2,6 @@
 
 # -----------------------------------------------------------------------------
 # 0. Load
-
-# Set the context for testthat
-context("Testing dHMM-related functions.")
-
 # -----------------------------------------------------------------------------
 # 1. Test dHMM, distribution for Hidden Markov Model
 test_that("dHMM works", {
@@ -78,7 +74,15 @@ test_that("dHMM works", {
   expect_equal(lProbX2, log(correctProbX2))
 
   # Repeat for the compiled function
-  CdHMM <- compileNimble(dHMM)
+  call_dHMM <- nimbleFunction(
+    run = function(x=double(1), init=double(1), probObs=double(2),
+                   probTrans=double(2), len=integer(0,default=0),
+                   checkRowSums = integer(0,default=1),
+                   log=integer(0, default=0)) {
+      return(dHMM(x,init,probObs,probTrans,len,checkRowSums,log))
+      returnType(double())
+    })
+  CdHMM <- compileNimble(call_dHMM)
   CprobX1 <- CdHMM(x = x1, init = init,
                    probObs = probObs, probTrans = probTrans,
                    len = len, log = FALSE)
@@ -228,7 +232,16 @@ test_that("dHMMo works", {
   expect_equal(lProbX2, log(correctProbX2))
 
   # Repeat for compiled nimbleFunction
-  CdHMMo <- compileNimble(dHMMo)
+  call_dHMMo <- nimbleFunction(
+    run = function(x=double(1), init=double(1), probObs=double(3),
+                   probTrans=double(2), len=integer(0,default=0),
+                   checkRowSums = integer(0,default=1),
+                   log=integer(0, default=0)) {
+      return(dHMMo(x,init,probObs,probTrans,len,checkRowSums,log))
+      returnType(double())
+    })
+
+  CdHMMo <- compileNimble(call_dHMMo)
   CprobX1 <- CdHMMo(x = x1, init = init,
                     probObs = probObs, probTrans = probTrans,
                     len = len, log = FALSE)
@@ -246,9 +259,9 @@ test_that("dHMMo works", {
                   probTrans = probTrans[1:3, 1:3], len = 5, checkRowSums = 1)
   })
   # Build a nimbleModel
-  m <- nimbleModel(nc, data = list(x = x1),
+  m <- suppressWarnings(nimbleModel(nc, data = list(x = x1),
                    inits = list(init = init, probObs = probObs,
-                                probTrans = probTrans))
+                                probTrans = probTrans)))
 
   # Use the nimbleModel to calculate probabilities and compare
   m$calculate()
@@ -346,7 +359,7 @@ test_that("dHMM and dHMMo compatibility", {
 # -----------------------------------------------------------------------------
 # 3. Test that dHMM errors when input assumptions are violated
 test_that("dHMM errors where expected", {
-
+  message("6 error messages are expected.")
 # Start with good inputs and break it one by one
   len <- 5
   x <- c(1, 1, 1, 2, 1)
@@ -418,6 +431,7 @@ test_that("dHMM errors where expected", {
 # 4. Test that dHMMo errors when input assumptions are violated
 
 test_that("dHMMo errors where expected", {
+  message("6 more error messages are expected.")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)
@@ -501,7 +515,7 @@ test_that("dHMMo errors where expected", {
 # -----------------------------------------------------------------------------
 # 5. Test that rHMM errors when input assumptions are violated
 test_that("rHMM errors where expected", {
-
+  message("8 error messages are expected.")
 # Start with good inputs and break it one by one
   len <- 5
   x <- c(1, 1, 1, 2, 1)
@@ -573,6 +587,7 @@ test_that("rHMM errors where expected", {
 # 6. Test that rHMMo errors when input assumptions are violated
 
 test_that("rHMMo errors where expected", {
+  message("7 more error messages are expected.")
   len <- 5
   x <- c(1, 1, 1, 2, 1)
   init <- c(0.4, 0.2, 0.4)

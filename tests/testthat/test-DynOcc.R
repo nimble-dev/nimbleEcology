@@ -1,6 +1,4 @@
 
-context("Testing dDynOcc-related functions.")
-
 test_that("dDynOcc_vvm works", {
   x <- matrix(c(0,0,NA,0,
                 1,1,1,0,
@@ -53,7 +51,18 @@ test_that("dDynOcc_vvm works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vvm <- compileNimble(dDynOcc_vvm)
+  call_dDynOcc_vvm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vvm <- compileNimble(call_dDynOcc_vvm)
   CprobX <- CdDynOcc_vvm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -77,13 +86,13 @@ test_that("dDynOcc_vvm works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -187,7 +196,18 @@ test_that("dDynOcc_vsm works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vsm <- compileNimble(dDynOcc_vsm)
+  call_dDynOcc_vsm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(0),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vsm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vsm <- compileNimble(call_dDynOcc_vsm)
   CprobX <- CdDynOcc_vsm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -222,13 +242,13 @@ test_that("dDynOcc_vsm works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -328,7 +348,18 @@ test_that("dDynOcc_svm works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_svm <- compileNimble(dDynOcc_svm)
+  call_dDynOcc_svm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(0), probColonize=double(1),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_svm <- compileNimble(call_dDynOcc_svm)
   CprobX <- CdDynOcc_svm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -366,13 +397,13 @@ test_that("dDynOcc_svm works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -473,7 +504,18 @@ test_that("dDynOcc_ssm works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_ssm <- compileNimble(dDynOcc_ssm)
+  call_dDynOcc_ssm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(0), probColonize=double(0),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_ssm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_ssm <- compileNimble(call_dDynOcc_ssm)
   CprobX <- CdDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -506,13 +548,13 @@ test_that("dDynOcc_ssm works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -562,11 +604,52 @@ test_that("dDynOcc_ssm works", {
 
 
 test_that("Case errors in compiled dDynOcc_**m work", {
-  CdDynOcc_ssm <- compileNimble(dDynOcc_ssm)
-  CdDynOcc_svm <- compileNimble(dDynOcc_svm)
-  CdDynOcc_vsm <- compileNimble(dDynOcc_vsm)
-  CdDynOcc_vvm <- compileNimble(dDynOcc_vvm)
 
+  call_dDynOcc_ssm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_ssm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_svm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(1),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vsm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vsm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vvm <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(2),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvm(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_ssm <- compileNimble(call_dDynOcc_ssm)
+  CdDynOcc_svm <- compileNimble(call_dDynOcc_svm)
+  CdDynOcc_vsm <- compileNimble(call_dDynOcc_vsm)
+  CdDynOcc_vvm <- compileNimble(call_dDynOcc_vvm)
 
   x <- matrix(c(0,0,NA,0,
                 1,1,1,0,
@@ -603,9 +686,6 @@ test_that("Case errors in compiled dDynOcc_**m work", {
   expect_error(CdDynOcc_ssm(x, init, probPersist, probColonize, p, start, end, log = FALSE))
 
 })
-
-
-
 
 test_that("dDynOcc_vvv works", {
   x <- matrix(c(0,0,NA,0,
@@ -659,7 +739,18 @@ test_that("dDynOcc_vvv works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vvv <- compileNimble(dDynOcc_vvv)
+  call_dDynOcc_vvv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vvv <- compileNimble(call_dDynOcc_vvv)
   CprobX <- CdDynOcc_vvv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -693,7 +784,7 @@ test_that("dDynOcc_vvv works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
@@ -742,7 +833,6 @@ test_that("dDynOcc_vvv works", {
 # # Did the imputed values come back?
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
-
 
 test_that("dDynOcc_vsv works", {
   x <- matrix(c(0,0,NA,0,
@@ -798,7 +888,18 @@ test_that("dDynOcc_vsv works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vsv <- compileNimble(dDynOcc_vsv)
+  call_dDynOcc_vsv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vsv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vsv <- compileNimble(call_dDynOcc_vsv)
   CprobX <- CdDynOcc_vsv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -831,13 +932,13 @@ test_that("dDynOcc_vsv works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -937,7 +1038,18 @@ test_that("dDynOcc_svv works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_svv <- compileNimble(dDynOcc_svv)
+  call_dDynOcc_svv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(1),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_svv <- compileNimble(call_dDynOcc_svv)
   CprobX <- CdDynOcc_svv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -973,13 +1085,13 @@ test_that("dDynOcc_svv works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1026,7 +1138,6 @@ test_that("dDynOcc_svv works", {
 # # Did the imputed values come back?
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
-
 
 test_that("dDynOcc_ssv works", {
   x <- matrix(c(0,0,NA,0,
@@ -1080,7 +1191,18 @@ test_that("dDynOcc_ssv works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_ssv <- compileNimble(dDynOcc_ssv)
+  call_dDynOcc_ssv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_ssv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_ssv <- compileNimble(call_dDynOcc_ssv)
   CprobX <- CdDynOcc_ssv(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -1111,13 +1233,13 @@ test_that("dDynOcc_ssv works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1164,13 +1286,53 @@ test_that("dDynOcc_ssv works", {
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
-
 test_that("Case errors in compiled dDynOcc_**v work", {
-  CdDynOcc_ssv <- compileNimble(dDynOcc_ssv)
-  CdDynOcc_svv <- compileNimble(dDynOcc_svv)
-  CdDynOcc_vsv <- compileNimble(dDynOcc_vsv)
-  CdDynOcc_vvv <- compileNimble(dDynOcc_vvv)
+  call_dDynOcc_ssv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_ssv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_svv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(1),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vsv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vsv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vvv <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(1),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvv(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
 
+
+  CdDynOcc_ssv <- compileNimble(call_dDynOcc_ssv)
+  CdDynOcc_svv <- compileNimble(call_dDynOcc_svv)
+  CdDynOcc_vsv <- compileNimble(call_dDynOcc_vsv)
+  CdDynOcc_vvv <- compileNimble(call_dDynOcc_vvv)
 
   x <- matrix(c(0,0,NA,0,
                 1,1,1,0,
@@ -1208,15 +1370,12 @@ test_that("Case errors in compiled dDynOcc_**v work", {
 
 })
 
-
-context("Testing dDynOcc-related functions.")
-
 test_that("dDynOcc_vvs works", {
-  x <- matrix(c(0,0,NA,0,
+  x <- matrix(c(0,0,-1,0,
                 1,1,1,0,
                 0,0,0,0,
                 0,0,1,0,
-                0,0,0,NA), nrow = 4)
+                0,0,0,-1), nrow = 4)
   start <- c(1,1,2,1)
   end <- c(5,5,5,4)
   init <- 0.7
@@ -1263,7 +1422,18 @@ test_that("dDynOcc_vvs works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vvs <- compileNimble(dDynOcc_vvs)
+  call_dDynOcc_vvs <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvs(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vvs <- compileNimble(call_dDynOcc_vvs)
   CprobX <- CdDynOcc_vvs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -1295,13 +1465,13 @@ test_that("dDynOcc_vvs works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1347,7 +1517,6 @@ test_that("dDynOcc_vvs works", {
 # # Did the imputed values come back?
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
-
 
 test_that("dDynOcc_vss works", {
   x <- matrix(c(0,0,NA,0,
@@ -1403,7 +1572,18 @@ test_that("dDynOcc_vss works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_vss <- compileNimble(dDynOcc_vss)
+  call_dDynOcc_vss <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vss(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_vss <- compileNimble(call_dDynOcc_vss)
   CprobX <- CdDynOcc_vss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -1434,13 +1614,13 @@ test_that("dDynOcc_vss works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1539,7 +1719,18 @@ test_that("dDynOcc_svs works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_svs <- compileNimble(dDynOcc_svs)
+  call_dDynOcc_svs <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(1),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svs(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_svs <- compileNimble(call_dDynOcc_svs)
   CprobX <- CdDynOcc_svs(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -1573,13 +1764,13 @@ test_that("dDynOcc_svs works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1625,7 +1816,6 @@ test_that("dDynOcc_svs works", {
 # # Did the imputed values come back?
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
-
 
 test_that("dDynOcc_sss works", {
   x <- matrix(c(0,0,NA,0,
@@ -1679,7 +1869,18 @@ test_that("dDynOcc_sss works", {
   expect_equal(exp(lCorrectProbX), probX)
   expect_equal(lCorrectProbX, lProbX)
 
-  CdDynOcc_sss <- compileNimble(dDynOcc_sss)
+  call_dDynOcc_sss <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_sss(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+
+  CdDynOcc_sss <- compileNimble(call_dDynOcc_sss)
   CprobX <- CdDynOcc_sss(x, init, probPersist, probColonize, p, start, end, log = FALSE)
   expect_equal(CprobX, probX)
 
@@ -1708,13 +1909,13 @@ test_that("dDynOcc_sss works", {
   MlProbX <- m$getLogProb("x")
   expect_equal(MlProbX, lProbX)
 
-  cm <- compileNimble(m, showCompilerOutput = TRUE)
+  cm <- compileNimble(m)
   cm$calculate()
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
   set.seed(2468)
-  cm$simulate('x')
+  cm$simulate('x[1:4, 1:5]', includeData = TRUE)
 
   # Test simulation code
   set.seed(1)
@@ -1761,12 +1962,51 @@ test_that("dDynOcc_sss works", {
 #   expect_true(all(!is.na(as.matrix(cmNA$mNA_MCMC$mvSamples)[,"x[1]"])))
 })
 
-
 test_that("Case errors in compiled dDynOcc_** work", {
-  CdDynOcc_sss <- compileNimble(dDynOcc_sss)
-  CdDynOcc_svs <- compileNimble(dDynOcc_svs)
-  CdDynOcc_vss <- compileNimble(dDynOcc_vss)
-  CdDynOcc_vvs <- compileNimble(dDynOcc_vvs)
+  call_dDynOcc_sss <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_sss(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_svs <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(), probColonize=double(1),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_svs(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vss <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vss(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  call_dDynOcc_vvs <- nimbleFunction(
+    run = function(x=double(2), init = double(),
+                   probPersist = double(1), probColonize=double(1),
+                   p = double(),
+                   start = double(1),
+                   end = double(1),
+                   log = integer(0,default=0)) {
+      return(dDynOcc_vvs(x,init,probPersist,probColonize,p,start,end,log))
+      returnType(double())
+    })
+  CdDynOcc_sss <- compileNimble(call_dDynOcc_sss)
+  CdDynOcc_svs <- compileNimble(call_dDynOcc_svs)
+  CdDynOcc_vss <- compileNimble(call_dDynOcc_vss)
+  CdDynOcc_vvs <- compileNimble(call_dDynOcc_vvs)
 
 
   x <- matrix(c(0,0,NA,0,

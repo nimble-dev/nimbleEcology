@@ -1,13 +1,17 @@
-# dNmixture
-#' N-mixture distribution for use in \code{nimble} models
+#' dNmixture distribution for use in \code{nimble} models
 #'
-#' \code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture distributions of abundance ("N-mixture") for use in \code{nimble} models. Overdispersion alternatives are also provided.
+#' \code{dNmixture_s} and \code{dNmixture_v} provide Poisson-Binomial mixture
+#' distributions of abundance ("N-mixture") for use in \code{nimble} models.
+#' Overdispersion alternatives using the negative binomial distribution (for
+#' the abundance submodel) and the beta binomial distribution (for the detection
+#' submodel) are also provided.
 #'
 #' @name dNmixture
+#'
 #' @aliases dNmixture_s dNmixture_v rNmixture_s rNmixture_v dNmixture_BNB_v
 #'   dNmixture_BNB_s dNmixture_BNB_oneObs dNmixture_BBP_v dNmixture_BBP_s
 #'   dNmixture_BBP_oneObs dNmixture_BBNB_v dNmixture_BBNB_s
-#'   rNmixture_BBNB_oneObs rNmixture_BNB_v rNmixture_BNB_s rNmixture_BNB_oneObs
+#'   dNmixture_BBNB_oneObs rNmixture_BNB_v rNmixture_BNB_s rNmixture_BNB_oneObs
 #'   rNmixture_BBP_v rNmixture_BBP_s rNmixture_BBP_oneObs rNmixture_BBNB_v
 #'   rNmixture_BBNB_s rNmixture_BBNB_oneObs
 #'
@@ -15,14 +19,14 @@
 #'
 #' @param x vector of integer counts from a series of sampling occasions.
 #' @param lambda expected value of the Poisson distribution of true abundance
-#' @param theta abundance overdispersion parameter required for negative binomial
-#'        (*NB) N-mixture models. theta is parameterized such that variance of
-#'        the negative binomial variable x is \code{lambda^2 * theta + lambda}
-#' @param prob detection probability (scalar for \code{dNmixture_s}, vector for \code{dNmixture_v}).
+#' @param theta abundance overdispersion parameter required for negative
+#'   binomial (*NB) N-mixture models. The negative binomial is parameterized
+#'   such that variance of x is \code{lambda^2 * theta + lambda}
+#' @param prob detection probability (scalar for \code{dNmixture_s}, vector for
+#'   \code{dNmixture_v}).
 #' @param s detection overdispersion parameter required for beta binomial (BB*)
-#'        N-mixture models. s is parameterized such that variance of the beta
-#'        binomial variable x is \code{V(x) = N \* prob \* (1-prob) \* (N +
-#'        s) / (s + 1)}
+#'   N-mixture models. The beta binomial is parameterized such that variance of
+#'   x is \code{V(x) = N * prob * (1-prob) * (N + s) / (s + 1)}
 #' @param Nmin minimum abundance to sum over for the mixture probability. Set to
 #'   -1 to select automatically (not available for beta binomial variations; see
 #'   Details).
@@ -30,10 +34,11 @@
 #'   -1 to select automatically (not available for beta binomial variations; see
 #'   Details).
 #' @param len The length of the x vector
-#' @param log TRUE or 1 to return log probability. FALSE or 0 to return probability.
+#' @param log TRUE or 1 to return log probability. FALSE or 0 to return
+#'   probability.
 #' @param n number of random draws, each returning a vector of length
-#'        \code{len}. Currently only \code{n = 1} is supported, but the
-#'        argument exists for standardization of "\code{r}" functions.
+#'   \code{len}. Currently only \code{n = 1} is supported, but the argument
+#'   exists for standardization of "\code{r}" functions.
 #'
 #' @details These nimbleFunctions provide distributions that can be
 #'     used directly in R or in \code{nimble} hierarchical models (via
@@ -63,12 +68,6 @@
 #' distribution with the negative binomial (NB) and the binomial (B) detection
 #' distribution with the beta binomial (BB).
 #'
-#' \strong{NOTE: These variants should work but are considered to be in development.
-#' Their function names, parameter names, and implementations are subject to
-#' change. Use with caution while this message is present. Please contact the
-#' authors on the nimble-users listserv if you have any questions. dNmixture_v
-#' and dNmixture_s are \emph{not} considered to be in development.}
-#'
 #' Binomial-negative binomial: BNB N-mixture models use a binomial distribution
 #' for detection and a negative binomial distribution for abundance with scalar
 #' overdispersion parameter \code{theta} (0-Inf). We parameterize such that the
@@ -83,8 +82,8 @@
 #' Beta-binomial-Poisson: BBP N-mixture uses a beta binomial distribution for
 #' detection probabilities and a Poisson distribution for abundance. The beta
 #' binomial distribution has scalar overdispersion parameter s (0-Inf). We
-#' parameterize such that the variance of the beta binomial is \code{N \* prob
-#' \* (1-prob) \* (N + s) / (s + 1)}, with greater s indicating less variance
+#' parameterize such that the variance of the beta binomial is \code{N * prob
+#' * (1-prob) * (N + s) / (s + 1)}, with greater s indicating less variance
 #' (greater-than-binomial relatedness between observations at the site) and s ->
 #' 0 indicating the binomial. The BBP is available in three suffixed forms:
 #' \code{dNmixture_BBP_v} is used if \code{prob} varies between observations,
@@ -118,8 +117,9 @@
 #' marginal distributions of each count, using the minimum over counts of the
 #' former and the maximum over counts of the latter.
 #'
-#' The summation over N uses the efficient method given by Meehan et al. (2020).
-#' See Appendix B for the algorithm.
+#' The summation over N uses the efficient method given by Meehan et al. (2020,
+#' see Appendix B) for the basic Poisson-Binomial case, extended for the
+#' overdispersion cases in Goldstein and de Valpine (2022).
 #'
 #' These are \code{nimbleFunction}s written in the format of user-defined
 #' distributions for NIMBLE's extension of the BUGS model language. More
@@ -161,6 +161,12 @@
 #' prob[i],
 #' Nmin, Nmax, T)}
 #'
+#' @section Notes for use with automatic differentiation:
+#'
+#' The N-mixture distributions are the only ones in \code{nimbleEcology} for which
+#' one must use different versions when AD support is needed. See
+#' \code{\link{dNmixtureAD}}.
+#'
 #' @return
 #' For \code{dNmixture_s} and \code{dNmixture_v}: the probability (or likelihood) or log
 #' probability of observation vector \code{x}.
@@ -177,10 +183,13 @@
 #' Carlo sampling for hierarchical hidden Markov models. Environmental and
 #' Ecological Statistics 23:549–564. DOI 10.1007/s10651-016-0353-z
 #'
-#' Meehan, T. D., Michel, N. L., & Rue, H. (2020). Estimating Animal Abundance
+#' Meehan, T. D., Michel, N. L., & Rue, H. 2020. Estimating Animal Abundance
 #' with N-Mixture Models Using the R—INLA Package for R. Journal of Statistical
 #' Software, 95(2). https://doi.org/10.18637/jss.v095.i02
 #'
+#' Goldstein, B.R., and P. de Valpine. 2022. Comparing N-mixture Models and
+#' GLMMs for Relative Abundance Estimation in a Citizen Science Dataset.
+#' Scientific Reports 12: 12276. DOI:10.1038/s41598-022-16368-z
 #'
 #' @examples
 #' # Set up constants and initial values for defining the model
@@ -212,57 +221,42 @@
 
 # nimbleOptions(checkNimbleFunction = FALSE)
 
+
 ##### Regular N-mixture #####
 NULL
 #' @rdname dNmixture
+#' @importFrom stats qpois
 #' @export
 dNmixture_v <- nimbleFunction(
     run = function(x = double(1),
                    lambda = double(),
                    prob = double(1),
-                   Nmin = double(0, default = -1),
-                   Nmax = double(0, default = -1),
-                   len = double(),
+                   Nmin = integer(0, default = -1),
+                   Nmax = integer(0, default = -1),
+                   len = integer(),
                    log = integer(0, default = 0)) {
   if (length(x) != len) stop("in dNmixture_v, len must equal length(x).")
   if (len != length(prob)) stop("in dNmixture_v, len must equal length(prob).")
-
-  # Lambda cannot be negative
-  if (lambda < 0) {
-    if (log) return(-Inf)
-    else return(0)
-  }
-
+  if (lambda < 0)
+    if (log) return(-Inf) else return(0)
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1) {
+  if (Nmin == -1)
     Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  }
-  if (Nmax == -1) {
+  if (Nmax == -1)
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  }
   Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-  logProb <- -Inf
-
-  if (Nmax > Nmin) {
-    numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-    prods <- rep(0, numN)
-    for (i in (Nmin + 1):Nmax) {
-      prods[i - Nmin] <- prod(i/(i - x)) / i
-    }
-
-    ff <- log(lambda) + sum(log(1-prob)) + log(prods)
-    log_fac <- nimNmixPois_logFac(numN, ff)
-    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
-  }
+  logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum(log(1-prob)),
+                             sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-})
+}
+)
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats qpois
 #' @export
 dNmixture_s <- nimbleFunction(
     run = function(x = double(1),
@@ -275,41 +269,26 @@ dNmixture_s <- nimbleFunction(
   if (length(x) != len) stop("in dNmixture_s, len must equal length(x).")
 
   # Lambda cannot be negative
-  if (lambda < 0) {
-    if (log) return(-Inf)
-    else return(0)
-  }
-
+  if (lambda < 0)
+    if (log) return(-Inf) else return(0)
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1) {
+  if (Nmin == -1)
     Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  }
-  if (Nmax == -1) {
+  if (Nmax == -1)
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  }
   Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-  logProb <- -Inf
-
-  if (Nmax > Nmin) {
-    numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-    prods <- rep(0, numN)
-    for (i in (Nmin + 1):Nmax) {
-      prods[i - Nmin] <- prod(i/(i - x)) / i
-    }
-
-    ff <- log(lambda) + log(1-prob)*len + log(prods)
-    log_fac <- nimNmixPois_logFac(numN, ff)
-    logProb <- dpois(Nmin, lambda, log = TRUE) + sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) + log_fac
-  }
+  logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, log(1-prob)*len,
+                             sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
-})
+ }
+)
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rpois rbinom
 #' @export
 rNmixture_v <- nimbleFunction(
   run = function(n = double(),
@@ -322,16 +301,15 @@ rNmixture_v <- nimbleFunction(
     if (length(prob) != len) stop("In rNmixture_v, len must equal length(prob).")
     trueN <- rpois(1, lambda)
     ans <- numeric(len)
-    for (i in 1:len) {
+    for (i in 1:len)
       ans[i] <- rbinom(n = 1, size = trueN, prob = prob[i])
-    }
-
     return(ans)
     returnType(double(1))
 })
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rpois rbinom
 #' @export
 rNmixture_s <- nimbleFunction(
   run = function(n = double(),
@@ -343,18 +321,15 @@ rNmixture_s <- nimbleFunction(
     if (n != 1) stop("rNmixture_v only works for n = 1")
     trueN <- rpois(1, lambda)
     ans <- numeric(len)
-    for (i in 1:len) {
+    for (i in 1:len)
       ans[i] <- rbinom(n = 1, size = trueN, prob = prob)
-    }
-
     return(ans)
     returnType(double(1))
 })
 
-##### N-mixture extensions #####
-##### dNmixture_BNB_v #####
-NULL
+
 #' @rdname dNmixture
+#' @importFrom stats qnbinom
 #' @export
 dNmixture_BNB_v <- nimbleFunction(
   run = function(x = double(1),
@@ -368,20 +343,10 @@ dNmixture_BNB_v <- nimbleFunction(
     if (length(x) != len) stop("in dNmixture_BNB_v, len must equal length(x).")
     if (len != length(prob)) stop("in dNmixture_BNB_v, len must equal length(prob).")
 
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    r <- 1 / theta
-    pNB <- 1 / (1 + theta * lambda)
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (theta <= 0)
+      if (log) return(-Inf) else return(0)
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
     ## For each x, the conditional distribution of (N - x | x) is
     ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
     ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
@@ -392,38 +357,23 @@ dNmixture_BNB_v <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
+    if (Nmin == -1)
       Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    }
-    if (Nmax == -1) {
+    if (Nmax == -1)
       Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    }
-
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-      for (i in (Nmin + 1):Nmax) {
-        prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
-      }
-
-      ff <- log(1 - pNB) + sum(log(1-prob)) + log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
-        log_fac
-    }
+    logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax,sum(log(1-prob)),
+                                   sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BNB_s #####
 NULL
 #' @rdname dNmixture
+#' @importFrom stats qnbinom
 #' @export
 dNmixture_BNB_s <- nimbleFunction(
   run = function(x = double(1),
@@ -435,58 +385,28 @@ dNmixture_BNB_s <- nimbleFunction(
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BNB_s, len must equal length(x).")
-
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    r <- 1 / theta
-    pNB <- 1 / (1 + theta * lambda)
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For each x, the conditional distribution of (N - x | x) is
-    ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
-    ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
-    ## omega = (1 - p) * (theta * lambda / (1 + theta * lambda))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
+    if (theta <= 0)
+      if (log) return(-Inf) else return(0)
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
+    ## See above for comments
     theta_cond <- theta / (1 + x * theta)
     omega <- (1 - prob) * (theta * lambda / (1 + theta * lambda))
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
+    if (Nmin == -1)
       Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    }
-    if (Nmax == -1) {
+    if (Nmax == -1)
       Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-      for (i in (Nmin + 1):Nmax) {
-        prods[i - Nmin] <- (i + r - 1) * prod(i/(i - x)) / i
-      }
-
-      ff <- log(1 - pNB) + len * log(1-prob) + log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)) +
-        log_fac
-    }
+    logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax,len*log(1-prob),
+                                   sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BNB_oneObs #####
 NULL
@@ -499,62 +419,13 @@ dNmixture_BNB_oneObs <- nimbleFunction(
                  prob = double(),
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
-                 len = double(),
                  log = integer(0, default = 0)) {
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    r <- 1 / theta
-    pNB <- 1 / (1 + theta * lambda)
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For each x, the conditional distribution of (N - x | x) is
-    ## a negative binomial with overdispersion parameter (theta / (1 + y * theta))
-    ## and mean omega / ((theta / (1 + y * theta)) * (1 - omega)) where
-    ## omega = (1 - p) * (theta * lambda / (1 + theta * lambda))
-    ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-    theta_cond <- theta / (1 + x * theta)
-    omega <- (1 - prob) * (theta * lambda / (1 + theta * lambda))
-    lambda_cond <- omega / (theta_cond * (1 - omega))
-    r_cond <- 1 / theta_cond
-    pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1) {
-      Nmin <- x + qnbinom(0.00001, size = r_cond, prob = pNB_cond)
-    }
-    if (Nmax == -1) {
-      Nmax <- x + qnbinom(0.99999, size = r_cond, prob = pNB_cond)
-    }
-    Nmin <- max(c(x, Nmin)) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-      for (i in (Nmin + 1):Nmax) {
-        prods[i - Nmin] <- (i + r - 1) / (i - x)
-      }
-
-      ff <- log(1 - pNB) + log(1-prob) + log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dbinom(x, size = Nmin, prob = prob, log = TRUE) +
-        log_fac
-    }
-    if (log) return(logProb)
-    else return(exp(logProb))
+    xvec <- numeric(value = x, length=1)
+    return(dNmixture_BNB_s(xvec,lambda,theta,prob,Nmin,Nmax,1,log))
     returnType(double())
-  })
+  }
+)
 
-##### dNmixture_BBP_v #####
-NULL
 #' @rdname dNmixture
 #' @export
 dNmixture_BBP_v <- nimbleFunction(
@@ -568,50 +439,25 @@ dNmixture_BBP_v <- nimbleFunction(
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBP_v, len must equal length(x).")
     if (len != length(prob)) stop("in dNmixture_BBP_v, len must equal length(prob).")
-
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (s <= 0)
+      if (log) return(-Inf) else return(0)
     alpha <- prob * s
     beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
     ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
     ## x) doesn't have a nice closed-form expression.
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) * (lambda / i)
-      }
-
-
-      ff <- log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
-        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
-        log_fac
-    }
+    logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
+                                   dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BBP_s #####
 NULL
@@ -627,50 +473,25 @@ dNmixture_BBP_s <- nimbleFunction(
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBP_s, len must equal length(x).")
-
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (s <= 0)
+      if (log) return(-Inf) else return(0)
     alpha <- prob * s
     beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
     ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
     ## x) doesn't have a nice closed-form expression.
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) * (lambda / i)
-      }
-
-
-      ff <- log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
-        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
-        log_fac
-    }
+    logProb <- dNmixture_BBP_steps(x, beta-x, lambda, s, Nmin, Nmax,
+                                   dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BBP_oneObs #####
 NULL
@@ -683,55 +504,13 @@ dNmixture_BBP_oneObs <- nimbleFunction(
                  s = double(),
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
-                 len = double(),
                  log = integer(0, default = 0)) {
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    alpha <- prob * s
-    beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
-    ## x) doesn't have a nice closed-form expression.
-    if (Nmin == -1 | Nmax == -1) {
-      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
-    }
-    Nmin <- x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) * (lambda / i)
-      }
-
-
-      ff <- log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dpois(Nmin, lambda, log = TRUE) +
-        dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
-        log_fac
-    }
-    if (log) return(logProb)
-    else return(exp(logProb))
+    xvec <- numeric(value = x, length = 1)
+    return(dNmixture_BBP_s(xvec,lambda,prob,s,Nmin,Nmax,1,log))
     returnType(double())
-  })
+  }
+)
 
-
-##### dNmixture_BBNB_v #####
-NULL
 #' @rdname dNmixture
 #' @export
 dNmixture_BBNB_v <- nimbleFunction(
@@ -746,58 +525,26 @@ dNmixture_BBNB_v <- nimbleFunction(
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBNB_v, len must equal length(x).")
     if (len != length(prob)) stop("in dNmixture_BBNB_v, len must equal length(prob).")
-
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    r <- 1 / theta
-    pNB <- 1 / (1 + theta * lambda)
-
+    if (s <= 0)
+      if (log) return(-Inf) else return(0)
+    if (theta <= 0)
+      if (log) return(-Inf) else return(0)
     alpha <- prob * s
     beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
-    ## x) doesn't have a nice closed-form expression.
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
+    ## see comments above
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) *
-          ((1 - pNB) * (i + r - 1) / i)
-      }
-
-
-      ff <- log(prods)
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dBetaBinom(x, Nmin, alpha, beta, log = TRUE) +
-        log_fac
-    }
+    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
+                                    dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BBNB_s #####
 NULL
@@ -814,58 +561,28 @@ dNmixture_BBNB_s <- nimbleFunction(
                  len = double(),
                  log = integer(0, default = 0)) {
     if (length(x) != len) stop("in dNmixture_BBNB_s, len must equal length(x).")
-
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
+    if (s <= 0)
+      if (log) return(-Inf) else return(0)
+    if (theta <= 0)
+      if (log) return(-Inf) else return(0)
     r <- 1 / theta
     pNB <- 1 / (1 + theta * lambda)
-
     alpha <- prob * s
     beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
-    ## x) doesn't have a nice closed-form expression.
+    if (lambda < 0)
+      if (log) return(-Inf) else return(0)
+    ## See comments above
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) *
-          ((1 - pNB) * (i + r - 1) / i)
-      }
-
-      ff <- log(prods)
-
-      log_fac <- nimNmixPois_logFac(numN, ff)
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dBetaBinom(x, Nmin, rep(alpha, len), rep(beta, len), log = TRUE) +
-        log_fac
-    }
+    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
+                                    dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  })
+  }
+)
 
 ##### dNmixture_BBNB_oneObs #####
 NULL
@@ -879,66 +596,18 @@ dNmixture_BBNB_oneObs <- nimbleFunction(
                  s = double(),
                  Nmin = double(0, default = -1),
                  Nmax = double(0, default = -1),
-                 len = double(),
                  log = integer(0, default = 0)) {
-
-    if (s <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-    if (theta <= 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    r <- 1 / theta
-    pNB <- 1 / (1 + theta * lambda)
-
-    alpha <- prob * s
-    beta <- s - prob * s
-
-    # Lambda cannot be negative
-    if (lambda < 0) {
-      if (log) return(-Inf)
-      else return(0)
-    }
-
-    ## For beta-binomial N-mixtures , the conditional distribution of (N - x |
-    ## x) doesn't have a nice closed-form expression.
-    if (Nmin == -1 | Nmax == -1) {
-      stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
-    }
-    if (Nmin < x) Nmin <- x
-
-    logProb <- -Inf
-
-    if (Nmax > Nmin) {
-      numN <- Nmax - Nmin + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
-      prods <- rep(0, numN)
-
-      for (i in (Nmin + 1):Nmax) {
-        # prods[i - Nmin] <- prod(i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1))) / i
-        prods[i - Nmin] <- i * (i - 1 + beta - x) / ((i - x) * (alpha + beta + i - 1)) *
-          ((1 - pNB) * (i + r - 1) / i)
-      }
-      ff <- log(prods)
-
-      log_fac <- nimNmixPois_logFac(numN, ff)
-
-      logProb <- dnbinom(Nmin, size = r, prob = pNB, log = TRUE) +
-        dBetaBinom_One(x, Nmin, alpha, beta, log = TRUE) +
-        log_fac
-    }
-    if (log) return(logProb)
-    else return(exp(logProb))
+    xvec <- numeric(x, length = 1)
+    return(dNmixture_BBNB_s(xvec, lambda, theta, prob, s, Nmin, Nmax, 1, log))
     returnType(double())
-  })
+  }
+)
 
 ##### rNmixture extensions #####
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
-
 rNmixture_BNB_v <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -963,10 +632,11 @@ rNmixture_BNB_v <- nimbleFunction(
     return(ans)
     returnType(double(1))
   })
+
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
-
 rNmixture_BNB_s <- nimbleFunction(
   run = function(n = double(),
                  lambda = double(),
@@ -994,6 +664,7 @@ rNmixture_BNB_s <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
 rNmixture_BNB_oneObs <- nimbleFunction(
   run = function(n = double(),
@@ -1001,8 +672,7 @@ rNmixture_BNB_oneObs <- nimbleFunction(
                  theta = double(),
                  prob = double(),
                  Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmax = double(0, default = -1)) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
     r <- 1 / theta
@@ -1018,6 +688,7 @@ rNmixture_BNB_oneObs <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rpois
 #' @export
 rNmixture_BBP_v <- nimbleFunction(
   run = function(n = double(),
@@ -1034,7 +705,7 @@ rNmixture_BBP_v <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_v(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -1042,6 +713,7 @@ rNmixture_BBP_v <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rpois
 #' @export
 rNmixture_BBP_s <- nimbleFunction(
   run = function(n = double(),
@@ -1057,8 +729,8 @@ rNmixture_BBP_s <- nimbleFunction(
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom(n = 1, N = trueN,
-                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
+    ans <- rBetaBinom_s(n = 1, N = trueN,
+                      shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -1066,6 +738,7 @@ rNmixture_BBP_s <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rpois
 #' @export
 rNmixture_BBP_oneObs <- nimbleFunction(
   run = function(n = double(),
@@ -1073,22 +746,22 @@ rNmixture_BBP_oneObs <- nimbleFunction(
                  prob = double(),
                  s = double(),
                  Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmax = double(0, default = -1)) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
     alpha <- prob * s
     beta <- s - prob * s
 
     trueN <- rpois(1, lambda = lambda)
-    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_s(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = 1)
 
-    return(ans)
+    return(ans[1])
     returnType(double())
   })
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
 rNmixture_BBNB_v <- nimbleFunction(
   run = function(n = double(),
@@ -1107,7 +780,7 @@ rNmixture_BBNB_v <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
+    ans <- rBetaBinom_v(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -1115,6 +788,7 @@ rNmixture_BBNB_v <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
 rNmixture_BBNB_s <- nimbleFunction(
   run = function(n = double(),
@@ -1133,8 +807,8 @@ rNmixture_BBNB_s <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom(n = 1, N = trueN,
-                      shape1 = rep(alpha, len), shape2 = rep(beta, len))
+    ans <- rBetaBinom_s(n = 1, N = trueN,
+                      shape1 = alpha, shape2 = beta, len = len)
 
     return(ans)
     returnType(double(1))
@@ -1142,6 +816,7 @@ rNmixture_BBNB_s <- nimbleFunction(
 
 NULL
 #' @rdname dNmixture
+#' @importFrom stats rnbinom
 #' @export
 rNmixture_BBNB_oneObs <- nimbleFunction(
   run = function(n = double(),
@@ -1150,8 +825,7 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
                  prob = double(),
                  s = double(),
                  Nmin = double(0, default = -1),
-                 Nmax = double(0, default = -1),
-                 len = double()) {
+                 Nmax = double(0, default = -1)) {
     if (n != 1) stop("rNmixture* only works for n = 1")
 
     alpha <- prob * s
@@ -1160,9 +834,7 @@ rNmixture_BBNB_oneObs <- nimbleFunction(
     p <- 1 / (1 + theta * lambda)
 
     trueN <- rnbinom(1, size = r, prob = p)
-    ans <- rBetaBinom_One(n = 1, N = trueN, shape1 = alpha, shape2 = beta)
-    return(ans)
+    ans <- rBetaBinom_s(n = 1, N = trueN, shape1 = alpha, shape2 = beta, len = 1)
+    return(ans[1])
     returnType(double())
   })
-
-# nimbleOptions(checkNimbleFunction = TRUE)
