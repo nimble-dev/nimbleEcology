@@ -13,9 +13,9 @@ nimbleOccu <- function(stateformula, detformula,
   
   sampler <- match.arg(sampler)
   if(sampler == "hmc"){
-    stop("Doesn't work until nimbleEcology AD branch is merged", call.=FALSE)
     if(!marginalized){
-      stop("hmc sampler requires marginalized model", call.=FALSE)
+      message("setting marginalized = TRUE")
+      marginalized <- TRUE
     }
     nimbleOptions(buildModelDerivs=TRUE) # this is a bit hacky
   }
