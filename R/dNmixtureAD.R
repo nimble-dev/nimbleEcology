@@ -77,14 +77,38 @@ dNmixtureAD_v <- nimbleFunction(
       if (log) return(-Inf) else return(0)
     if ((Nmin == -1) | (Nmax == -1))
       stop("Must provide Nmin and Nmax in AD version of dNmixture distributions")
-    Nmin <- ADbreak(max( max(x), Nmin ))
-    logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum(log(1-prob)),
-                               sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)),
-                               usingAD=TRUE)
+
+    max_x <- 0
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        if(x[i] > max_x) max_x <- x[i]
+      }
+    }
+    Nmin <- ADbreak(max( max_x, Nmin ))
+
+    sum_log_dbinom <- 0
+    sum_log_one_m_prob <- 0
+    any_not_na <- FALSE
+    # You can't combine this with the loop above because we need to know the final Nmin
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob[i])
+        sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob[i], log=TRUE)
+        any_not_na <- TRUE
+      }
+    }
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum_log_one_m_prob,
+                                 sum_log_dbinom, usingAD=TRUE)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = list(run = list())
+  }, buildDerivs = list(run = list(ignore=c("i","xi")))
 )
 
 #' @rdname dNmixtureAD
@@ -102,14 +126,37 @@ dNmixtureAD_s <- nimbleFunction(
       if (log) return(-Inf) else return(0)
     if ((Nmin == -1) | (Nmax == -1))
       stop("Must provide Nmin and Nmax in AD version of dNmixture distributions")
-    Nmin <- ADbreak(max( max(x), Nmin ))
-    logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, len*log(1-prob),
-                               sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)),
-                               usingAD=TRUE)
+    
+    max_x <- 0
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        if(x[i] > max_x) max_x <- x[i]
+      }
+    }
+    Nmin <- ADbreak(max( max_x, Nmin ))
+
+    sum_log_dbinom <- 0
+    sum_log_one_m_prob <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob)
+        sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob, log=TRUE)
+        any_not_na <- TRUE
+      }
+    }
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum_log_one_m_prob,
+                                 sum_log_dbinom, usingAD=TRUE)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs = list(run = list())
+  }, buildDerivs = list(run = list(ignore=c("i","xi")))
 )
 
 NULL

@@ -87,6 +87,31 @@ test_that("dNmixtureAD_v works uncompiled",
   CMlProbX <- cm$getLogProb("x")
   expect_equal(CMlProbX, lProbX)
 
+  # Missing values
+  xna <- c(1, 0, NA, 3, 0)
+  probXna <- dNmixtureAD_v(xna, lambda, prob, Nmin, Nmax, len)
+  # Manually calculate the correct answer
+  correctProbXna <- 0
+  for (N in Nmin:Nmax) {
+    correctProbXna <- correctProbXna + dpois(N, lambda) * prod(dbinom(xna, N, prob), na.rm=TRUE)
+  }
+  expect_equal(probXna, correctProbXna)
+
+  CprobXna <- CdNmixtureAD_v(xna, lambda, prob, Nmin, Nmax, len)
+  expect_equal(CprobXna, probXna)
+
+  xna <- c(1,NA,NA,NA,NA)
+  correctProbXna <- 0
+  for (N in Nmin:Nmax) {
+    correctProbXna <- correctProbXna + dpois(N, lambda) * prod(dbinom(xna, N, prob), na.rm=TRUE)
+  }
+  probXna <- CdNmixtureAD_v(xna, lambda, prob, Nmin, Nmax, len)
+  expect_equal(probXna, correctProbXna)
+
+  xna <- as.numeric(rep(NA, 5))
+  expect_equal(CdNmixtureAD_v(xna, lambda, prob, Nmin, Nmax, len), 1)
+  expect_equal(CdNmixtureAD_v(xna, lambda, prob, Nmin, Nmax, len, log=TRUE), 0)
+
   # Test imputing value for all NAs
   xNA <- c(NA, NA, NA, NA, NA)
   mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -230,6 +255,31 @@ test_that("dNmixtureAD_s works",
           cm$calculate()
           CMlProbX <- cm$getLogProb("x")
           expect_equal(CMlProbX, lProbX)
+
+      # Missing values
+        xna <- c(1, 0, NA, 3, 2)
+        probXna <- dNmixtureAD_s(xna, lambda, prob, Nmin, Nmax, len)
+        # Manually calculate the correct answer
+        correctProbXna <- 0
+        for (N in Nmin:Nmax) {
+          correctProbXna <- correctProbXna + dpois(N, lambda) * prod(dbinom(xna, N, prob), na.rm=TRUE)
+        }
+        expect_equal(probXna, correctProbXna)
+
+        CprobXna <- CdNmixtureAD_s(xna, lambda, prob, Nmin, Nmax, len)
+        expect_equal(CprobXna, probXna)
+
+        xna <- c(1,NA,NA,NA,NA)
+        correctProbXna <- 0
+        for (N in Nmin:Nmax) {
+          correctProbXna <- correctProbXna + dpois(N, lambda) * prod(dbinom(xna, N, prob), na.rm=TRUE)
+        }
+        probXna <- CdNmixtureAD_s(xna, lambda, prob, Nmin, Nmax, len)
+        expect_equal(probXna, correctProbXna)
+
+        xna <- as.numeric(rep(NA, 5))
+        expect_equal(CdNmixtureAD_s(xna, lambda, prob, Nmin, Nmax, len), 1)
+        expect_equal(CdNmixtureAD_s(xna, lambda, prob, Nmin, Nmax, len, log=TRUE), 0)
 
       # Test imputing value for all NAs
           xNA <- c(NA, NA, NA, NA, NA)

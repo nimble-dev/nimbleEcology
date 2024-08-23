@@ -245,9 +245,31 @@ dNmixture_v <- nimbleFunction(
     Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
   if (Nmax == -1)
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-  logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum(log(1-prob)),
-                             sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
+
+  max_x <- 0
+  for (i in 1:length(x)){
+    if(!is.na(x[i])){
+      if(x[i] > max_x) max_x <- x[i]
+    }
+  }
+  Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+  sum_log_dbinom <- 0
+  sum_log_one_m_prob <- 0
+  any_not_na <- FALSE
+  for (i in 1:length(x)){
+    if(!is.na(x[i])){
+      sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob[i])
+      sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob[i], log=TRUE)
+      any_not_na <- TRUE
+    }
+  }
+
+  logProb <- 0
+  if(any_not_na){
+    logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum_log_one_m_prob,
+                               sum_log_dbinom)
+  }
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())
@@ -277,9 +299,31 @@ dNmixture_s <- nimbleFunction(
     Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
   if (Nmax == -1)
     Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
-  Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-  logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, log(1-prob)*len,
-                             sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
+  
+  max_x <- 0
+  for (i in 1:length(x)){
+    if(!is.na(x[i])){
+      if(x[i] > max_x) max_x <- x[i]
+    }
+  }
+  Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+  sum_log_dbinom <- 0
+  sum_log_one_m_prob <- 0
+  any_not_na <- FALSE
+  for (i in 1:length(x)){
+    if(!is.na(x[i])){
+      sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob)
+      sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob, log=TRUE)
+      any_not_na <- TRUE
+    }
+  }
+
+  logProb <- 0
+  if(any_not_na){
+    logProb <- dNmixture_steps(x, lambda, Nmin, Nmax, sum_log_one_m_prob,
+                               sum_log_dbinom)
+  }
   if (log) return(logProb)
   else return(exp(logProb))
   returnType(double())

@@ -135,7 +135,14 @@ dNmixture_steps <- nimbleFunction(
       numN <- NmaxC - NminC + 1 - 1  ## remember: +1 for the count, but -1 because the summation should run from N = maxN to N = minN + 1
       prods <- rep(0, numN)
       for (i in (NminC + 1):NmaxC) {
-        prods[i - NminC] <- prod(i/(i - x)) / i
+        prodi <- 1
+        for (j in 1:length(x)){
+          xj <- ADbreak(x[j])
+          if(!is.na(xj)){
+            prodi <- prodi * (i / (i - x[j]))
+          }
+        }
+        prods[i - NminC] <- prodi / i
       }
       ff <- log(lambda) + sum_log_one_m_prob + log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff, max_index)
@@ -144,7 +151,7 @@ dNmixture_steps <- nimbleFunction(
     return(logProb)
     returnType(double())
   },
-  buildDerivs = list(run = list(ignore = c("i")))
+  buildDerivs = list(run = list(ignore = c("i","j","xj")))
 )
 
 ##### N-mixture extensions #####
