@@ -401,13 +401,52 @@ dNmixture_BNB_v <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1)
-      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    if (Nmax == -1)
-      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax,sum(log(1-prob)),
-                                   sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
+
+    if (Nmax == -1){
+      Nmax <- 0
+      for (i in 1:length(x)){
+        if(!is.na(x[i])){
+          Nmax_cand <- x[i] + qnbinom(0.99999, size = r_cond[i], prob = pNB_cond[i])
+          if(Nmax_cand > Nmax) Nmax <- Nmax_cand
+        }
+      }
+    }
+
+    if(Nmin == -1){
+      Nmin <- Nmax
+      for (i in 1:length(x)){
+        if(!is.na(x[i])){
+          Nmin_cand <- x[i] + qnbinom(0.00001, size = r_cond[i], prob = pNB_cond[i])
+          if(Nmin_cand < Nmin) Nmin <- Nmin_cand
+        }
+      }
+    }
+
+    max_x <- 0
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
+      }
+    }
+
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+    sum_log_dbinom <- 0
+    sum_log_one_m_prob <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob[i])
+        sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob[i], log=TRUE)
+        any_not_na <- TRUE
+      }
+    }
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax, sum_log_one_m_prob,
+                                     sum_log_dbinom)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -439,13 +478,52 @@ dNmixture_BNB_s <- nimbleFunction(
     lambda_cond <- omega / (theta_cond * (1 - omega))
     r_cond <- 1 / theta_cond
     pNB_cond <- 1 / (1 + theta_cond * lambda_cond)
-    if (Nmin == -1)
-      Nmin <- min(x + qnbinom(0.00001, size = r_cond, prob = pNB_cond))
-    if (Nmax == -1)
-      Nmax <- max(x + qnbinom(0.99999, size = r_cond, prob = pNB_cond))
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax,len*log(1-prob),
-                                   sum(dbinom(x, size = Nmin, prob = prob, log = TRUE)))
+
+    if (Nmax == -1){
+      Nmax <- 0
+      for (i in 1:length(x)){
+        if(!is.na(x[i])){
+          Nmax_cand <- x[i] + qnbinom(0.99999, size = r_cond[i], prob = pNB_cond[i])
+          if(Nmax_cand > Nmax) Nmax <- Nmax_cand
+        }
+      }
+    }
+
+    if(Nmin == -1){
+      Nmin <- Nmax
+      for (i in 1:length(x)){
+        if(!is.na(x[i])){
+          Nmin_cand <- x[i] + qnbinom(0.00001, size = r_cond[i], prob = pNB_cond[i])
+          if(Nmin_cand < Nmin) Nmin <- Nmin_cand
+        }
+      }
+    }
+
+    max_x <- 0
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
+      }
+    }
+
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+    sum_log_dbinom <- 0
+    sum_log_one_m_prob <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        sum_log_one_m_prob <- sum_log_one_m_prob + log(1 - prob)
+        sum_log_dbinom <- sum_log_dbinom + dbinom(x[i], size = Nmin, prob = prob, log=TRUE)
+        any_not_na <- TRUE
+      }
+    }
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BNB_steps(x,lambda,theta,Nmin,Nmax, sum_log_one_m_prob,
+                                     sum_log_dbinom)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())

@@ -227,6 +227,34 @@ test_that ("dNmixture works with AD", {
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # NA handling
+  x <- c(7, 7, NA, 9, 10)
+  nc <- nimbleCode({
+    x[1:5] ~ dNmixtureAD_BNB_s(lambda, prob, theta = theta,
+                             Nmin = 0, Nmax = 100, len = 5)
+    prob ~ dunif(0, 1)
+    lambda ~ dunif(0, 100)
+  })
+
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 ##############################
 #### dNmixture_BBP_s case ####
 
@@ -384,6 +412,27 @@ test_that ("dNmixture works with AD", {
     lambda ~ dunif(0, 100)
   })
 
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+  # NA handling
+  x <- c(7, 7, NA, 9, 10)
   Rmodel <- nimbleModel(nc, data = list(x = x),
                         inits = list(prob = prob,
                                      lambda = lambda,

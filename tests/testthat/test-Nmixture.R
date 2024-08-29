@@ -458,6 +458,57 @@ test_that("dNmixture_BNB_v works",
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
 
+            # Missing values
+            xna <- c(1, 0, NA, 3, 0)
+            probXna <- dNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+
+            # Manually calculate the correct answer
+            correctProbXna <- 0
+            for (N in Nmin:Nmax) {
+              correctProbXna <- correctProbXna + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(xna, N, prob), na.rm=TRUE)
+            }
+            expect_equal(probXna, correctProbXna)
+
+            # Check compiled version
+            CprobXna <- CdNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, correctProbXna)
+
+            m_na <- nimbleModel(code = nc,
+                             data = list(x = xna),
+                             inits = list(lambda = lambda,
+                                          prob = prob,
+                                          theta = theta),
+                             constants = list(Nmin = Nmin, Nmax = Nmax,
+                                              len = len))
+            m_na$calculate()
+            MlProbXna <- m_na$getLogProb("x")
+            expect_equal(MlProbXna, log(correctProbXna))
+
+            # Compiled model
+            cm_na <- compileNimble(m_na)
+            cm_na$calculate()
+            CMlProbXna <- cm_na$getLogProb("x")
+            expect_equal(CMlProbXna, log(correctProbXna))
+
+            xna <- c(1, NA, NA, NA, NA)
+            probXna <- dNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+            # Manually calculate the correct answer
+            correctProbXna <- 0
+            for (N in Nmin:Nmax) {
+              correctProbXna <- correctProbXna + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(xna, N, prob), na.rm=TRUE)
+            }
+            expect_equal(probXna, correctProbXna)
+            CprobXna <- CdNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, correctProbXna)
+
+            xna <- as.numeric(rep(NA, 5))
+            probXna <- dNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(probXna, 1)
+            CprobXna <- CdNmixture_BNB_v(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, 1)
+
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -592,6 +643,57 @@ test_that("dNmixture_BNB_s works",
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
 
+            # Test NA handling
+            xna <- c(1, 0, NA, 3, 0)
+            probXna <- dNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+
+            # Manually calculate the correct answer
+            correctProbXna <- 0
+            for (N in Nmin:Nmax) {
+              correctProbXna <- correctProbXna + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(xna, N, prob), na.rm=TRUE)
+            }
+            expect_equal(probXna, correctProbXna)
+
+            # Check compiled version
+            CprobXna <- CdNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, correctProbXna)
+
+            m_na <- nimbleModel(code = nc,
+                             data = list(x = xna),
+                             inits = list(lambda = lambda,
+                                          prob = prob,
+                                          theta = theta),
+                             constants = list(Nmin = Nmin, Nmax = Nmax,
+                                              len = len))
+            m_na$calculate()
+            MlProbXna <- m_na$getLogProb("x")
+            expect_equal(MlProbXna, log(correctProbXna))
+
+            # Compiled model
+            cm_na <- compileNimble(m_na)
+            cm_na$calculate()
+            CMlProbXna <- cm_na$getLogProb("x")
+            expect_equal(CMlProbXna, log(correctProbXna))
+
+            xna <- c(1, NA, NA, NA, NA)
+            probXna <- dNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+            # Manually calculate the correct answer
+            correctProbXna <- 0
+            for (N in Nmin:Nmax) {
+              correctProbXna <- correctProbXna + dnbinom(N, size = r, prob = pNB) *
+                prod(dbinom(xna, N, prob), na.rm=TRUE)
+            }
+            expect_equal(probXna, correctProbXna)
+            CprobXna <- CdNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, correctProbXna)
+
+            xna <- as.numeric(rep(NA, 5))
+            probXna <- dNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(probXna, 1)
+            CprobXna <- CdNmixture_BNB_s(xna, lambda, theta, prob, Nmin, Nmax, len)
+            expect_equal(CprobXna, 1)
+
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -724,6 +826,17 @@ test_that("dNmixture_BNB_oneObs works",
             cm$calculate()
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
+
+            # Test NA handling
+            xna <- as.numeric(c(NA))
+            probXna <- dNmixture_BNB_oneObs(xna, lambda, theta, prob, Nmin, Nmax)
+
+            # Manually calculate the correct answer
+            expect_equal(probXna, 1)
+
+            # Check compiled version
+            CprobXna <- CdNmixture_BNB_oneObs(xna, lambda, theta, prob, Nmin, Nmax)
+            expect_equal(CprobXna, 1)
 
             # Test imputing value for all NAs
             xNA <- NA
