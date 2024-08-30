@@ -191,8 +191,6 @@ dNmixture_BNB_steps <- nimbleFunction(
       numN <- NmaxC - NminC + 1 - 1 # remember...
       prods <- rep(0, numN)
       for (i in (NminC + 1):NmaxC){
-        prods[i - NminC] <- (i + r - 1) * prod(i/(i - x)) / i
-
         prodi <- i + r - 1
         for (j in 1:length(x)){
           xj <- ADbreak(x[j])
