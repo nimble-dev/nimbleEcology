@@ -603,19 +603,14 @@ dNmixture_BBP_v <- nimbleFunction(
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
     max_x <- 0
-    for (i in 1:length(x)){
-      if(!is.na(x[i])){
-        if(x[i] > max_x) max_x <- x[i]
-      }
-    }
-    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
-
     any_not_na <- FALSE
     for (i in 1:length(x)){
       if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
         any_not_na <- TRUE
       }
     }
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
 
     logProb <- 0
     if(any_not_na){
@@ -655,19 +650,14 @@ dNmixture_BBP_s <- nimbleFunction(
     }
 
     max_x <- 0
-    for (i in 1:length(x)){
-      if(!is.na(x[i])){
-        if(x[i] > max_x) max_x <- x[i]
-      }
-    }
-    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
-
     any_not_na <- FALSE
     for (i in 1:length(x)){
       if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
         any_not_na <- TRUE
       }
     }
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
 
     logProb <- 0
     if(any_not_na){

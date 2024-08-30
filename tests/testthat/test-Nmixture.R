@@ -1029,11 +1029,11 @@ test_that("dNmixture_BBP_v works",
             expect_equal(CMlProbX, lProbX)
 
             x <- as.numeric(rep(NA, 5))
-            probX <- dNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len)
+            probX <- dNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax, len)
             expect_equal(probX, 1)
 
             # Compilation and compiled calculations
-            CprobX <- CdNmixture_BBP_s(x, lambda, prob, s, Nmin, Nmax, len)
+            CprobX <- CdNmixture_BBP_v(x, lambda, prob, s, Nmin, Nmax, len)
             expect_equal(CprobX, 1)
 
             # Test imputing value for all NAs
