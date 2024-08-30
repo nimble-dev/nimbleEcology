@@ -241,10 +241,25 @@ dNmixture_v <- nimbleFunction(
     if (log) return(-Inf) else return(0)
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1)
-    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  if (Nmax == -1)
-    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  if (Nmax == -1){
+    Nmax <- 0
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        Nmax_cand <- x[i] + qpois(0.99999, lambda * (1-prob[i]))
+        if(Nmax_cand > Nmax) Nmax <- Nmax_cand
+      }
+    }
+  }
+
+  if(Nmin == -1){
+    Nmin <- Nmax
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        Nmin_cand <- x[i] + qpois(0.00001, lambda * (1-prob[i]))
+        if(Nmin_cand < Nmin) Nmin <- Nmin_cand
+      }
+    }
+  }
 
   max_x <- 0
   for (i in 1:length(x)){
@@ -295,10 +310,25 @@ dNmixture_s <- nimbleFunction(
     if (log) return(-Inf) else return(0)
   ## For each x, the conditional distribution of (N - x | x) is pois(lambda * (1-p))
   ## We determine the lowest N and highest N at extreme quantiles and sum over those.
-  if (Nmin == -1)
-    Nmin <- min(x + qpois(0.00001, lambda * (1 - prob)))
-  if (Nmax == -1)
-    Nmax <- max(x + qpois(0.99999, lambda * (1 - prob)))
+  if (Nmax == -1){
+    Nmax <- 0
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        Nmax_cand <- x[i] + qpois(0.99999, lambda * (1-prob))
+        if(Nmax_cand > Nmax) Nmax <- Nmax_cand
+      }
+    }
+  }
+
+  if(Nmin == -1){
+    Nmin <- Nmax
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        Nmin_cand <- x[i] + qpois(0.00001, lambda * (1-prob))
+        if(Nmin_cand < Nmin) Nmin <- Nmin_cand
+      }
+    }
+  }
   
   max_x <- 0
   for (i in 1:length(x)){
