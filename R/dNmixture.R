@@ -714,9 +714,22 @@ dNmixture_BBNB_v <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
+
+    max_x <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
+        any_not_na <- TRUE
+      }
+    }
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BBNB_steps(x, beta-x, lambda, theta, s, Nmin, Nmax,
+                                     dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE))
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
@@ -752,9 +765,22 @@ dNmixture_BBNB_s <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- max( max(x), Nmin ) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
+
+    max_x <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      if(!is.na(x[i])){
+        if(x[i] > max_x) max_x <- x[i]
+        any_not_na <- TRUE
+      }
+    }
+    Nmin <- max( max_x, Nmin ) ## set Nmin to at least the largest x
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BBNB_steps(x, beta-x, lambda, theta, s, Nmin, Nmax,
+                                     dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE))
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())

@@ -303,9 +303,16 @@ dNmixture_BBNB_steps <- nimbleFunction(
       numN <- NmaxC - NminC + 1 - 1 # remember...
       prods <- rep(0, numN)
         # N.B. alpha+beta == s
-      for (i in (NminC + 1):NmaxC)
-                prods[i - NminC] <- prod(i * (i - 1 + beta_m_x) / ((i - x) * (s + i - 1))) *
-          ((1 - pNB) * (i + r - 1) / i)
+      for (i in (NminC + 1):NmaxC){
+        prodi <- 1
+        for (j in 1:length(x)){
+          xj <- ADbreak(x[j])
+          if(!is.na(xj)){
+            prodi <- prodi * (i * (i - 1 + beta_m_x[j]) / ((i - x[j]) * (s + i - 1)))
+          }
+          prods[i - NminC] <- prodi * ((1 - pNB) * (i + r - 1) / i)
+        }
+      }
       ff <- log(prods)
       log_fac <- nimNmixPois_logFac(numN, ff, max_index)
       logProb <- logProb + log_fac
@@ -313,5 +320,5 @@ dNmixture_BBNB_steps <- nimbleFunction(
     return(logProb)
     returnType(double())
   },
-  buildDerivs = list(run = list(ignore = c("i")))
+  buildDerivs = list(run = list(ignore = c("i","j","xj")))
 )
