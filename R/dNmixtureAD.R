@@ -462,13 +462,27 @@ dNmixtureAD_BBNB_v <- nimbleFunction(
     if (Nmin == -1 | Nmax == -1) {
       stop("Dynamic choice of Nmin/Nmax is not supported for beta binomial N-mixtures.")
     }
-    Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom_v(x, Nmin, alpha, beta, len = len, log = TRUE))
+
+    max_x <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        if(x[i] > max_x) max_x <- x[i]
+        any_not_na <- TRUE
+      }
+    }
+    Nmin <- ADbreak(max( max_x, Nmin )) ## set Nmin to at least the largest x
+
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BBNB_steps(x, beta-x, lambda, theta, s, Nmin, Nmax,
+                                     dBetaBinom_v(x, Nmin, alpha, beta, len, log = TRUE), usingAD=TRUE)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs=list(run=list())
+  }, buildDerivs=list(run=list(ignore=c("i", "xi")))
 )
 
 #' @rdname dNmixtureAD
@@ -500,13 +514,26 @@ dNmixtureAD_BBNB_s <- nimbleFunction(
     }
 #    Clen <- 0L
 #    Clen <- ADbreak(len)
-    Nmin <- ADbreak(max( max(x), Nmin )) ## set Nmin to at least the largest x
-    logProb <- dNmixture_BBNB_steps(x, beta-x,lambda,theta,s,Nmin,Nmax,
-                                    dBetaBinom_s(x, Nmin, alpha, beta, len = len, log = TRUE))
+    max_x <- 0
+    any_not_na <- FALSE
+    for (i in 1:length(x)){
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        if(x[i] > max_x) max_x <- x[i]
+        any_not_na <- TRUE
+      }
+    }
+    Nmin <- ADbreak(max( max_x, Nmin )) ## set Nmin to at least the largest x
+    
+    logProb <- 0
+    if(any_not_na){
+      logProb <- dNmixture_BBNB_steps(x, beta-x, lambda, theta, s, Nmin, Nmax,
+                                     dBetaBinom_s(x, Nmin, alpha, beta, len, log = TRUE), usingAD=TRUE)
+    }
     if (log) return(logProb)
     else return(exp(logProb))
     returnType(double())
-  }, buildDerivs=list(run=list())
+  }, buildDerivs=list(run=list(ignore=c("i", "xi")))
 )
 
 #' @rdname dNmixtureAD

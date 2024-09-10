@@ -1848,6 +1848,84 @@ test_that("dNmixtureAD_BBNB_v works",
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
 
+            # Missing values
+            # Uncompiled calculation
+            x <- c(1, 0, NA, 3, 0)
+            Nmin <- max(x, na.rm=TRUE)
+            probX <- dNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len)
+
+            # Manually calculate the correct answer
+            alpha <- prob * s
+            beta <- s - prob * s
+            r <- 1 / theta
+            pNB <- 1 / (1 + theta * lambda)
+
+            correctProbX <- 0
+            for (N in Nmin:Nmax) {
+              correctProbX <- correctProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dBetaBinom_v(x, N, shape1 = alpha, shape2 = beta), na.rm=TRUE)
+            }
+
+            expect_equal(probX, correctProbX)
+
+            # Uncompiled log probability
+            lProbX <- dNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            lCorrectProbX <- log(correctProbX)
+            expect_equal(lProbX, lCorrectProbX)
+
+            # Other Nmin / Nmax
+            Nmin <- 3
+            for(Nmax in 3:6)  {
+              dynProbX <- dNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin = Nmin, Nmax = Nmax, len)
+              dynCorrectProbX <- 0
+              for (N in Nmin:Nmax) {
+                dynCorrectProbX <- dynCorrectProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dBetaBinom_v(x, N, shape1 = alpha, shape2 = beta))
+              }
+              expect_equal(dynProbX, dynCorrectProbX)
+            }
+            Nmin <- 0
+            Nmax <- 250
+
+            CprobX <- CdNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(CprobX, probX)
+
+            ClProbX <- CdNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            expect_equal(ClProbX, lProbX)
+
+            # Use in Nimble model
+            nc <- nimbleCode({
+              x[1:5] ~ dNmixtureAD_BBNB_v(lambda = lambda, prob = prob[1:5],
+                                       theta = theta, s = s,
+                                       Nmin = Nmin, Nmax = Nmax, len = len)
+
+            })
+
+            m <- nimbleModel(code = nc,
+                             data = list(x = x),
+                             inits = list(lambda = lambda,
+                                          prob = prob,
+                                          s = s, theta = theta),
+                             constants = list(Nmin = Nmin, Nmax = Nmax,
+                                              len = len))
+            m$calculate()
+            MlProbX <- m$getLogProb("x")
+            expect_equal(MlProbX, lProbX)
+
+            # Compiled model
+            cm <- compileNimble(m)
+            cm$calculate()
+            CMlProbX <- cm$getLogProb("x")
+            expect_equal(CMlProbX, lProbX)
+
+            # All missing
+            x <- as.numeric(rep(NA, 5))
+            probX <- dNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(probX, 1)
+
+            CprobX <- CdNmixtureAD_BBNB_v(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(CprobX, probX)
+
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -2017,6 +2095,76 @@ test_that("dNmixtureAD_BBNB_s works",
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
 
+            # Missing values
+            # Uncompiled calculation
+            x <- c(1, 0, NA, 3, 0)
+            Nmin <- max(x, na.rm=TRUE)
+
+            probX <- dNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+
+            # Manually calculate the correct answer
+            alpha <- prob * s
+            beta <- s - prob * s
+            r <- 1 / theta
+            pNB <- 1 / (1 + theta * lambda)
+
+            correctProbX <- 0
+            for (N in Nmin:Nmax) {
+              correctProbX <- correctProbX + dnbinom(N, size = r, prob = pNB) *
+                prod(dBetaBinom_s(x, N, shape1 = alpha, shape2 = beta), na.rm=TRUE)
+            }
+
+            expect_equal(probX, correctProbX)
+
+            # Uncompiled log probability
+            lProbX <- dNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            lCorrectProbX <- log(correctProbX)
+            expect_equal(lProbX, lCorrectProbX)
+            # Other Nmin / Nmax
+            Nmin <- 3
+            for(Nmax in 3:6)  {
+              dynProbX <- dNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin = Nmin, Nmax = Nmax, len)
+              dynCorrectProbX <- 0
+              for (N in Nmin:Nmax) {
+                dynCorrectProbX <- dynCorrectProbX + dnbinom(N, size = r, prob = pNB) *
+                  prod(dBetaBinom_s(x, N, shape1 = alpha, shape2 = beta))
+              }
+              expect_equal(dynProbX, dynCorrectProbX)
+            }
+            Nmin <- 0
+            Nmax <- 250
+
+            CprobX <- CdNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(CprobX, probX)
+
+            ClProbX <- CdNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len, log = TRUE)
+            expect_equal(ClProbX, lProbX)
+
+            m <- nimbleModel(code = nc,
+                             data = list(x = x),
+                             inits = list(lambda = lambda,
+                                          prob = prob,
+                                          s = s, theta = theta),
+                             constants = list(Nmin = Nmin, Nmax = Nmax,
+                                              len = len))
+            m$calculate()
+            MlProbX <- m$getLogProb("x")
+            expect_equal(MlProbX, lProbX)
+
+            # Compiled model
+            cm <- compileNimble(m)
+            cm$calculate()
+            CMlProbX <- cm$getLogProb("x")
+            expect_equal(CMlProbX, lProbX)
+
+            # All missing
+            x <- as.numeric(rep(NA,5))
+            probX <- dNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(probX, 1)
+
+            CprobX <- CdNmixtureAD_BBNB_s(x, lambda, theta, prob, s, Nmin, Nmax, len)
+            expect_equal(CprobX, probX)
+
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -2185,6 +2333,15 @@ test_that("dNmixtureAD_BBNB_oneObs works",
             cm$calculate()
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
+
+            # Missing value
+            x <- as.numeric(NA)
+            probX <- dNmixtureAD_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax)
+            expect_equal(probX, 1)
+
+            CprobX <- CdNmixtureAD_BBNB_oneObs(x, lambda, theta, prob, s, Nmin, Nmax)
+            expect_equal(CprobX, probX)
+
 
             # Test imputing value for all NAs
             xNA <- NA
