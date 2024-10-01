@@ -80,17 +80,20 @@ dBetaBinom_v <- nimbleFunction(
     logprob <- 0
     lgNp1 <- lgamma(N+1)
     for (i in 1:length(x)) {
-      logprob <- logprob +
-        nimBetaFun(a = x[i] + shape1[i], b = N - x[i] + shape2[i], log = TRUE) -
-        nimBetaFun(a = shape1[i], b = shape2[i], log = TRUE) +
-        lgNp1 - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        logprob <- logprob +
+          nimBetaFun(a = x[i] + shape1[i], b = N - x[i] + shape2[i], log = TRUE) -
+          nimBetaFun(a = shape1[i], b = shape2[i], log = TRUE) +
+          lgNp1 - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
+      }
     }
 
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
   },
-  buildDerivs = list(run = list(ignore = 'i'))
+  buildDerivs = list(run = list(ignore = c('i','xi')))
 )
 
 #' @rdname dBetaBinom
@@ -106,16 +109,19 @@ dBetaBinom_s <- nimbleFunction(
     lgNp1 <- lgamma(N+1)
     lbs1s2 <- nimBetaFun(a = shape1, b = shape2, log = TRUE)
     for (i in 1:length(x)) {
-      logprob <- logprob +
-        nimBetaFun(a = x[i] + shape1, b = N - x[i] + shape2, log = TRUE) -
-        lbs1s2 +
-        lgNp1 - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)){
+        logprob <- logprob +
+          nimBetaFun(a = x[i] + shape1, b = N - x[i] + shape2, log = TRUE) -
+          lbs1s2 +
+          lgNp1 - (lgamma(x[i] + 1) + lgamma(N - x[i] + 1))
+      }
     }
     if (log) return(logprob)
     return(exp(logprob))
     returnType(double(0))
   },
-  buildDerivs = list(run=list(ignore = 'i'))
+  buildDerivs = list(run=list(ignore = c('i','xi')))
 )
 
 #' @rdname dBetaBinom

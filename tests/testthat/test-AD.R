@@ -51,6 +51,33 @@ test_that("dOcc works with AD",
                             v1_case1, v2_case1,
                             0:2) # lots of output numbers with no warning messages means it passes.
 
+  # Missing values
+  dat2 <- c(1,NA,0,0) # A vector of observations
+
+  nc <- nimbleCode({
+    x[1:4] ~ dOcc_s(probOcc, probDetect, len = 4)
+    probOcc ~ dunif(0,1)
+    probDetect ~ dunif(0,1)
+  })
+
+  Rmodel_na <- nimbleModel(nc, data = list(x = dat2),
+                        inits = list(probOcc = probOcc,
+                                     probDetect = probDetect),
+                        buildDerivs=TRUE)
+
+  Cmodel_na <- compileNimble(Rmodel_na)
+
+  nodesList_case_na <-
+    setup_update_and_constant_nodes_for_tests(Rmodel_na, c('probOcc', 'probDetect'))
+  v1_case1 <- list(arg1 = c(0.6, 0.4)) # taping values for probOcc and probDetect
+  v2_case1 <- list(arg1 = c(0.65, 0.35)) # testing values for probOcc and probDetect
+  RCrelTol = c(1e-15, 1e-8, 1e-3, 1e-14)
+
+  res_na <- model_calculate_test_case(Rmodel_na, Cmodel_na,
+                            model_calculate_test, nodesList_case_na,
+                            v1_case1, v2_case1,
+                            0:2) # lots of output numbers with no warning messages means it passes.
+
 #####################
 #### dOcc_v case ####
 
@@ -84,6 +111,26 @@ test_that("dOcc works with AD",
 
   res <- model_calculate_test_case(Rmodel, Cmodel,
                             model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2)
+
+  # Missing values
+  x2 <- c(1,0,NA,1,0)
+  Rmodel_na <- nimbleModel(nc, data = list(x = x2),
+                        inits = list(probOcc = probOcc,
+                                     probDetect = probDetect),
+                        buildDerivs=TRUE)
+  Rmodel_na$calculate()
+
+  Cmodel_na <- compileNimble(Rmodel_na)
+
+  nodesList_case_na <- setup_update_and_constant_nodes_for_tests(Rmodel_na,
+                                                               c('probOcc', Rmodel_na$expandNodeNames('probDetect[1:5]')))
+  v1_case1 <- list(arg1 = c(probOcc, probDetect)) # taping values for probOcc and probDetect
+  v2_case1 <- list(arg1 = c(probOcc2, probDetect2)) # testing values for probOcc and probDetect
+
+  res <- model_calculate_test_case(Rmodel_na, Cmodel_na,
+                            model_calculate_test, nodesList_case_na,
                             v1_case1, v2_case1,
                             0:2)
 })
@@ -124,6 +171,24 @@ test_that ("dNmixture works with AD", {
                                    v1_case1, v2_case1,
                                    0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # Missing values
+  xna <- c(7, 7, NA, 9, 10)
+  Rmodel_na <- nimbleModel(nc, data = list(x = xna),
+                        inits = list(prob = prob,
+                                     lambda = lambda),
+                        buildDerivs=TRUE)
+  Rmodel_na$calculate()
+
+  Cmodel_na <- compileNimble(Rmodel_na)
+  Cmodel_na$calculate()
+
+  nodesList_case1_na <- setup_update_and_constant_nodes_for_tests(Rmodel_na, c('prob', 'lambda'))
+
+  res_na <- model_calculate_test_case(Rmodel_na, Cmodel_na,
+                            model_calculate_test, nodesList_case1_na,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 ##########################
 #### dNmixture_BNB_s case ####
 
@@ -136,6 +201,34 @@ test_that ("dNmixture works with AD", {
   prob2 <- 0.5
   theta2 <- 1.2
 
+  nc <- nimbleCode({
+    x[1:5] ~ dNmixtureAD_BNB_s(lambda, prob, theta = theta,
+                             Nmin = 0, Nmax = 100, len = 5)
+    prob ~ dunif(0, 1)
+    lambda ~ dunif(0, 100)
+  })
+
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+  # NA handling
+  x <- c(7, 7, NA, 9, 10)
   nc <- nimbleCode({
     x[1:5] ~ dNmixtureAD_BNB_s(lambda, prob, theta = theta,
                              Nmin = 0, Nmax = 100, len = 5)
@@ -200,6 +293,27 @@ test_that ("dNmixture works with AD", {
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # Missing value handling
+  x <- c(7, 7, NA, 9, 10)
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     s = s),
+                        buildDerivs = TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+  v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 ##############################
 #### dNmixture_BBNB_s case ####
 
@@ -240,6 +354,28 @@ test_that ("dNmixture works with AD", {
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # Missing value
+  x <- c(7, 7, NA, 9, 10)
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta, s = s),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+
 ##########################
 #### dNmixture_v case ####
 
@@ -278,6 +414,24 @@ test_that ("dNmixture works with AD", {
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # Missing values
+  xna <- c(7, 7, NA, 9, 10)
+  Rmodel_na <- nimbleModel(nc, data = list(x = xna),
+                        inits = list(prob = prob,
+                                     lambda = lambda),
+                        buildDerivs=TRUE)
+  Rmodel_na$calculate()
+
+  Cmodel_na <- compileNimble(Rmodel_na)
+  Cmodel_na$calculate()
+
+  nodesList_case1_na <- setup_update_and_constant_nodes_for_tests(Rmodel_na, c('prob', 'lambda'))
+
+  res_na <- model_calculate_test_case(Rmodel_na, Cmodel_na,
+                            model_calculate_test, nodesList_case1_na,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 ##############################
 #### dNmixture_BNB_v case ####
 
@@ -301,6 +455,27 @@ test_that ("dNmixture works with AD", {
     lambda ~ dunif(0, 100)
   })
 
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+  # NA handling
+  x <- c(7, 7, NA, 9, 10)
   Rmodel <- nimbleModel(nc, data = list(x = x),
                         inits = list(prob = prob,
                                      lambda = lambda,
@@ -362,6 +537,27 @@ test_that ("dNmixture works with AD", {
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
 
+  # Missing value handling
+  x <- c(7, 7, NA, 9, 10)
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     s = s),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 's'))
+  v1_case1 <- list(arg1 = c(prob, lambda, s)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, s2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 ##############################
 #### dNmixture_BBNB_v case ####
 
@@ -387,6 +583,26 @@ test_that ("dNmixture works with AD", {
     lambda ~ dunif(0, 100)
   })
 
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob,
+                                     lambda = lambda,
+                                     theta = theta, s = s),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta, s)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+  x <- c(7, 7, NA, 9, 10)
   Rmodel <- nimbleModel(nc, data = list(x = x),
                         inits = list(prob = prob,
                                      lambda = lambda,
@@ -518,6 +734,26 @@ test_that ("dNmixture works with AD", {
                             model_calculate_test, nodesList_case1,
                             v1_case1, v2_case1,
                             0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
+  x <- as.numeric(NA)
+  Rmodel <- nimbleModel(nc, data = list(x = x),
+                        inits = list(prob = prob, theta = theta, s=s,
+                                     lambda = lambda),
+                        buildDerivs=TRUE)
+  Rmodel$calculate()
+
+  Cmodel <- compileNimble(Rmodel)
+  Cmodel$calculate()
+
+  nodesList_case1 <- setup_update_and_constant_nodes_for_tests(Rmodel, c('prob', 'lambda', 'theta', 's'))
+  v1_case1 <- list(arg1 = c(prob, lambda, theta, s2)) # taping values for prob and lambda
+  v2_case1 <- list(arg1 = c(prob2, lambda2, theta2, s2)) # testing values for prob and lambda
+
+  res <- model_calculate_test_case(Rmodel, Cmodel,
+                            model_calculate_test, nodesList_case1,
+                            v1_case1, v2_case1,
+                            0:2, RCrelTol = c(2e-15, 1e-8, 1e-3, 1e-14))
+
 })
 
 

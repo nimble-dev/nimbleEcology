@@ -137,12 +137,19 @@ dOcc_s <- nimbleFunction(
                  log = logical(0, default = 0)) {
     if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
     returnType(double(0))
-    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
-    prob_x_given_unoccupied <- sum(x) == 0
+    logProb_x_given_occupied <- 0
+    prob_x_given_unoccupied <- 1
+    for(i in 1:length(x)) {
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)) { # Handle missing values
+        logProb_x_given_occupied <- logProb_x_given_occupied + dbinom(x[i], prob = probDetect, size = 1, log = TRUE)
+        if(xi==1) prob_x_given_unoccupied <- 0
+      }
+    }
     prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
     if (log) return(log(prob_x))
     return(prob_x)
-  }, buildDerivs = TRUE
+  }, buildDerivs = list(run = list(ignore = c("i", "xi")))
 )
 
 #' @export
@@ -156,12 +163,19 @@ dOcc_v <- nimbleFunction(
     if (len != 0) if (len != length(x)) stop("Argument 'len' must match length of data, or be 0.")
     if (length(x) != length(probDetect)) stop("Length of data does not match length of detection vector.")
     returnType(double(0))
-    logProb_x_given_occupied <- sum(dbinom(x, prob = probDetect, size = 1, log = TRUE))
-    prob_x_given_unoccupied <- sum(x) == 0
+    logProb_x_given_occupied <- 0
+    prob_x_given_unoccupied <- 1
+    for(i in 1:length(x)) {
+      xi <- ADbreak(x[i])
+      if(!is.na(xi)) { # Handle missing values
+        logProb_x_given_occupied <- logProb_x_given_occupied + dbinom(x[i], prob = probDetect[i], size = 1, log = TRUE)
+        if(xi==1) prob_x_given_unoccupied <- 0
+      }
+    }
     prob_x <- exp(logProb_x_given_occupied) * probOcc + prob_x_given_unoccupied * (1 - probOcc)
     if (log) return(log(prob_x))
     return(prob_x)
-  }, buildDerivs = TRUE
+  }, buildDerivs = list(run = list(ignore = c("i", "xi")))
 )
 
 #' @export
