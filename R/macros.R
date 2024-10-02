@@ -213,7 +213,9 @@ embedLinesInCurlyBrackets <- function(lines) {
 #'  with nimbleMacros::setPriors()
 #' @param marginalized Logical. If TRUE, fit the marginalized model using the
 #'  dOcc_v nimbleFunction
-#' @param speciesID Name to use for species ID index vector 
+#' @param speciesID Name to use for species ID index vector
+#' @param speciesCovs Character vector of species-level covariates that should
+#'  not have random slopes by species
 #'
 #' @details This macro should be placed on the right-hand side of an assignment
 #'  (it doesn't matter if you use <- or ~). The left-hand side must be an

@@ -26,6 +26,9 @@ with nimbleMacros::setPriors()}
 dOcc_v nimbleFunction}
 
 \item{speciesID}{Name to use for species ID index vector}
+
+\item{speciesCovs}{Character vector of species-level covariates that should
+not have random slopes by species}
 }
 \description{
 Generates nimble code for a single-season, multi-species occupancy model,
