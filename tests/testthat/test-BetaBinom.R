@@ -67,6 +67,25 @@ test_that("dBetaBinom_v works",
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
 
+            # Missing values
+            xna <- c(4, NA, 8, 0, 3)
+            probXna <- dBetaBinom_v(xna, N, shape1, shape2)
+            len <- 5
+
+            correctProbXna <- prod(
+              choose(N, xna) * beta(xna + shape1, N - xna + shape2) /
+                              beta(shape1, shape2)
+            , na.rm=TRUE)
+            expect_equal(probXna, correctProbXna)
+
+            CprobXna <- CdBetaBinom_v(xna, N, shape1, shape2, len = len)
+            expect_equal(CprobXna, probXna)
+
+            # All NAs
+            xna <- as.numeric(rep(NA, 5))
+            expect_equal(CdBetaBinom_v(xna, N, shape1, shape2, len=len), 1)
+            expect_equal(CdBetaBinom_v(xna, N, shape1, shape2, len=len, log=TRUE), 0)
+
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
             mNA <- nimbleModel(nc, data = list(x = xNA),
@@ -178,6 +197,25 @@ test_that("dBetaBinom_s works",
             cm$calculate()
             CMlProbX <- cm$getLogProb("x")
             expect_equal(CMlProbX, lProbX)
+
+            # Missing values
+            xna <- c(4, NA, 8, 0, 3)
+            probXna <- dBetaBinom_s(xna, N, shape1, shape2)
+            len <- 5
+
+            correctProbXna <- prod(
+              choose(N, xna) * beta(xna + shape1, N - xna + shape2) /
+                              beta(shape1, shape2)
+            , na.rm=TRUE)
+            expect_equal(probXna, correctProbXna)
+
+            CprobXna <- CdBetaBinom_s(xna, N, shape1, shape2, len = len)
+            expect_equal(CprobXna, probXna)
+
+            # All NAs
+            xna <- as.numeric(rep(NA, 5))
+            expect_equal(CdBetaBinom_s(xna, N, shape1, shape2, len=len), 1)
+            expect_equal(CdBetaBinom_s(xna, N, shape1, shape2, len=len, log=TRUE), 0)
 
             # Test imputing value for all NAs
             xNA <- c(NA, NA, NA, NA, NA)
