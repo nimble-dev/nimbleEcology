@@ -185,18 +185,24 @@ nimbleOccu <- function(stateformula, detformula,
     # single species case
     resp <- quote(y[1:M, 1:J])
     macro <- quote(OCCUPANCY)
+    code <- substitute({
+    RESP ~ OCCUPANCY(stateformula = SF, detformula = DF,
+                 statePriors = SP, detPriors = DP,
+                 marginalized = MAR)
+    }, list(RESP = resp, SF=stateformula, DF=detformula, 
+          SP = statePriors, DP = detPriors, MAR = marginalized))
   } else {
     # multispecies
     resp <- quote(y[1:M, 1:J, 1:S])
-    macro <- quote(MULTISPECIESOCCUPANCY)
-  }
-
-  code <- substitute({
-    RESP ~ MACRO(stateformula = SF, detformula = DF,
+    spcovs <- ""
+    if(!is.null(speciesCovs)) spcovs <- names(speciesCovs)
+    code <- substitute({
+    RESP ~ MULTISPECIESOCCUPANCY(stateformula = SF, detformula = DF,
                  statePriors = SP, detPriors = DP,
-                 marginalized = MAR)
-  }, list(RESP = resp, MACRO = macro, SF=stateformula, DF=detformula, 
-          SP = statePriors, DP = detPriors, MAR = marginalized))
+                 marginalized = MAR, speciesCovs=SPCOVS)
+    }, list(RESP = resp, SF=stateformula, DF=detformula, 
+          SP = statePriors, DP = detPriors, MAR = marginalized, SPCOVS=spcovs))
+  }
 
   args <- list(...)
   if(is.null(args$inits)) args$inits <- list()

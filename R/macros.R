@@ -245,7 +245,7 @@ function(stoch, LHS, stateformula, detformula,
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
          detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"),
-         marginalized = FALSE, speciesID=quote(speciesID),
+         marginalized = FALSE, speciesID=quote(speciesID), speciesCovs="",
          modelInfo, .env){
  
     site_dim <- LHS[[3]] # sites, e.g. 1:N
@@ -256,8 +256,8 @@ function(stoch, LHS, stateformula, detformula,
     S <- dim(y)[3]
     modelInfo$constants[[safeDeparse(speciesID)]] <- factor(1:S, levels=1:S)
 
-    sf <- multispeciesFormula(stateformula, sp_dim, speciesID)
-    df <- multispeciesFormula(detformula, sp_dim, speciesID)
+    sf <- multispeciesFormula(stateformula, sp_dim, speciesID, speciesCovs)
+    df <- multispeciesFormula(detformula, sp_dim, speciesID, speciesCovs)
 
     # Code for calculating occupancy and detection parameters
     param_code <- substitute({
@@ -327,11 +327,37 @@ use3pieces=TRUE,
 unpackArgs=TRUE
 )
 
-multispeciesFormula <- function(form, sp_idx, sp_vec){
+multispeciesFormula <- function(form, sp_idx, sp_vec, sp_covs=""){
+  form <- stats::as.formula(form)
   bars <- "||"
   if(form == ~1) bars <- "|"
   sp_vec <- safeDeparse(sp_vec)
-  rand <- paste0("+ (", safeDeparse(form[[2]]), " ", bars, " ", 
+
+  trms <- stats::terms(form)
+  trm_labs <- attributes(trms)$term.labels
+  if(attributes(trms)$intercept){
+    trm_labs <- c("1", trm_labs)
+  } else {
+    trm_labs <- c("0", trm_labs)
+  }
+
+  # Figure out which terms to not do random effects for
+  # We need to remove the brackets from the formula first
+  trms_nobrack <- stats::terms(removeBracketsFromFormula(form))
+  trm_nobrack_labs <- attributes(trms_nobrack)$term.labels
+  if(attributes(trms_nobrack)$intercept){
+    trm_nobrack_labs <- c("1", trm_nobrack_labs)
+  } else {
+    trm_nobrack_labs <- c("0", trm_nobrack_labs)
+  }
+  trms_split <- strsplit(trm_nobrack_labs, ":")
+  has_sp_cov <- sapply(trms_split, function(x) any(x %in% sp_covs))
+
+  # Remove those terms from the original set of terms
+  trms_nosp <- trm_labs[! has_sp_cov]
+  form_nosp <- stats::reformulate(trms_nosp)
+
+  rand <- paste0("+ (", safeDeparse(form_nosp[[2]]), " ", bars, " ", 
                  sp_vec,"[",safeDeparse(sp_idx),"])")
   stats::as.formula(str2lang(paste(safeDeparse(form), rand)))
 }
@@ -341,3 +367,26 @@ safeDeparse <- function(inp) {
   out <- deparse(inp)
   paste(sapply(out, trimws), collapse=" ")
 }
+
+removeBracketsFromFormula <- function(formula){
+  out <- removeSquareBrackets(formula)
+  stats::as.formula(out)
+}
+
+removeSquareBrackets <- function(code){
+  if(is.name(code)) return(code)
+  if(code[[1]] == "["){
+    out <- code[[2]]
+  } else {
+    if(is.call(code)){
+      out <- lapply(code, removeSquareBrackets)
+    } else {
+      out <- code
+    }
+  }
+  if(!is.name(out) & !is.numeric(out)){
+    out <- as.call(out)
+  }
+  out
+}
+
