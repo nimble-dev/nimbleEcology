@@ -225,6 +225,7 @@ nimbleOccu <- function(stateformula, detformula,
     }
     conf <- nimbleHMC::configureHMC(mod, print = FALSE,
               control = list(warmupMode = "iterations", warmup=args$warmup))
+    args$warmup <- NULL
   }
 
   if(savePsi){
@@ -239,7 +240,7 @@ nimbleOccu <- function(stateformula, detformula,
   modC <- compileNimble(mod)
   mcmcC <- compileNimble(mcmc, project = mod)
 
-  runMCMC(mcmcC, ...)
+  do.call(runMCMC, c(list(mcmc = mcmcC), args))
 }
 
 # Add dimension bracket (bracket; e.g. [1:M]) to a specific variable (target)
