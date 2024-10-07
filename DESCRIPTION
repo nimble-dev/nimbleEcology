@@ -36,6 +36,7 @@ RoxygenNote: 7.3.2
 Suggests: 
     rmarkdown,
     knitr,
+    nimbleHMC,
     nimbleMacros,
     testthat (>= 2.1.0)
 Remotes:

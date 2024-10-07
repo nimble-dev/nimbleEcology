@@ -20,6 +20,7 @@ nimbleOccu(
   sampler = c("default", "hmc"),
   savePsi = TRUE,
   saveP = FALSE,
+  buildDerivs = FALSE,
   ...
 )
 }
@@ -58,6 +59,8 @@ dOcc_v nimbleFunction}
 \item{savePsi}{Save site-level occupancy probabilities in the output?}
 
 \item{saveP}{Save site x occasion level detection probabilities in the output?}
+
+\item{buildDerivs}{Build derivative capabilities for the model?}
 
 \item{...}{Arguments passed to \code{runMCMC} such as \code{nchains}.}
 }

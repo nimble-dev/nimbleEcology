@@ -30,6 +30,7 @@
 #' @param sampler MCMC sampler to use. Currently only the nimble default sampler works.
 #' @param savePsi Save site-level occupancy probabilities in the output?
 #' @param saveP Save site x occasion level detection probabilities in the output?
+#' @param buildDerivs Build derivative capabilities for the model?
 #' @param ... Arguments passed to \code{runMCMC} such as \code{nchains}.
 #'
 #' @return Either MCMC samples, or a nimble model object if \code{returnModel = TRUE}.
@@ -43,6 +44,7 @@ nimbleOccu <- function(stateformula, detformula,
                        returnModel = FALSE,
                        sampler = c("default", "hmc"),
                        savePsi = TRUE, saveP = FALSE,
+                       buildDerivs = FALSE,
                        ...){
 
   check_nimbleMacros_installed()
@@ -53,7 +55,7 @@ nimbleOccu <- function(stateformula, detformula,
       message("setting marginalized = TRUE")
       marginalized <- TRUE
     }
-    nimbleOptions(buildModelDerivs=TRUE) # this is a bit hacky
+    buildDerivs <- TRUE
   }
 
   stopifnot(is.array(y))
@@ -207,7 +209,7 @@ nimbleOccu <- function(stateformula, detformula,
   args <- list(...)
   if(is.null(args$inits)) args$inits <- list()
   mod <- nimbleModel(code = code, data = data, constants = constants, 
-                     inits = args$inits)
+                     inits = args$inits, buildDerivs = buildDerivs)
   
   if(returnModel){
     return(mod)
@@ -223,8 +225,9 @@ nimbleOccu <- function(stateformula, detformula,
     if(is.null(args$warmup)){
       stop("Must provide warmup argument", call.=FALSE)
     }
-    conf <- nimbleHMC::configureHMC(mod, print = FALSE,
-              control = list(warmupMode = "iterations", warmup=args$warmup))
+    conf <- configureMCMC(mod, nodes = NULL, print = FALSE)
+    conf$addSampler(nimbleHMC::sampler_NUTS, target = conf$getUnsampledNodes(),
+                control = list(warmupMode = "iterations", warmup=args$warmup))
     args$warmup <- NULL
   }
 
