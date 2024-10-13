@@ -61,6 +61,9 @@
 
 ##### Regular N-mixture #####
 NULL
+
+nimbleOptions(doADerrorTraps = FALSE)
+
 #' @rdname dNmixtureAD
 #' @export
 dNmixtureAD_v <- nimbleFunction(
@@ -552,6 +555,9 @@ dNmixtureAD_BBNB_oneObs <- nimbleFunction(
     returnType(double())
   }, buildDerivs=list(run=list())
 )
+
+nimbleOptions(doADerrorTraps = TRUE)
+
 
 ##### rNmixtureAD extensions #####
 NULL

@@ -145,6 +145,10 @@
 
 NULL
 
+## Turn off warnings about use of `is.na` in deriv-enabled nimbleFunction.
+
+nimbleOptions(doADerrorTraps = FALSE)
+
 #' @rdname dCJS
 #' @export
 dCJS_ss <- nimbleFunction(
@@ -341,6 +345,8 @@ dCJS_vv <- nimbleFunction(
     returnType(double())
   }, buildDerivs = list(run = list(ignore = c('i', "xt", "t")))
 )
+
+nimbleOptions(doADerrorTraps = TRUE)
 
 #' @rdname dCJS
 #' @export

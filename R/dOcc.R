@@ -127,6 +127,8 @@
 #' Occ_model$calculate()
 #' # Use the model for a variety of other purposes...
 
+nimbleOptions(doADerrorTraps = FALSE)
+
 #' @export
 #' @rdname dOcc
 dOcc_s <- nimbleFunction(
@@ -177,6 +179,8 @@ dOcc_v <- nimbleFunction(
     return(prob_x)
   }, buildDerivs = list(run = list(ignore = c("i", "xi")))
 )
+
+nimbleOptions(doADerrorTraps = TRUE)
 
 #' @export
 #' @rdname dOcc
