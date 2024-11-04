@@ -31,7 +31,7 @@
 #'  missing values (e.g. if you have different numbers of occasions by site)
 #'
 #' @examples
-#' nimbleOptions(enableModelMacros = TRUE)
+#' nimbleOptions(enableMacros = TRUE)
 #' y <- matrix(rbinom(10, 1, 0.5), 5, 2)
 #' x <- rnorm(5)
 #' const <- list(y=y, x=x, M=nrow(y), J = ncol(y))
@@ -45,7 +45,7 @@
 NULL
 
 #' @export
-OCCUPANCY <- nimble::model_macro_builder(
+OCCUPANCY <- nimble::buildMacro(
 function(stoch, LHS, stateformula = ~1, detformula = ~1,
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)"), 
@@ -224,7 +224,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 #'  missing values (e.g. if you have different numbers of occasions by site).
 #'
 #' @examples
-#' nimbleOptions(enableModelMacros = TRUE)
+#' nimbleOptions(enableMacros = TRUE)
 #' M <- 100 # sites
 #' J <- 5   # occasions
 #' S <- 10  # species
@@ -242,7 +242,7 @@ embedLinesInCurlyBrackets <- function(lines) {
 NULL
 
 #' @export
-MULTISPECIESOCCUPANCY <- nimble::model_macro_builder(
+MULTISPECIESOCCUPANCY <- nimble::buildMacro(
 function(stoch, LHS, stateformula, detformula, 
          statePrefix=quote(state_), detPrefix=quote(det_), 
          statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 

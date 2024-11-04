@@ -2,9 +2,9 @@ skip_on_cran()
 nimbleMacros_installed <- requireNamespace("nimbleMacros")
 skip_if_not(nimbleMacros_installed)
 
-macro_setting <- nimbleOptions("enableModelMacros")
+macro_setting <- nimbleOptions("enableMacros")
 comm_setting <- nimbleOptions("enableMacroComments")
-nimbleOptions(enableModelMacros = TRUE)
+nimbleOptions(enableMacros = TRUE)
 
 # Simulate OCCUPANCY dataset
 set.seed(123)
@@ -537,5 +537,5 @@ test_that("nimbleOccu works with multispecies data",{
 })
 
 # after, not sure if this is needed
-nimbleOptions(enableModelMacros = macro_setting)
+nimbleOptions(enableMacros = macro_setting)
 nimbleOptions(enableMacroComments = comm_setting)
