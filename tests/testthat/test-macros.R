@@ -384,7 +384,7 @@ code_ref <- quote({
   for (i_1 in 1:M) {
       for (i_2 in 1:S) {
           logit(psi[i_1, i_2]) <- state_speciesID[speciesID[i_2]] +
-              state_speciesID_x1[speciesID[i_2]] * x1[i_1]
+              state_x1_speciesID[speciesID[i_2]] * x1[i_1]
       }
   }
   state_Intercept ~ dunif(-10, 10)
@@ -393,15 +393,15 @@ code_ref <- quote({
   for (i_3 in 1:10) {
       state_speciesID[i_3] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
   }
-  state_sd_speciesID_x1 ~ dunif(0, 5)
+  state_sd_x1_speciesID ~ dunif(0, 5)
   for (i_4 in 1:10) {
-      state_speciesID_x1[i_4] ~ dnorm(state_x1, sd = state_sd_speciesID_x1)
+      state_x1_speciesID[i_4] ~ dnorm(state_x1, sd = state_sd_x1_speciesID)
   }
   for (i_5 in 1:M) {
       for (i_6 in 1:J) {
           for (i_7 in 1:S) {
               logit(p[i_5, i_6, i_7]) <- det_speciesID[speciesID[i_7]] +
-                det_speciesID_x2[speciesID[i_7]] * x2[i_5,
+                det_x2_speciesID[speciesID[i_7]] * x2[i_5,
                   i_6]
           }
       }
@@ -412,9 +412,9 @@ code_ref <- quote({
   for (i_8 in 1:10) {
       det_speciesID[i_8] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
   }
-  det_sd_speciesID_x2 ~ dunif(0, 5)
+  det_sd_x2_speciesID ~ dunif(0, 5)
   for (i_9 in 1:10) {
-      det_speciesID_x2[i_9] ~ dnorm(det_x2, sd = det_sd_speciesID_x2)
+      det_x2_speciesID[i_9] ~ dnorm(det_x2, sd = det_sd_x2_speciesID)
   }
   for (i_10 in 1:M) {
       for (i_11 in 1:S) {
@@ -459,7 +459,7 @@ test_that("marginalized multispecies model works", {
     for (i_3 in 1:M) {
         for (i_4 in 1:S) {
             logit(psi[i_3, i_4]) <- state_speciesID[speciesID[i_4]] +
-                state_speciesID_x1[speciesID[i_4]] * x1[i_3]
+                state_x1_speciesID[speciesID[i_4]] * x1[i_3]
         }
     }
     state_Intercept ~ dunif(-10, 10)
@@ -468,15 +468,15 @@ test_that("marginalized multispecies model works", {
     for (i_5 in 1:10) {
         state_speciesID[i_5] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
     }
-    state_sd_speciesID_x1 ~ dunif(0, 5)
+    state_sd_x1_speciesID ~ dunif(0, 5)
     for (i_6 in 1:10) {
-        state_speciesID_x1[i_6] ~ dnorm(state_x1, sd = state_sd_speciesID_x1)
+        state_x1_speciesID[i_6] ~ dnorm(state_x1, sd = state_sd_x1_speciesID)
     }
     for (i_7 in 1:M) {
         for (i_8 in 1:J) {
             for (i_9 in 1:S) {
                 logit(p[i_7, i_8, i_9]) <- det_speciesID[speciesID[i_9]] +
-                  det_speciesID_x2[speciesID[i_9]] * x2[i_7,
+                  det_x2_speciesID[speciesID[i_9]] * x2[i_7,
                     i_8]
             }
         }
@@ -487,9 +487,9 @@ test_that("marginalized multispecies model works", {
     for (i_10 in 1:10) {
         det_speciesID[i_10] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
     }
-    det_sd_speciesID_x2 ~ dunif(0, 5)
+    det_sd_x2_speciesID ~ dunif(0, 5)
     for (i_11 in 1:10) {
-        det_speciesID_x2[i_11] ~ dnorm(det_x2, sd = det_sd_speciesID_x2)
+        det_x2_speciesID[i_11] ~ dnorm(det_x2, sd = det_sd_x2_speciesID)
     }
     for (i_1 in 1:M) {
         for (i_2 in 1:S) {
@@ -523,7 +523,7 @@ test_that("nimbleOccu works with multispecies data",{
       for (i_1 in 1:M) {
         for (i_2 in 1:S) {
         logit(psi[i_1, i_2]) <- state_x3 * x3[i_2] + state_speciesID[speciesID[i_2]] +
-            state_speciesID_x1[speciesID[i_2]] * x1[i_1]
+            state_x1_speciesID[speciesID[i_2]] * x1[i_1]
       }
     } 
     })[[2]]
