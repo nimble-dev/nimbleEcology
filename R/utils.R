@@ -92,6 +92,8 @@ nimNmixPois_logFac <- nimbleFunction(
     returnType(double())
   }, buildDerivs = list(run = list()))
 
+nimbleOptions(doADerrorTraps = FALSE)
+
 #' @rdname dNmixture_steps
 #' @importFrom stats dpois
 #' @export
@@ -322,3 +324,5 @@ dNmixture_BBNB_steps <- nimbleFunction(
   },
   buildDerivs = list(run = list(ignore = c("i","j","xj")))
 )
+
+nimbleOptions(doADerrorTraps = TRUE)

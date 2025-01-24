@@ -68,6 +68,8 @@ nimBetaFun <- nimbleFunction(
     returnType(double(0))
   }, buildDerivs=list(run=list()))
 
+nimbleOptions(doADerrorTraps = FALSE)
+
 #' @rdname dBetaBinom
 #' @export
 dBetaBinom_v <- nimbleFunction(
@@ -123,6 +125,8 @@ dBetaBinom_s <- nimbleFunction(
   },
   buildDerivs = list(run=list(ignore = c('i','xi')))
 )
+
+nimbleOptions(doADerrorTraps = TRUE)
 
 #' @rdname dBetaBinom
 #' @export
