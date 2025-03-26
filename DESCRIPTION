@@ -29,9 +29,15 @@ Collate:
   dOcc.R
   dNmixture.R
   dNmixtureAD.R
+  macros.R
+  nimbleOccu.R
   zzz.R
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Suggests: 
     rmarkdown,
     knitr,
+    nimbleHMC,
+    nimbleMacros,
     testthat (>= 2.1.0)
+Remotes:
+    nimbleMacros=github::kenkellner/nimbleMacros
