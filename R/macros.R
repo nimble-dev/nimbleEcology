@@ -61,10 +61,10 @@ function(stoch, LHS, stateformula = ~1, detformula = ~1,
     # Code to calculate parameters psi and p
     param_code <- substitute({
       psi[SITEDIM] <- nimbleMacros::LINPRED(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
-                                sdPrefix=STATEPREFIX, priorSpecs=STATEPRIOR, 
+                                sdPrefix=STATEPREFIX, priors=STATEPRIOR, 
                                 centerVar=CENTVAR)  
       p[SITEDIM, OBSDIM] <- nimbleMacros::LINPRED(DETFORM, link=logit, coefPrefix=DETPREFIX, 
-                                      sdPrefix=DETPREFIX, priorSpecs=DETPRIOR, 
+                                      sdPrefix=DETPREFIX, priors=DETPRIOR, 
                                       centerVar=CENTVAR)
       }, 
       list(SITEDIM=site_dim, OBSDIM=obs_dim,
@@ -264,10 +264,10 @@ function(stoch, LHS, stateformula, detformula,
     # Code for calculating occupancy and detection parameters
     param_code <- substitute({
       psi[SITEDIM, SPDIM] <- nimbleMacros::LINPRED(STATEFORM, link=logit, coefPrefix=STATEPREFIX, 
-                                     sdPrefix=STATEPREFIX, priorSpecs=STATEPRIOR, 
+                                     sdPrefix=STATEPREFIX, priors=STATEPRIOR, 
                                      center=SPID)  
       p[SITEDIM, OBSDIM, SPDIM] <- nimbleMacros::LINPRED(DETFORM, link=logit, coefPrefix=DETPREFIX, 
-                                           sdPrefix=DETPREFIX, priorSpecs=DETPRIOR, 
+                                           sdPrefix=DETPREFIX, priors=DETPRIOR, 
                                            center=SPID)
     }, 
     list(SITEDIM=site_dim, OBSDIM=obs_dim, SPDIM=sp_dim,
