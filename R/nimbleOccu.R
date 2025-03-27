@@ -30,6 +30,10 @@
 #' @param sampler MCMC sampler to use. Currently only the nimble default sampler works.
 #' @param savePsi Save site-level occupancy probabilities in the output?
 #' @param saveP Save site x occasion level detection probabilities in the output?
+#' @param samplerControl An optional list of control arguments to sampler functions 
+#' to be passed `configureMCMC`. In addition, one can provide the element
+#' \code{noncentered = TRUE} to add NIMBLE's "noncentered" sampler to jointly sample
+#' each hyperparameter with its dependent random effects.
 #' @param buildDerivs Build derivative capabilities for the model?
 #' @param ... Arguments passed to \code{runMCMC} such as \code{nchains}.
 #'
@@ -38,26 +42,34 @@
 #' @export
 nimbleOccu <- function(stateformula, detformula,
                        y, siteCovs = NULL, obsCovs = NULL, speciesCovs = NULL,
-                       statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0,5)"), 
-                       detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dunif(0, 5)"),
+                       statePriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dhalfflat()"), 
+                       detPriors=setPriors(intercept="dunif(-10, 10)", coefficient="dlogis(0, 1)", sd = "dhalfflat()"),
                        marginalized = FALSE,
                        returnModel = FALSE,
-                       sampler = c("default", "hmc"),
+                       sampler = c("default", "polyagamma", "RW_block", "barker", "hmc"),
                        savePsi = TRUE, saveP = FALSE,
                        buildDerivs = FALSE,
                        ...){
 
   check_nimbleMacros_installed()
-  
-  sampler <- match.arg(sampler)
-  if(sampler == "hmc"){
-    if(!marginalized){
-      message("setting marginalized = TRUE")
-      marginalized <- TRUE
-    }
-    buildDerivs <- TRUE
-  }
 
+  ## TODO: decide on the actual default for the sampling scheme. 
+  sampler <- match.arg(sampler)
+  if(!returnModel) {  
+    if(sampler == "hmc")
+        buildDerivs <- TRUE
+    ## Using block_RW and barker with latent model is conceptually fine but hasn't mixed well
+    ## in CDFW examples.
+    if(!marginalized && sampler %in% c("hmc", "block_RW", "barker")) {
+        marginalized <- TRUE
+        message("  [Note] Using marginalized model as the ", sampler, " sampling is set up for use with the marginalized model.")
+    }
+    if(marginalized && sampler == "polyagamma") {
+        marginalized <- FALSE
+        message("  [Note] Using non-marginalized model as the ", sampler, " sampling is set up for use with the non-marginalized model.")
+    }
+  }
+    
   stopifnot(is.array(y))
   stopifnot(length(dim(y)) == 2 | length(dim(y)) == 3)
   stopifnot(ncol(y) > 1)
@@ -215,21 +227,23 @@ nimbleOccu <- function(stateformula, detformula,
     return(mod)
   }
 
-  # Set up sampler
-  if(sampler == "default"){
-    conf <- configureMCMC(mod, print = FALSE)
-  } else if(sampler == "hmc"){
-    if(!requireNamespace("nimbleHMC")){
-      stop("Install nimbleHMC package", call.=FALSE)
-    }
-    if(is.null(args$warmup)){
-      stop("Must provide warmup argument", call.=FALSE)
-    }
-    conf <- configureMCMC(mod, nodes = NULL, print = FALSE)
-    conf$addSampler(nimbleHMC::sampler_NUTS, target = conf$getUnsampledNodes(),
-                control = list(warmupMode = "iterations", warmup=args$warmup))
-    args$warmup <- NULL
-  }
+  ## TODO: this assumes all detection/state parameters are species-specific.
+  ## Need to figure out how to set up sampling when have site- and observation-specific
+  ## parameters.  
+  state_vars <- all.vars(stateformula)
+  detect_vars <- all.vars(detformula)
+
+  species_vars <- c(detect_vars, state_vars)
+
+  ## Do we know the hyperparameter var names in some other way?
+  hyper_vars <- mod$getVarNames(model$getParents(species_vars))
+  ## Is there a better way to split into location and scale variables?  
+  hyper_vars_scale <- hyper_vars[grep("sd", hypervars)]
+  hyper_vars_location <- hyper_vars[grep("sd", hypervars, invert = TRUE)]
+
+  conf <- configureOccuMCMC(mod, sampler, samplerControl, S = S,
+                              detect_vars, state_vars, hyper_vars_location, hyper_vars_scale, occ_var = 'z')
+    
 
   if(savePsi){
     conf$addMonitors("psi")
@@ -268,3 +282,173 @@ addBracketToFormulaRecursive <- function(inp, target, bracket){
   if(is.list(out)) out <- as.call(out)
   out
 }
+
+configureOccuMCMC <- function(model, sampler, samplerControl, S, detect_coeffs_vars, state_coeffs_vars,
+                              hyper_vars_location, hyper_vars_scale, occ_var = 'z') {
+    hyper_vars <- c(hyper_vars_location, hyper_vars_scale)
+
+    ## TODO: modify this to handle single species
+    
+    ## TODO: consider site-level covariates and obs-level:
+    ## how do we set up blocking when these are present.
+    ## Possibly we would add each of these to each species-level block, since
+    ## they affect likelihood for all species. 
+    
+    ## TODO: More generally, this code basically assumes model structure like the CDFW examples.
+    ## We need to check it for other possible specifications, including cases
+    ## where effects do not vary by species.
+    
+    if(sampler == "hmc") {
+        conf <- configureHMC(mod, control = samplerControl, print = FALSE)
+    }
+    
+    if(sampler == "polyagamma") {
+        conf <- configureMCMC(model, nodes = hyper_vars)
+        conf$addSampler(binaryVar, "jointBinary", control = list(order = TRUE))
+        for (i in 1:S){
+            pgNodes <- paste0(state_coeffs_vars, "[", i, "]")
+            conf$addSampler(type = "sampler_polyagamma", target=pgNodes, control = list(fixedDesignColumns = TRUE))
+            pgNodes <- paste0(detect_coeffs_vars, "[", i, "]")
+            conf$addSampler(type = "sampler_polyagamma", target=pgNodes, control = list(fixedDesignColumns = TRUE))
+        }
+    }
+    
+    if(sampler == "default") {
+        conf <- configureMCMC(model, nodes = c(hyper_vars, detect_coeffs_vars, state_coeffs_var), print = FALSE)
+        if(!marginalized)
+            conf$addSampler(binaryVar, "jointBinary", control = list(order = TRUE))
+    }
+    
+    if(sampler == "RW_block") {
+        conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
+                                        # Species-specific slopes and intercepts
+        for (i in 1:S){
+            blockNodes <- paste0(species_vars, "[", i, "]")
+            conf$addSampler(blockNodes, type = "RW_block", print=FALSE,
+                            control = samplerControl)
+        }
+    }
+    
+    if(sampler == "barker") {
+        conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
+                                        # Species-specific slopes and intercepts
+        for (i in 1:S){
+            blockNodes <- paste0(state_coeffs_vars, "[", i, "]")
+            conf$addSampler(blockNodes, type = "barker", print=FALSE, control = samplerControl)
+            blockNodes <- paste0(detect_coeffs_vars, "[", i, "]")
+            conf$addSampler(blockNodes, type = "barker", print=FALSE, control = samplerControl)
+        }
+    }
+        
+    hyper_nodes_scale <- model$expandNodeNames(hyper_vars_scale)
+
+    ## Use slice sampling for standard deviations if not conjugate.
+    for(node in hyper_nodes_scale) {
+        samplers <- conf$getSampler(node)
+        if(length(samplers) == 1 && grep("^conjugage", samplers[[1]]$name, invert = TRUE))
+            conf$replaceSamplers(node, "slice")
+    }
+
+    ## Optionally add noncentered sampling for each hyperparameter with its random effects.
+    if(samplerControl$noncentered) {
+     for(param in conf$model$expandNodeNames(hyper_vars_location))
+        conf$addSampler(type = 'noncentered', target = param,
+                        control = list(sampler = "RW", param = "location", log = TRUE))
+    for(param in conf$model$expandNodeNames(hyper_vars_scale))
+        conf$addSampler(type = 'noncentered', target = param,
+                        control = list(sampler = "RW", param = "scale", log = TRUE))
+    }
+    
+    return(conf)
+}
+
+
+
+
+
+## "Vectorized" occupancy distribution over multiple sites.
+## `dOcc_v` in `nimbleEcology only vectorizes over visits at a single site.
+dOcc_v_multisite <- nimbleFunction(run = function(x = double(2),
+                                            probOcc = double(1), probDetect = double(2),
+                                            lens = double(1), n.sites = double(0),
+                                            log = integer(0, default = 0)) {
+    returnType(double(0))
+    
+    n.sites_noDeriv <- 0L 
+    len <- 0L 
+    n.sites_noDeriv <- ADbreak(n.sites)
+
+    logProb <- 0
+    for(j in 1:n.sites_noDeriv) {
+        len  <- ADbreak(lens[j])
+        logProb <- logProb + dOcc_v(x[j, 1:len], probOcc = probOcc[j], probDetect = probDetect[j, 1:len], len = len, log=TRUE)
+    }
+    if(log) return(logProb) else return(exp(logProb))
+}, buildDerivs = list(run = list(ignore=c('j')))
+)
+
+## "Vectorized" sampler that samples all occupancy indicators at once.
+sampler_jointBinary <- nimbleFunction(
+    name = 'sampler_jointBinary',
+    contains = sampler_BASE,
+    setup = function(model, mvSaved, target, control) {
+        ## node list generation
+        targetAsScalar <- model$expandNodeNames(target, returnScalarComponents = TRUE)
+        targetAsScalar <- targetAsScalar[!model$isData(targetAsScalar)]
+
+        
+        ## Put in same order as configureMCMC would do so that sampling exactly matches
+        ## order of application of binary samplers.
+        if(!is.null(control$order) && control$order) {
+            fullNodes <- model$getNodeNames(stochOnly = TRUE, includeData = FALSE)
+            mtch <- match(targetAsScalar, fullNodes)
+            targetAsScalar <- targetAsScalar[order(mtch)]
+        }            
+            
+        ccList <- nimble:::mcmc_determineCalcAndCopyNodes(model, targetAsScalar)
+        calcNodes <- ccList$calcNodes; calcNodesNoSelf <- ccList$calcNodesNoSelf; copyNodesDeterm <- ccList$copyNodesDeterm; copyNodesStoch <- ccList$copyNodesStoch
+        p <- length(targetAsScalar)
+
+        lens <- rep(0, p)
+        first <- 1
+        for(i in 1:p) {
+            calcNodesOne <- model$getDependencies(targetAsScalar[i], self = TRUE)  
+            lens[i] <- length(calcNodesOne)
+            last <- first+lens[i]-1
+            calcNodes[first:last] <- calcNodesOne
+            first <- last + 1
+        }
+        currentLogProb <- otherLogProb <- rep(0, p)
+    },
+    run = function() {
+        start <- 1
+        for(i in 1:p) {
+            end <- start + lens[i] - 1
+            currentLogProb[i] <<- model$getLogProb(calcNodes[start:end])
+            start <- end + 1
+        }
+        values(model, targetAsScalar) <<- 1 - values(model, targetAsScalar)
+        model$calculate(calcNodes)
+        start <- 1
+        for(i in 1:p) {
+            end <- start + lens[i] - 1
+            otherLogProb[i] <<- model$getLogProb(calcNodes[start:end])
+            start <- end + 1
+        }
+        acceptanceProb <- 1/(exp(currentLogProb - otherLogProb) + 1)
+        jump <- (!is.nan(acceptanceProb)) & (runif(p,0,1) < acceptanceProb)
+
+        for(i in 1:p) 
+            if(!jump[i]) 
+                values(model, targetAsScalar[i]) <<- 1-values(model, targetAsScalar[i])
+
+        model$calculate(calcNodes)
+        
+        nimCopy(from = model, to = mvSaved, row = 1, nodes = targetAsScalar, logProb = TRUE)
+        nimCopy(from = model, to = mvSaved, row = 1, nodes = copyNodesDeterm, logProb = FALSE)
+        nimCopy(from = model, to = mvSaved, row = 1, nodes = copyNodesStoch, logProbOnly = TRUE)
+    },
+    methods = list(
+        reset = function() { }
+    )
+)
