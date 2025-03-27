@@ -227,7 +227,8 @@ nimbleOccu <- function(stateformula, detformula,
     return(mod)
   }
 
-  ## TODO: this assumes all detection/state parameters are species-specific.
+  ## TODO: setting up the vars as done here and then using them in configureOccuMCMC
+  ## assumes all detection/state parameters are species-specific.
   ## Need to figure out how to set up sampling when have site- and observation-specific
   ## parameters.  
   state_vars <- all.vars(stateformula)
@@ -237,7 +238,8 @@ nimbleOccu <- function(stateformula, detformula,
 
   ## Do we know the hyperparameter var names in some other way?
   hyper_vars <- mod$getVarNames(model$getParents(species_vars))
-  ## Is there a better way to split into location and scale variables?  
+  ## Is there a better way to split into location and scale variables?
+  ## Are location and scale the only possible cases?  
   hyper_vars_scale <- hyper_vars[grep("sd", hypervars)]
   hyper_vars_location <- hyper_vars[grep("sd", hypervars, invert = TRUE)]
 
@@ -321,9 +323,9 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, detect_coeffs_v
     
     if(sampler == "RW_block") {
         conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
-                                        # Species-specific slopes and intercepts
+        ## Species-specific slopes and intercepts
         for (i in 1:S){
-            blockNodes <- paste0(species_vars, "[", i, "]")
+            blockNodes <- paste0(c(detect_vars, state_vars), "[", i, "]")
             conf$addSampler(blockNodes, type = "RW_block", print=FALSE,
                             control = samplerControl)
         }
@@ -331,7 +333,7 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, detect_coeffs_v
     
     if(sampler == "barker") {
         conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
-                                        # Species-specific slopes and intercepts
+        ## Species-specific slopes and intercepts
         for (i in 1:S){
             blockNodes <- paste0(state_coeffs_vars, "[", i, "]")
             conf$addSampler(blockNodes, type = "barker", print=FALSE, control = samplerControl)
@@ -340,10 +342,8 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, detect_coeffs_v
         }
     }
         
-    hyper_nodes_scale <- model$expandNodeNames(hyper_vars_scale)
-
     ## Use slice sampling for standard deviations if not conjugate.
-    for(node in hyper_nodes_scale) {
+    for(node in model$expandNodeNames(hyper_vars_scale)) {
         samplers <- conf$getSampler(node)
         if(length(samplers) == 1 && grep("^conjugage", samplers[[1]]$name, invert = TRUE))
             conf$replaceSamplers(node, "slice")
