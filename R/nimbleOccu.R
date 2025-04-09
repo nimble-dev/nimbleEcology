@@ -336,17 +336,17 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
             conf$addSampler(type = "sampler_polyagamma", target= detect_coeffs_vars, 
                             control = list(fixedDesignColumns = TRUE))
         } else {
-            # TODO: Note that the non-species specific variables are included here
-            # but not sure this is correct
-            conf$addSampler(vars_notsp)
             for (i in 1:S){
                 # TODO: Not sure how to handle non-species specific covariates for PG.
-                # Right now they are not included below, but I think they need to be somehow
-                # since they are in the linear predictor?
+                # Right now they are included below, because they are part of the
+                # linear predictor, but I think that means
+                # they are being sampled repeatedly for each species block (?)
                 pgNodes <- paste0(state_vars_sp, "[", i, "]")
+                pgNodes <- c(pgNodes, state_vars_notsp) 
                 conf$addSampler(type = "sampler_polyagamma", target=pgNodes, 
                                 control = list(fixedDesignColumns = TRUE))
                 pgNodes <- paste0(detect_vars_sp, "[", i, "]")
+                pgNodes <- c(pgNodes, detect_vars_notsp)
                 conf$addSampler(type = "sampler_polyagamma", target=pgNodes, 
                                 control = list(fixedDesignColumns = TRUE))
             }
@@ -397,16 +397,13 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
     }
 
     ## Use slice sampling for standard deviations if not conjugate.
-    for(node in model$expandNodeNames(hyper_vars_scale)) {
-        samplers <- conf$getSamplers(node)
-        if(length(samplers) == 1 && grep("^conjugage", samplers[[1]]$name, invert = TRUE)){
-            #TODO: Some kind of scoping issue here?
-            #conf$replaceSamplers(node, "slice")
-            #Error in eval(m$target) : object 'node' not found
-            #Could also just use replaceSampler() I think
-            cl <- substitute(conf$replaceSamplers(NODE, "slice"),
-                             list(NODE = node))
-            eval(cl)
+    ## TODO: doesn't work with HMC, do we want to do something else here?
+    if(sampler != "hmc"){
+        for(node in model$expandNodeNames(hyper_vars_scale)) {
+            samplers <- conf$getSamplers(node)
+            if(length(samplers) == 1 && grep("^conjugage", samplers[[1]]$name, invert = TRUE)){
+                conf$replaceSamplers(node, "slice")
+            }
         }
     }
 
