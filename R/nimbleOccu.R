@@ -57,7 +57,7 @@ nimbleOccu <- function(stateformula, detformula,
   ## TODO: decide on the actual default for the sampling scheme. 
   sampler <- match.arg(sampler)
   if(!returnModel) {  
-    if(sampler == "hmc")
+    if(sampler %in% c("hmc", "barker"))
         buildDerivs <- TRUE
     ## Using block_RW and barker with latent model is conceptually fine but hasn't mixed well
     ## in CDFW examples.
@@ -293,16 +293,17 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
 
     # Get hyperparameters
     # Start by getting all coefficients and hyperparameters from the priors macros
-    # No need to distinguish between state/det here (right?)
+    # No need to distinguish between state/det here.
     coefs_hyperpars <- unlist(macro_pars[["nimbleMacros::LINPRED_PRIORS"]])
     # Remove the coefficients to leave only hyperparameters
     hyper_vars <- coefs_hyperpars[! coefs_hyperpars %in% unlist(coefs)]
     hyper_vars <- unique(hyper_vars) # just in case
 
-    # This is the only way I can think of to split location and scale
-    # and yes these should be the only options
+    # This is the only way I can think of to split location and scale.
     hyper_vars_scale <- hyper_vars[grep("_sd_", hyper_vars)]
     hyper_vars_location <- hyper_vars[grep("_sd_", hyper_vars, invert = TRUE)]
+    if(length(setdiff(hyper_vars, c(hyper_vars_scale, hyper_vars_location))))
+        stop("Detected unexpected hyperparameters that are neither location nor scale parameters.")
 
     if(S > 1){
         # Extract only coefs random by species (needed for block samplers)
@@ -322,12 +323,18 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
         conf$addSampler(nimbleHMC::sampler_NUTS, target = conf$getUnsampledNodes(),
           control = list(warmupMode = "iterations"))
     }
+
+    # Note that in the species-specific block sampling below,
+    # we include non-species-specific covariate coeffs within each block,
+    # since they are part of the linear predictor for each species.
+    # They will be sampled repeatedly.
+
     
     if(sampler == "polyagamma") {
-        # Configure hyperparameters if they exist
+        # Configure hyperparameters if they exist.
         conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
-        # Add configuration for latent state
-        conf$addSampler(occ_var, "binary", control = list(order = TRUE))
+        # Add configuration for latent state.
+        conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
 
         if(S == 1){
             # For single species, just one sampler each for state/detection
@@ -337,10 +344,6 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
                             control = list(fixedDesignColumns = TRUE))
         } else {
             for (i in 1:S){
-                # TODO: Not sure how to handle non-species specific covariates for PG.
-                # Right now they are included below, because they are part of the
-                # linear predictor, but I think that means
-                # they are being sampled repeatedly for each species block (?)
                 pgNodes <- paste0(state_vars_sp, "[", i, "]")
                 pgNodes <- c(pgNodes, state_vars_notsp) 
                 conf$addSampler(type = "sampler_polyagamma", target=pgNodes, 
@@ -358,21 +361,26 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
                               nodes = c(hyper_vars, detect_coeffs_vars, state_coeffs_vars), 
                               print = FALSE)
         if(!marginalized)
-            conf$addSampler(occ_var, "binary", control = list(order = TRUE))
+            conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
     }
     
     if(sampler == "RW_block") {
-        if(S == 1) stop("RW_block sampler not supported for single species")
         # Non-species-specific parameters included here
-        conf <- configureMCMC(model, nodes = c(hyper_vars, vars_notsp), print = FALSE)
-        ## Species-specific slopes and intercepts
-        for (i in 1:S){
-            blockNodes <- paste0(vars_sp, "[", i, "]")
-            conf$addSampler(blockNodes, type = "RW_block", print=FALSE,
-                            control = samplerControl)
+        conf <- configureMCMC(model, nodes = hyper_vars, print = FALSE)
+        if(S == 1) {
+            conf$addSampler(c(state_coeffs_vars, detect_coeffs_vars), type = "RW_block",
+                            print=FALSE, control = samplerControl)
+
+        } else {
+            ## Species-specific slopes and intercepts
+            for (i in 1:S){
+                blockNodes <- c(vars_notsp, paste0(vars_sp, "[", i, "]"))
+                conf$addSampler(blockNodes, type = "RW_block", print=FALSE,
+                                control = samplerControl)
+            }
+            if(!marginalized)  # At the moment, this is ruled out in initial `nimbleOccu` checks.
+                conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
         }
-        if(!marginalized)
-            conf$addSampler(occ_var, "binary", control = list(order = TRUE))
     }
     
     if(sampler == "barker") {
@@ -381,44 +389,39 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
             conf$addSampler(state_coeffs_vars, type = "barker", print=FALSE, control = samplerControl)
             conf$addSampler(detect_coeffs_vars, type = "barker", print=FALSE, control = samplerControl)
         } else {
-            # Non-species-specific parameters included here
-            conf$addSampler(vars_notsp) 
             ## Species-specific slopes and intercepts
             for (i in 1:S){
-              blockNodes <- paste0(state_vars_sp, "[", i, "]")
+              blockNodes <- c(state_vars_notsp, paste0(state_vars_sp, "[", i, "]"))
               conf$addSampler(blockNodes, type = "barker", print=FALSE, control = samplerControl)
-              blockNodes <- paste0(detect_vars_sp, "[", i, "]")
+              blockNodes <- c(detect_vars_notsp, paste0(detect_vars_sp, "[", i, "]"))
               conf$addSampler(blockNodes, type = "barker", print=FALSE, control = samplerControl)
             }
         }
-        if(!marginalized)
-            # TODO: jointBinary not available?
-            conf$addSampler(occ_var, "binary", control = list(order = TRUE))
+        if(!marginalized)  # At the moment, this is ruled out in initial `nimbleOccu` checks.
+            conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
     }
 
-    ## Use slice sampling for standard deviations if not conjugate.
-    ## TODO: doesn't work with HMC, do we want to do something else here?
     if(sampler != "hmc"){
+        ## Use slice sampling for standard deviations if not conjugate.
         for(node in model$expandNodeNames(hyper_vars_scale)) {
             samplers <- conf$getSamplers(node)
-            if(length(samplers) == 1 && grep("^conjugage", samplers[[1]]$name, invert = TRUE)){
+            if(length(samplers) == 1 && length(grep("^conjugate", samplers[[1]]$name, invert = TRUE))) 
                 conf$replaceSamplers(node, "slice")
-            }
+        }
+        
+        
+        ## Optionally add noncentered sampling for each hyperparameter with its random effects.
+        noncentered <- samplerControl$noncentered
+        if(is.null(noncentered)) noncentered <- FALSE
+        if(noncentered) {
+            for(param in conf$model$expandNodeNames(hyper_vars_location))
+                conf$addSampler(type = 'noncentered', target = param,
+                                control = list(sampler = "RW", param = "location", log = TRUE))
+            for(param in conf$model$expandNodeNames(hyper_vars_scale))
+                conf$addSampler(type = 'noncentered', target = param,
+                                control = list(sampler = "RW", param = "scale", log = TRUE))
         }
     }
-
-    ## Optionally add noncentered sampling for each hyperparameter with its random effects.
-    noncentered <- samplerControl$noncentered
-    if(is.null(noncentered)) noncentered <- FALSE
-    if(noncentered) {
-     for(param in conf$model$expandNodeNames(hyper_vars_location))
-        conf$addSampler(type = 'noncentered', target = param,
-                        control = list(sampler = "RW", param = "location", log = TRUE))
-    for(param in conf$model$expandNodeNames(hyper_vars_scale))
-        conf$addSampler(type = 'noncentered', target = param,
-                        control = list(sampler = "RW", param = "scale", log = TRUE))
-    }
-    
     return(conf)
 }
 
