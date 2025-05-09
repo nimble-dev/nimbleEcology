@@ -330,7 +330,7 @@ test_that("mcmc configurations for single-species marginalized model", {
 
   # HMC
   conf <- nimbleEcology:::configureOccuMCMC(mod, "hmc", samplerControl=list(),
-                               S=S, marginalized=TRUE)
+                               S=1, marginalized=TRUE)
   samp <- lapply(conf$getSamplers(), function(x) x$toStr())
   expect_equal(samp,
     list("NUTS sampler: state_Intercept, state_x, det_Intercept,  warmupMode: default")
@@ -418,6 +418,363 @@ test_that("fit single-species marginalized model with hmc", {
   expect_equivalent(est, c(-0.13, -0.19, 0.83))
   nimbleOptions(verbose=verb)
 })
+
+test_that("multi species occupancy code", {
+
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x), 
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    returnModel = TRUE)
+
+  expect_equal(
+    mod$getCode(),
+    quote({
+    for (i_1 in 1:M) {
+        for (i_2 in 1:S) {
+            logit(psi[i_1, i_2]) <- state_speciesID[speciesID[i_2]] + 
+                state_x_speciesID[speciesID[i_2]] * x[i_1]
+        }
+    }
+    state_Intercept ~ dunif(-10, 10)
+    state_x ~ dlogis(0, 1)
+    state_sd_speciesID ~ dhalfflat()
+    for (i_3 in 1:10) {
+        state_speciesID[i_3] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
+    }
+    state_sd_x_speciesID ~ dhalfflat()
+    for (i_4 in 1:10) {
+        state_x_speciesID[i_4] ~ dnorm(state_x, sd = state_sd_x_speciesID)
+    }
+    for (i_5 in 1:M) {
+        for (i_6 in 1:J) {
+            for (i_7 in 1:S) {
+                logit(p[i_5, i_6, i_7]) <- det_speciesID[speciesID[i_7]]
+            }
+        }
+    }
+    det_Intercept ~ dunif(-10, 10)
+    det_sd_speciesID ~ dhalfflat()
+    for (i_8 in 1:10) {
+        det_speciesID[i_8] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
+    }
+    for (i_9 in 1:M) {
+        for (i_10 in 1:S) {
+            z[i_9, i_10] ~ dbern(psi[i_9, i_10])
+        }
+    }
+    for (i_11 in 1:M) {
+        for (i_12 in 1:J) {
+            for (i_13 in 1:S) {
+                y[i_11, i_12, i_13] ~ dbern(p[i_11, i_12, i_13] * 
+                  z[i_11, i_13])
+            }
+        }
+    }
+    })
+  )
+
+  pars <- unique(unlist(mod$getMacroParameters()))
+  expect_equal(pars, c("psi", "p", "z", "speciesID", "state_speciesID", "state_x_speciesID", 
+    "det_speciesID", "state_Intercept", "state_x", "state_sd_speciesID", 
+    "state_sd_x_speciesID", "det_Intercept", "det_sd_speciesID"))
+})
+
+test_that("species cov in model", {
+  mod <- nimbleOccu(stateformula = ~x+x3, detformula = ~1, y = ymulti, 
+              siteCovs = list(x = x),
+              speciesCovs = list(x3 = rnorm(S)),
+              returnModel = TRUE)
+
+  expect_equal(
+    mod$getCode(),
+    quote({
+    for (i_1 in 1:M) {
+        for (i_2 in 1:S) {
+            logit(psi[i_1, i_2]) <- state_x3 * x3[i_2] + state_speciesID[speciesID[i_2]] + 
+                state_x_speciesID[speciesID[i_2]] * x[i_1]
+        }
+    }
+    state_Intercept ~ dunif(-10, 10)
+    state_x ~ dlogis(0, 1)
+    state_x3 ~ dlogis(0, 1)
+    state_sd_speciesID ~ dhalfflat()
+    for (i_3 in 1:10) {
+        state_speciesID[i_3] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
+    }
+    state_sd_x_speciesID ~ dhalfflat()
+    for (i_4 in 1:10) {
+        state_x_speciesID[i_4] ~ dnorm(state_x, sd = state_sd_x_speciesID)
+    }
+    for (i_5 in 1:M) {
+        for (i_6 in 1:J) {
+            for (i_7 in 1:S) {
+                logit(p[i_5, i_6, i_7]) <- det_speciesID[speciesID[i_7]]
+            }
+        }
+    }
+    det_Intercept ~ dunif(-10, 10)
+    det_sd_speciesID ~ dhalfflat()
+    for (i_8 in 1:10) {
+        det_speciesID[i_8] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
+    }
+    for (i_9 in 1:M) {
+        for (i_10 in 1:S) {
+            z[i_9, i_10] ~ dbern(psi[i_9, i_10])
+        }
+    }
+    for (i_11 in 1:M) {
+        for (i_12 in 1:J) {
+            for (i_13 in 1:S) {
+                y[i_11, i_12, i_13] ~ dbern(p[i_11, i_12, i_13] * 
+                  z[i_11, i_13])
+            }
+        }
+    }
+  })
+  )
+
+  pars <- unique(unlist(mod$getMacroParameters()))
+  expect_equal(pars, c("psi", "p", "z", "speciesID", "state_x3", "state_speciesID", "state_x_speciesID", 
+    "det_speciesID", "state_Intercept", "state_x", "state_sd_speciesID", 
+    "state_sd_x_speciesID", "det_Intercept", "det_sd_speciesID"))
+})
+
+test_that("error when species cov is incorrect length", {
+  x3_wrong <- rnorm(S-1)
+  expect_error(nimbleOccu(stateformula = ~x+x3, detformula = ~1, y = ymulti, 
+              siteCovs = list(x = x),
+              speciesCovs = list(x3 = x3_wrong),
+              returnModel = TRUE), "incorrect dimensions")
+})
+
+test_that("marginalized multi-species model", {
+
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x), 
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    returnModel = TRUE, marginalized = TRUE)
+
+  expect_equal(
+    mod$getCode(),
+    quote({
+    for (i_3 in 1:M) {
+        for (i_4 in 1:S) {
+            logit(psi[i_3, i_4]) <- state_speciesID[speciesID[i_4]] + 
+                state_x_speciesID[speciesID[i_4]] * x[i_3]
+        }
+    }
+    state_Intercept ~ dunif(-10, 10)
+    state_x ~ dlogis(0, 1)
+    state_sd_speciesID ~ dhalfflat()
+    for (i_5 in 1:10) {
+        state_speciesID[i_5] ~ dnorm(state_Intercept, sd = state_sd_speciesID)
+    }
+    state_sd_x_speciesID ~ dhalfflat()
+    for (i_6 in 1:10) {
+        state_x_speciesID[i_6] ~ dnorm(state_x, sd = state_sd_x_speciesID)
+    }
+    for (i_7 in 1:M) {
+        for (i_8 in 1:J) {
+            for (i_9 in 1:S) {
+                logit(p[i_7, i_8, i_9]) <- det_speciesID[speciesID[i_9]]
+            }
+        }
+    }
+    det_Intercept ~ dunif(-10, 10)
+    det_sd_speciesID ~ dhalfflat()
+    for (i_10 in 1:10) {
+        det_speciesID[i_10] ~ dnorm(det_Intercept, sd = det_sd_speciesID)
+    }
+    for (i_1 in 1:M) {
+        for (i_2 in 1:S) {
+            y[i_1, 1:J, i_2] ~ dOcc_v(probOcc = psi[i_1, i_2], 
+                probDetect = p[i_1, 1:J, i_2], len = J)
+        }
+    }
+    })
+  )
+
+  pars <- unique(unlist(mod$getMacroParameters()))
+  expect_equal(pars, c("psi", "p", "speciesID", "state_speciesID", "state_x_speciesID", 
+    "det_speciesID", "state_Intercept", "state_x", "state_sd_speciesID", 
+    "state_sd_x_speciesID", "det_Intercept", "det_sd_speciesID"))
+})
+
+test_that("mcmc configurations for multi-species latent state model", {
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x), 
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    returnModel = TRUE)
+
+  # Default RW
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "default", samplerControl=list(),
+                                            S=S, marginalized=FALSE, occ_var="z") 
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  expect_equal(length(samp), 37)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "RW sampler: state_speciesID[1]")
+  expect_equal(samp[[17]], "RW sampler: state_x_speciesID[1]")
+  expect_equal(samp[[27]], "RW sampler: det_speciesID[1]")
+  expect_true(grepl("jointBinary", samp[[37]]))
+
+  # RW block
+  conf <- expect_message(nimbleEcology:::configureOccuMCMC(mod, "RW_block", samplerControl=list(),
+                         S=S, marginalized=FALSE, occ_var="z"))
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  
+  expect_equal(length(samp), 17)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "RW_block sampler: state_speciesID[1], state_x_speciesID[1], det_speciesID[1]")
+  expect_true(grepl("jointBinary", samp[[17]]))
+
+  # polya-gamma 
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "polyagamma", samplerControl=list(),
+                               S=S, marginalized=FALSE, occ_var="z")
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+
+  expect_equal(length(samp), 27)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_true(grepl("jointBinary", samp[[7]]))
+  expect_equal(samp[[8]], "polyagamma sampler: state_speciesID[1], state_x_speciesID[1],  fixedDesignColumns: TRUE") 
+  expect_equal(samp[[9]], "polyagamma sampler: det_speciesID[1],  fixedDesignColumns: TRUE")
+
+  # Barker
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "barker", samplerControl=list(),
+                               S=S, marginalized=FALSE, occ_var="z")
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+
+  expect_equal(length(samp), 27)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "barker sampler: state_speciesID[1], state_x_speciesID[1]") 
+  expect_equal(samp[[8]], "barker sampler: det_speciesID[1]")
+  expect_true(grepl("jointBinary", samp[[27]]))
+})
+
+test_that("mcmc configurations for multi-species marginalized model", {
+
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x), 
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    returnModel = TRUE, marginalized=TRUE, buildDerivs=TRUE)
+  # RW
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "default", samplerControl=list(),
+                               S=S, marginalized=TRUE) 
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  expect_equal(length(samp), 36)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "RW sampler: state_speciesID[1]")
+  expect_equal(samp[[17]], "RW sampler: state_x_speciesID[1]")
+  expect_equal(samp[[27]], "RW sampler: det_speciesID[1]")
+
+  # RW_block
+  conf <- expect_message(nimbleEcology:::configureOccuMCMC(mod, "RW_block", 
+                          samplerControl=list(), S=S, marginalized=TRUE))
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  expect_equal(length(samp), 16)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "RW_block sampler: state_speciesID[1], state_x_speciesID[1], det_speciesID[1]")
+  
+  # barker
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "barker", samplerControl=list(),
+                               S=S, marginalized=TRUE)
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  expect_equal(length(samp), 26)
+  expect_equal(samp[[1]], "RW sampler: state_Intercept")
+  expect_equal(samp[[3]], "conjugate_dhalfflat_dnorm_identity sampler: state_sd_speciesID")
+  expect_equal(samp[[7]], "barker sampler: state_speciesID[1], state_x_speciesID[1]") 
+  expect_equal(samp[[8]], "barker sampler: det_speciesID[1]")
+
+  # HMC
+  conf <- nimbleEcology:::configureOccuMCMC(mod, "hmc", samplerControl=list(),
+                               S=S, marginalized=TRUE)
+  samp <- lapply(conf$getSamplers(), function(x) x$toStr())
+  expect_equal(length(samp), 1)
+  expect_true(grepl("NUTS", samp[[1]]))
+})
+
+test_that("fit multi-species latent state model", {
+  nimbleOptions(verbose=FALSE)
+  set.seed(123)
+  pr <- nimbleMacros::setPriors(sd="dhalfflat()", intercept="dunif(-10, 10)", coefficient="dnorm(0, sd=10)")
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x),
+                    statePriors=pr, detPriors=pr,
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    nburnin=3000, niter=4000, nchains=1,
+                    samplesAsCodaMCMC = TRUE)
+
+  mat <- as.matrix(mod)
+  expect_equal(ncol(mat), 506) 
+  mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
+  est <- round(colMeans(mat), 2)
+  expect_equivalent(est, c(-0.18, 0.19, 0.16, 0.23, 0.23, 1.06))
+  nimbleOptions(verbose=verb)
+})
+
+test_that("fit single-species latent state model with polyagamma", {
+  nimbleOptions(verbose=FALSE)
+  nimbleOptions(verbose=FALSE)
+  set.seed(123)
+  pr <- nimbleMacros::setPriors(sd="dhalfflat()", intercept="dnorm(0, sd=10)", coefficient="dnorm(0, sd=10)")
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x),
+                    statePriors=pr, detPriors=pr,
+                    sampler = "polyagamma",
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    nburnin=3000, niter=4000, nchains=1,
+                    samplesAsCodaMCMC = TRUE)
+
+  mat <- as.matrix(mod)
+  expect_equal(ncol(mat), 506) 
+  mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
+  est <- round(colMeans(mat), 2)
+  expect_equivalent(est, c(-0.18, 0.16, 0.13, 0.16, 0.21, 1.00))
+  nimbleOptions(verbose=verb)
+})
+
+test_that("fit single-species latent state model with barker", {
+  nimbleOptions(verbose=FALSE)
+  set.seed(123)
+  pr <- nimbleMacros::setPriors(sd="dunif(0, 3)", intercept="dunif(-5, 5)", coefficient="dnorm(0, sd=2.5)")
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x),
+                    statePriors=pr, detPriors=pr,
+                    sampler="barker",
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    nburnin=3000, niter=4000, nchains=1,
+                    samplesAsCodaMCMC = TRUE)
+
+  mat <- as.matrix(mod)
+  expect_equal(ncol(mat), 506) 
+  mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
+  est <- round(colMeans(mat), 2)
+  expect_equivalent(est, c(-0.18, 0.20, 0.16, 0.23, 0.24, 1.03))
+  nimbleOptions(verbose=verb)
+})
+
+test_that("fit single-species marginalized model with hmc", {
+  nimbleOptions(verbose=FALSE)
+  set.seed(123)
+  mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
+                    siteCovs = list(x = x), 
+                    obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
+                    nburnin=300, niter=500, nchains=1,
+                    samplesAsCodaMCMC = TRUE, marginalized=TRUE, sampler="hmc")
+
+  mat <- as.matrix(mod)
+  expect_equal(ncol(mat), 506) 
+  mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
+  est <- round(colMeans(mat), 2)
+  expect_equivalent(est, c(-0.18, 0.19, 0.14, 0.25, 0.20, 1.0))
+  nimbleOptions(verbose=verb)
+})
+
 
 nimbleOptions(enableMacroComments = mc)
 nimbleOptions(verbose = verb)
