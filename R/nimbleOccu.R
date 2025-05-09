@@ -62,12 +62,16 @@ nimbleOccu <- function(stateformula, detformula,
     ## Using block_RW and barker with latent model is conceptually fine but hasn't mixed well
     ## in CDFW examples.
     if(!marginalized && sampler %in% c("hmc", "block_RW", "barker")) {
-        marginalized <- TRUE
+      marginalized <- TRUE
+      if(nimbleOptions("verbose")){
         message("  [Note] Using marginalized model as the ", sampler, " sampling is set up for use with the marginalized model.")
+      }
     }
     if(marginalized && sampler == "polyagamma") {
-        marginalized <- FALSE
+      marginalized <- FALSE
+      if(nimbleOptions("verbose")){
         message("  [Note] Using non-marginalized model as the ", sampler, " sampling is set up for use with the non-marginalized model.")
+      }
     }
   }
     
@@ -124,7 +128,11 @@ nimbleOccu <- function(stateformula, detformula,
   check_site <- sapply(site_sub, function(x){
     is.vector(x) & length(x) == M
   })
-  stopifnot(all(check_site))
+  if(!all(check_site)){
+    wrong_dims <- names(check_site[!check_site])
+    stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
+          " have incorrect dimensions", call.=FALSE)
+  }
   constants <- c(constants, site_sub)
 
   state_vars_sp <- state_vars[state_vars %in% names(speciesCovs)]
@@ -136,7 +144,11 @@ nimbleOccu <- function(stateformula, detformula,
   check_sp <- sapply(sp_sub, function(x){
     is.vector(x) & length(x) == S
   })
-  stopifnot(all(check_sp))
+  if(!all(check_sp)){
+    wrong_dims <- names(check_sp[!check_sp])
+    stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
+          " have incorrect dimensions", call.=FALSE)
+  }
   constants <- c(constants, sp_sub)
 
   # Process obs covariates
@@ -146,7 +158,6 @@ nimbleOccu <- function(stateformula, detformula,
   # Find covariates in the detection model that are actually site-level
   # modify formula and add to constants
   obs_in_site <- obs_vars[obs_vars %in% names(siteCovs)]
-  #obs_in_site <- obs_in_site[!obs_in_site %in% state_vars] # TODO: I think this check is wrong
   if(length(obs_in_site) > 0){
     obs_site_sub <- siteCovs[obs_in_site]
     # Add required bracket ([1:M]) to the formula components
@@ -156,7 +167,11 @@ nimbleOccu <- function(stateformula, detformula,
     check_site_obs <- sapply(obs_site_sub, function(x){
       is.vector(x) & length(x) == M
     })
-    stopifnot(all(check_site_obs))
+    if(!all(check_site_obs)){
+      wrong_dims <- names(check_site_obs[!check_site_obs])
+      stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
+           " have incorrect dimensions", call.=FALSE)
+    }
     obs_site_sub <- obs_site_sub[!names(obs_site_sub) %in% names(constants)]
     constants <- c(constants, obs_site_sub)
   }
@@ -174,6 +189,11 @@ nimbleOccu <- function(stateformula, detformula,
       is.vector(x) & length(x) == S
     })
     stopifnot(all(check_sp_obs))
+    if(!all(check_sp_obs)){
+      wrong_dims <- names(check_sp_obs[!check_sp_obs])
+      stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
+           " have incorrect dimensions", call.=FALSE)
+    }
     obs_sp_sub <- obs_sp_sub[!names(obs_sp_sub) %in% names(constants)]
     constants <- c(constants, obs_sp_sub)
   }
@@ -184,14 +204,17 @@ nimbleOccu <- function(stateformula, detformula,
   if(length(obs_vars) > 0){
     obs_sub <- obsCovs[obs_vars]
     # Add required bracket ([1:M, 1:J])
-    # TODO: Handle variable sample size for marginalized model (handling missing values)
     for (i in obs_vars){
       detformula <- addBracketToFormula(detformula, str2lang(i), "[1:M, 1:J]")
     }
     check_obs <- sapply(obs_sub[names(obs_sub) %in% names(obsCovs)], function(x){
       is.matrix(x) & all(dim(x) == c(M,J))
     })
-    stopifnot(all(check_obs))
+    if(!all(check_obs)){
+      wrong_dims <- names(check_obs[!check_obs])
+      stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
+           " have incorrect dimensions", call.=FALSE)
+    }
     constants <- c(constants, obs_sub)
   }
  
@@ -238,7 +261,7 @@ nimbleOccu <- function(stateformula, detformula,
     conf$addMonitors("p")
   }
 
-  mcmc <- buildMCMC(conf)
+  mcmc <- buildMCMC(conf, print = nimbleOptions("verbose"))
   
   modC <- compileNimble(mod)
   mcmcC <- compileNimble(mcmc, project = mod)
@@ -321,7 +344,7 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
     if(sampler == "hmc") {
         conf <- configureMCMC(model, nodes = NULL, print = FALSE)
         conf$addSampler(nimbleHMC::sampler_NUTS, target = conf$getUnsampledNodes(),
-          control = list(warmupMode = "iterations"))
+          control = list(warmupMode = "default"))
     }
 
     # Note that in the species-specific block sampling below,
@@ -378,9 +401,9 @@ configureOccuMCMC <- function(model, sampler, samplerControl, S, marginalized, o
                 conf$addSampler(blockNodes, type = "RW_block", print=FALSE,
                                 control = samplerControl)
             }
-            if(!marginalized)  # At the moment, this is ruled out in initial `nimbleOccu` checks.
-                conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
         }
+        if(!marginalized)  # At the moment, this is ruled out in initial `nimbleOccu` checks.
+          conf$addSampler(occ_var, "jointBinary", control = list(order = TRUE))
     }
     
     if(sampler == "barker") {
@@ -451,6 +474,7 @@ dOcc_v_multisite <- nimbleFunction(run = function(x = double(2),
 )
 
 ## "Vectorized" sampler that samples all occupancy indicators at once.
+#' @export
 sampler_jointBinary <- nimbleFunction(
     name = 'sampler_jointBinary',
     contains = sampler_BASE,
