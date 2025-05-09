@@ -12,14 +12,15 @@ nimbleOccu(
   obsCovs = NULL,
   speciesCovs = NULL,
   statePriors = setPriors(intercept = "dunif(-10, 10)", coefficient = "dlogis(0, 1)", sd
-    = "dunif(0,5)"),
+    = "dhalfflat()"),
   detPriors = setPriors(intercept = "dunif(-10, 10)", coefficient = "dlogis(0, 1)", sd =
-    "dunif(0, 5)"),
+    "dhalfflat()"),
   marginalized = FALSE,
   returnModel = FALSE,
-  sampler = c("default", "hmc"),
+  sampler = c("default", "polyagamma", "RW_block", "barker", "hmc"),
   savePsi = TRUE,
   saveP = FALSE,
+  samplerControl = list(),
   buildDerivs = FALSE,
   ...
 )
@@ -59,6 +60,11 @@ dOcc_v nimbleFunction}
 \item{savePsi}{Save site-level occupancy probabilities in the output?}
 
 \item{saveP}{Save site x occasion level detection probabilities in the output?}
+
+\item{samplerControl}{An optional list of control arguments to sampler functions 
+to be passed `configureMCMC`. In addition, one can provide the element
+\code{noncentered = TRUE} to add NIMBLE's "noncentered" sampler to jointly sample
+each hyperparameter with its dependent random effects.}
 
 \item{buildDerivs}{Build derivative capabilities for the model?}
 
