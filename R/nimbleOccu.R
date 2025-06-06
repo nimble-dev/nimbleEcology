@@ -480,6 +480,8 @@ dOcc_v_multisite <- nimbleFunction(run = function(x = double(2),
 }, buildDerivs = list(run = list(ignore=c('j')))
 )
 
+## This function causes 'package 'methods' is used but not declared'
+## is it just because it literally contains the word "methods"?
 ## "Vectorized" sampler that samples all occupancy indicators at once.
 #' @export
 sampler_jointBinary <- nimbleFunction(
@@ -546,3 +548,51 @@ sampler_jointBinary <- nimbleFunction(
         reset = function() { }
     )
 )
+
+# nimbleOccu methods
+
+#' @export
+summary.nimbleOccu <- function(object, levels=c(0.025, 0.5, 0.975), digits=2, ...){
+
+  # Convert to coda object
+  if(is.list(object$samples)){
+    object$samples <- coda::as.mcmc.list(lapply(object$samples, coda::as.mcmc))
+    pars <- colnames(object$samples[[1]])
+  } else {
+    object$samples <- coda::as.mcmc(object$samples)
+    pars <- colnames(object$samples)
+  }
+
+  state_tab <- summary_table(pars[grepl("^state_", pars)], object$samples, levels)
+  det_tab <- summary_table(pars[grepl("^det_", pars)], object$samples, levels)
+
+  cat("Occupancy:\n")
+  print(round(state_tab, digits))
+  cat("\nDetection:\n")
+  print(round(det_tab, digits))
+
+  invisible(list(state=state_tab, det=det_tab))
+}
+
+summary_table <- function(pars, samples, levels){
+  sumtab <- lapply(pars, function(x){
+    sampx <- unlist(samples[,x])
+    out <- c(mean = mean(sampx, na.rm=TRUE),
+    stats::quantile(sampx, probs=levels, na.rm=TRUE))
+    if(is.list(samples)){
+      rhat <- coda::gelman.diag(samples[,x])
+      out <- c(out, Rhat=rhat$psrf[1])
+    }
+    out <- c(out, effSize=unname(coda::effectiveSize(samples[,x])))
+    out
+  })
+  sumtab <- as.data.frame(do.call(rbind, sumtab))
+  rownames(sumtab) <- gsub("^state_|^det_", "", pars)
+  sumtab
+}
+
+#' @export
+print.nimbleOccu <- function(x, ...){
+  summary(x, ...)
+}
+

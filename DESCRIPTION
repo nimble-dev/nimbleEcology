@@ -16,6 +16,7 @@ Description: Common ecological distributions for 'nimble' models in the form of 
 License: GPL-3
 Copyright: Copyright (c) 2024, Perry de Valpine, Ben Goldstein, Daniel Turek, Lauren Ponisio
 Depends: R (>= 4.0.0), nimble
+Imports: coda
 Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/nimble-dev/nimbleEcology
