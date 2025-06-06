@@ -35,6 +35,7 @@
 #' \code{noncentered = TRUE} to add NIMBLE's "noncentered" sampler to jointly sample
 #' each hyperparameter with its dependent random effects.
 #' @param buildDerivs Build derivative capabilities for the model?
+#' @param samplesOnly Save only the matrix of samples? If \code{FALSE}, the model is also saved.
 #' @param ... Arguments passed to \code{runMCMC} such as \code{nchains}.
 #'
 #' @return Either MCMC samples, or a nimble model object if \code{returnModel = TRUE}.
@@ -50,6 +51,7 @@ nimbleOccu <- function(stateformula, detformula,
                        savePsi = TRUE, saveP = FALSE,
                        samplerControl = list(),
                        buildDerivs = FALSE,
+                       samplesOnly = FALSE,
                        ...){
 
   check_nimbleMacros_installed()
@@ -266,7 +268,12 @@ nimbleOccu <- function(stateformula, detformula,
   modC <- compileNimble(mod)
   mcmcC <- compileNimble(mcmc, project = mod)
 
-  do.call(runMCMC, c(list(mcmc = mcmcC), args))
+  samples <- do.call(runMCMC, c(list(mcmc = mcmcC), args))
+  if(samplesOnly) return(samples)
+
+  out <- list(model = mod, samples = samples, call = match.call())
+  class(out) <- c("nimbleOccu", class(out))
+  out
 }
 
 # Add dimension bracket (bracket; e.g. [1:M]) to a specific variable (target)

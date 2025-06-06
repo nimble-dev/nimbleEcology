@@ -22,6 +22,7 @@ nimbleOccu(
   saveP = FALSE,
   samplerControl = list(),
   buildDerivs = FALSE,
+  samplesOnly = FALSE,
   ...
 )
 }
@@ -67,6 +68,8 @@ to be passed `configureMCMC`. In addition, one can provide the element
 each hyperparameter with its dependent random effects.}
 
 \item{buildDerivs}{Build derivative capabilities for the model?}
+
+\item{samplesOnly}{Save only the matrix of samples? If \code{FALSE}, the model is also saved.}
 
 \item{...}{Arguments passed to \code{runMCMC} such as \code{nchains}.}
 }
