@@ -41,7 +41,7 @@ This macro should be placed on the right-hand side of an assignment
  missing values (e.g. if you have different numbers of occasions by site)
 }
 \examples{
-nimbleOptions(enableModelMacros = TRUE)
+nimbleOptions(enableMacros = TRUE)
 y <- matrix(rbinom(10, 1, 0.5), 5, 2)
 x <- rnorm(5)
 const <- list(y=y, x=x, M=nrow(y), J = ncol(y))

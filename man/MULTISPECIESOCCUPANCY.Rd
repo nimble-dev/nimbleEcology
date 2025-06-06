@@ -44,7 +44,7 @@ This macro should be placed on the right-hand side of an assignment
  missing values (e.g. if you have different numbers of occasions by site).
 }
 \examples{
-nimbleOptions(enableModelMacros = TRUE)
+nimbleOptions(enableMacros = TRUE)
 M <- 100 # sites
 J <- 5   # occasions
 S <- 10  # species
