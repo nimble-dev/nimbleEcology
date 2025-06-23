@@ -701,10 +701,8 @@ test_that("mcmc configurations for multi-species marginalized model", {
 test_that("fit multi-species latent state model", {
   nimbleOptions(verbose=FALSE)
   set.seed(123)
-  pr <- nimbleMacros::setPriors(sd="dhalfflat()", intercept="dunif(-10, 10)", coefficient="dnorm(0, sd=10)")
   mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
                     siteCovs = list(x = x),
-                    statePriors=pr, detPriors=pr,
                     obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
                     nburnin=3000, niter=4000, nchains=1,
                     samplesAsCodaMCMC = TRUE)
@@ -713,18 +711,15 @@ test_that("fit multi-species latent state model", {
   expect_equal(ncol(mat), 506) 
   mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
   est <- round(colMeans(mat), 2)
-  expect_equivalent(est, c(-0.18, 0.19, 0.16, 0.23, 0.23, 1.06))
+  expect_equivalent(est, c(-0.18, 0.20, 0.20, 0.21, 0.23, 0.96))
   nimbleOptions(verbose=verb)
 })
 
-test_that("fit single-species latent state model with polyagamma", {
-  nimbleOptions(verbose=FALSE)
+test_that("fit multi-species latent state model with polyagamma", {
   nimbleOptions(verbose=FALSE)
   set.seed(123)
-  pr <- nimbleMacros::setPriors(sd="dhalfflat()", intercept="dnorm(0, sd=10)", coefficient="dnorm(0, sd=10)")
   mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
                     siteCovs = list(x = x),
-                    statePriors=pr, detPriors=pr,
                     sampler = "polyagamma",
                     obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
                     nburnin=3000, niter=4000, nchains=1,
@@ -734,17 +729,15 @@ test_that("fit single-species latent state model with polyagamma", {
   expect_equal(ncol(mat), 506) 
   mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
   est <- round(colMeans(mat), 2)
-  expect_equivalent(est, c(-0.18, 0.16, 0.13, 0.16, 0.21, 1.00))
+  expect_equivalent(est, c(-0.18, 0.18, 0.15, 0.21, 0.25, 0.98))
   nimbleOptions(verbose=verb)
 })
 
 test_that("fit single-species latent state model with barker", {
   nimbleOptions(verbose=FALSE)
   set.seed(123)
-  pr <- nimbleMacros::setPriors(sd="dunif(0, 3)", intercept="dunif(-5, 5)", coefficient="dnorm(0, sd=2.5)")
   mod <- nimbleOccu(stateformula = ~x, detformula = ~1, y = ymulti, 
                     siteCovs = list(x = x),
-                    statePriors=pr, detPriors=pr,
                     sampler="barker",
                     obsCovs = list(x2 = matrix(rnorm(M*J), M, J)),
                     nburnin=3000, niter=4000, nchains=1,
@@ -754,7 +747,7 @@ test_that("fit single-species latent state model with barker", {
   expect_equal(ncol(mat), 506) 
   mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
   est <- round(colMeans(mat), 2)
-  expect_equivalent(est, c(-0.18, 0.20, 0.16, 0.23, 0.24, 1.03))
+  expect_equivalent(est, c(-0.18, 0.19, 0.15, 0.25, 0.23, 1.00))
   nimbleOptions(verbose=verb)
 })
 
@@ -771,7 +764,7 @@ test_that("fit single-species marginalized model with hmc", {
   expect_equal(ncol(mat), 506) 
   mat <- mat[,grepl("_", colnames(mat), fixed=TRUE)]
   est <- round(colMeans(mat), 2)
-  expect_equivalent(est, c(-0.18, 0.19, 0.14, 0.25, 0.20, 1.0))
+  expect_equivalent(est, c(-0.19, 0.22, 0.17, 0.13, 0.14, 0.99))
   nimbleOptions(verbose=verb)
 })
 

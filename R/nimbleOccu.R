@@ -243,10 +243,12 @@ nimbleOccu <- function(stateformula, detformula,
   }
 
   args <- list(...)
-  if(is.null(args$inits)) args$inits <- list()
+  inits <- args$inits
+  if(is.null(inits)) inits <- list()
+  if(is.function(inits)) inits <- inits()  
+  if(any(sapply(inits, is.list))) inits <- inits[[1]]
   mod <- nimbleModel(code = code, data = data, constants = constants, 
-                     inits = args$inits, buildDerivs = buildDerivs)
-  
+                     inits = inits, buildDerivs = buildDerivs) 
   if(returnModel){
     return(mod)
   }
@@ -265,6 +267,46 @@ nimbleOccu <- function(stateformula, detformula,
   
   modC <- compileNimble(mod)
   mcmcC <- compileNimble(mcmc, project = mod)
+
+  # Set up initial values
+  # Goal here is to end up with a list of lists of initial values
+  # regardless of input
+  new_inits <- args$inits
+  if(is.null(new_inits)){ 
+    new_inits <- lapply(1:args$nchains, function(x) list())
+  } else if(is.list(new_inits)){
+    if(!any(sapply(new_inits, is.list))){
+      new_inits <- lapply(1:args$nchains, function(x) new_inits) 
+    } else {
+      stopifnot(length(new_inits) != args$nchains)
+    }
+  } else if(is.function(new_inits)){
+    new_inits <- lapply(1:args$nchains, new_inits)
+  }
+
+  # Initialize random effects to be dnorm(0,1), which prevents
+  # samplers from getting stuck at 0
+  possible_random <- mod$getMacroParameters()$`nimbleMacros::LINPRED_PRIORS`
+  possible_random <- unique(unlist(possible_random))
+  sds <- possible_random[grepl("_sd_", possible_random)]
+  rand <- gsub("_sd_", "_",sds)
+  stopifnot(all(rand %in% possible_random))
+
+  # Add the new random effect initial values to existing inits
+  if(length(rand) > 1){
+    new_inits <- lapply(new_inits, function(x){
+      rand_inits <- lapply(rand, function(x){
+        vals <- mod[[x]]
+        vals[] <- rnorm(length(vals), 0, 1)
+        vals
+      })
+      names(rand_inits) <- rand
+      # don't overwrite existing initial values
+      rand_inits <- rand_inits[!rand %in% names(x)]
+      modifyList(x, rand_inits)
+    })
+  }
+  args$inits <- new_inits
 
   do.call(runMCMC, c(list(mcmc = mcmcC), args))
 }
