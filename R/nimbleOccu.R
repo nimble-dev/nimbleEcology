@@ -100,7 +100,7 @@ nimbleOccu <- function(stateformula, detformula,
   # Possibly step here to move data to front of vectors
 
   # Make data list
-  data <- list()
+  data <- list(y = y)
 
   # Add z if latent model
   if(!marginalized){
@@ -114,10 +114,10 @@ nimbleOccu <- function(stateformula, detformula,
   }
 
   # Make basic constants list
-  constants <- list(y = y, M = M, J = J)  
+  constants <- list(M = M, J = J)  
   if(S > 1) constants <- c(constants, list(S = S))
   
-  # Process site model and add required constants
+  # Process site model and add required data
   state_vars <- all.vars(stateformula)
   stopifnot(all(state_vars %in% c(names(siteCovs), names(speciesCovs))))
 
@@ -135,7 +135,7 @@ nimbleOccu <- function(stateformula, detformula,
     stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
           " have incorrect dimensions", call.=FALSE)
   }
-  constants <- c(constants, site_sub)
+  data <- c(data, site_sub)
 
   state_vars_sp <- state_vars[state_vars %in% names(speciesCovs)]
   for (i in state_vars_sp){
@@ -151,14 +151,14 @@ nimbleOccu <- function(stateformula, detformula,
     stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
           " have incorrect dimensions", call.=FALSE)
   }
-  constants <- c(constants, sp_sub)
+  data <- c(data, sp_sub)
 
   # Process obs covariates
   obs_vars <- all.vars(detformula)
   stopifnot(all(obs_vars %in% c(names(obsCovs), names(siteCovs), names(speciesCovs))))
   
   # Find covariates in the detection model that are actually site-level
-  # modify formula and add to constants
+  # modify formula and add to data
   obs_in_site <- obs_vars[obs_vars %in% names(siteCovs)]
   if(length(obs_in_site) > 0){
     obs_site_sub <- siteCovs[obs_in_site]
@@ -174,12 +174,12 @@ nimbleOccu <- function(stateformula, detformula,
       stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
            " have incorrect dimensions", call.=FALSE)
     }
-    obs_site_sub <- obs_site_sub[!names(obs_site_sub) %in% names(constants)]
-    constants <- c(constants, obs_site_sub)
+    obs_site_sub <- obs_site_sub[!names(obs_site_sub) %in% names(data)]
+    data <- c(data, obs_site_sub)
   }
 
   # Find covariates in the detection model that are actually species-level
-  # modify formula and add to constants
+  # modify formula and add to data
   obs_in_sp <- obs_vars[obs_vars %in% names(speciesCovs)]
   if(length(obs_in_sp) > 0){
     obs_sp_sub <- speciesCovs[obs_in_sp]
@@ -196,12 +196,12 @@ nimbleOccu <- function(stateformula, detformula,
       stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
            " have incorrect dimensions", call.=FALSE)
     }
-    obs_sp_sub <- obs_sp_sub[!names(obs_sp_sub) %in% names(constants)]
-    constants <- c(constants, obs_sp_sub)
+    obs_sp_sub <- obs_sp_sub[!names(obs_sp_sub) %in% names(data)]
+    data <- c(data, obs_sp_sub)
   }
 
   # Find covariates in the detection model that are observation-level
-  # modify formula and add to constants
+  # modify formula and add to data
   obs_vars <- obs_vars[obs_vars %in% names(obsCovs)]
   if(length(obs_vars) > 0){
     obs_sub <- obsCovs[obs_vars]
@@ -217,7 +217,7 @@ nimbleOccu <- function(stateformula, detformula,
       stop("Covariate(s) ", paste(wrong_dims, collapse=", "),
            " have incorrect dimensions", call.=FALSE)
     }
-    constants <- c(constants, obs_sub)
+    data <- c(data, obs_sub)
   }
  
   # Generate code
@@ -313,7 +313,8 @@ nimbleOccu <- function(stateformula, detformula,
   samples <- do.call(runMCMC, c(list(mcmc = mcmcC), args))
   if(samplesOnly) return(samples)
 
-  out <- list(model = mod, samples = samples, call = match.call())
+  out <- list(model = mod, samples = samples, call = match.call(),
+              formulas = list(stateformula = stateformula, detformula = detformula))
   class(out) <- c("nimbleOccu", class(out))
   out
 }
